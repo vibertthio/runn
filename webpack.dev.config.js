@@ -2,37 +2,20 @@ const webpack = require('webpack');
 const path = require('path');
 const BrowserSyncPlugin = require('browser-sync-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const loaders = require('./webpack.loaders');
 
 module.exports = {
-	entry: './src/three/three.js',
+	entry: {
+		main: './src/index.js',
+		three: './src/three/app.js',
+	},
 	output: {
 		path: path.resolve(__dirname, 'public/'),
 		publicPath: '/',
-		filename: './js/three.bundle.js',
+		filename: './js/[name].[hash].bundle.js',
 	},
 	module: {
-		loaders: [
-			{
-				test: /\.js$/,
-				exclude: /(node_modules|bower_components)/,
-				use: {
-					loader: 'babel-loader',
-					options: {
-						presets: ['env'],
-					},
-				},
-			},
-			{
-				test: /\.(glsl|frag|vert)$/,
-				loader: 'raw-loader',
-				exclude: /node_modules/,
-			},
-			{
-				test: /\.(glsl|frag|vert)$/,
-				loader: 'glslify-loader',
-				exclude: /node_modules/,
-			},
-		],
+		loaders,
 	},
 	plugins: [
 		new webpack.HotModuleReplacementPlugin(), // Enable HMR

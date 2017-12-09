@@ -5,8 +5,9 @@
   "main": "webpack.config.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "webpack-dev-server --config webpack.dev.config.js",
-    "build": "webpack -d --config webpack.prod.config.js --colors"
+    "dev": "webpack-dev-server --config webpack.dev.config.js",
+    "build": "webpack -d --config webpack.prod.config.js --colors",
+    "start": "serve public/"
   },
   "keywords": [],
   "author": "",
@@ -14,15 +15,23 @@
   "dependencies": {
     "gsap": "^1.19.1",
     "normalize-css": "^2.3.1",
-    "orbit-controls-es6": "^1.0.10"
+    "orbit-controls-es6": "^1.0.10",
+    "react": "^16.2.0",
+    "react-dom": "^16.2.0",
+    "react-tap-event-plugin": "^3.0.2"
   },
   "devDependencies": {
     "babel-core": "^6.24.1",
     "babel-eslint": "^8.0.3",
     "babel-loader": "^7.0.0",
+    "babel-plugin-transform-class-properties": "^6.24.1",
+    "babel-plugin-transform-runtime": "^6.23.0",
+    "babel-preset-babili": "^0.1.4",
     "babel-preset-env": "^1.4.0",
+    "babel-preset-react": "^6.24.1",
     "browser-sync": "^2.18.8",
     "browser-sync-webpack-plugin": "^1.1.4",
+    "css-loader": "^0.28.7",
     "eslint": "^4.13.0",
     "eslint-config-airbnb": "^16.1.0",
     "eslint-plugin-import": "^2.8.0",
@@ -32,6 +41,7 @@
     "html-webpack-plugin": "^2.30.1",
     "prettier": "^1.9.1",
     "raw-loader": "^0.5.1",
+    "style-loader": "^0.19.0",
     "webpack": "^2.5.1",
     "webpack-dev-server": "^2.4.5"
   }
