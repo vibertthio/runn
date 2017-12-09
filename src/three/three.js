@@ -37,27 +37,38 @@ function init() {
 	camera.position.z = 1000;
 
 	controls = new OrbitControls(camera);
+	controls.enablePan = false;
+	controls.enableZoom = false;
+	controls.minPolarAngle = 0.4 * Math.PI;
+	controls.maxPolarAngle = 0.6 * Math.PI;
+	controls.minAzimuthAngle = -1 * Math.PI * 0.1;
+	controls.maxAzimuthAngle = Math.PI * 0.1;
+	// controls.enableRotate = false;
+
 
 	geometry = new THREE.BoxGeometry(200, 200, 200);
-	material = new THREE.RawShaderMaterial({
-		vertexShader: vert,
-		fragmentShader: frag,
-	});
+	material = new THREE.MeshNormalMaterial();
+
+	// material = new THREE.RawShaderMaterial({
+	// 	vertexShader: vert,
+	// 	fragmentShader: frag,
+	// });
 
 	mesh = new THREE.Mesh(geometry, material);
+	// mesh = new THREE.Mesh(geometry);
 	scene.add(mesh);
 
-	for (let i = -5; i <= 5; i += 1) {
-		const geometry = new THREE.BoxGeometry(200, 200, 200);
-		const material = new THREE.MeshBasicMaterial({
-			color: 0xffffff,
-			wireframe: true,
-		});
-
-		const mesh = new THREE.Mesh(geometry, material);
-		scene.add(mesh);
-		mesh.position.x = i * 400;
-	}
+	// for (let i = -5; i <= 5; i += 1) {
+	// 	const geometry = new THREE.BoxGeometry(200, 200, 200);
+	// 	const material = new THREE.MeshBasicMaterial({
+	// 		color: 0xffffff,
+	// 		wireframe: true,
+	// 	});
+  //
+	// 	const mesh = new THREE.Mesh(geometry, material);
+	// 	scene.add(mesh);
+	// 	mesh.position.x = i * 400;
+	// }
 
 	renderer = new THREE.WebGLRenderer({ antialias: true });
 	renderer.setSize(window.innerWidth, window.innerHeight);
@@ -67,9 +78,10 @@ function init() {
 
 function animate() {
 	animationId = requestAnimationFrame(animate);
+	controls.update();
 
-	mesh.rotation.x += 0.04;
-	mesh.rotation.y += 0.02;
+	// mesh.rotation.x += 0.04;
+	// mesh.rotation.y += 0.02;
 
 	renderer.render(scene, camera);
 }

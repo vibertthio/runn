@@ -5,7 +5,8 @@
   "main": "webpack.config.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "webpack-dev-server"
+    "start": "webpack-dev-server --config webpack.dev.config.js",
+    "build": "webpack -d --config webpack.prod.config.js --colors"
   },
   "keywords": [],
   "author": "",
@@ -28,6 +29,7 @@
     "eslint-plugin-jsx-a11y": "^6.0.2",
     "eslint-plugin-react": "^7.5.1",
     "glslify-loader": "^1.0.2",
+    "html-webpack-plugin": "^2.30.1",
     "prettier": "^1.9.1",
     "raw-loader": "^0.5.1",
     "webpack": "^2.5.1",

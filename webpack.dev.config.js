@@ -1,13 +1,14 @@
 const webpack = require('webpack');
 const path = require('path');
 const BrowserSyncPlugin = require('browser-sync-webpack-plugin');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
-	entry: './src/three.js',
+	entry: './src/three/three.js',
 	output: {
-		path: path.resolve(__dirname, 'dist/js'),
-		publicPath: '/js/',
-		filename: 'three.bundle.js',
+		path: path.resolve(__dirname, 'public/'),
+		publicPath: '/',
+		filename: './js/three.bundle.js',
 	},
 	module: {
 		loaders: [
@@ -57,11 +58,18 @@ module.exports = {
 				reload: false,
 			},
 		),
+		new HtmlWebpackPlugin({
+			template: './src/template.html',
+			files: {
+				js: ['bundle.js'],
+			},
+			filename: 'index.html',
+		}),
 	],
 	devServer: {
 		hot: true, // Tell the dev-server we're using HMR
-		contentBase: path.resolve(__dirname, 'dist'),
-		publicPath: '/js/',
+		contentBase: path.resolve(__dirname, 'public'),
+		publicPath: '/',
 	},
 	watch: true,
 	devtool: 'cheap-eval-source-map',
