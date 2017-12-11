@@ -6,7 +6,7 @@ const loaders = require('./webpack.loaders');
 
 module.exports = {
 	entry: {
-		main: './src/index.js',
+		// main: './src/index.js',
 		three: './src/three/app.js',
 	},
 	output: {
@@ -50,7 +50,7 @@ module.exports = {
 		}),
 	],
 	devServer: {
-		hot: true, // Tell the dev-server we're using HMR
+		hot: false, // Tell the dev-server we're using HMR
 		contentBase: path.resolve(__dirname, 'public'),
 		publicPath: '/',
 	},

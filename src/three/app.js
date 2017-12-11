@@ -1,5 +1,13 @@
 // import box from './box/';
+//
+// box();
+
 import particles from './particles/';
 
-// box();
 particles();
+
+if (module.hot) {
+  module.hot.accept(() => {
+    window.location.reload(true);
+  });
+}

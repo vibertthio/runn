@@ -31,6 +31,20 @@
     "react/no-danger": 0,
 
     "jsx-a11y/anchor-is-valid": 0,
+
+    "no-mixed-operators": [
+      "error",
+        {
+            "groups": [
+                ["+", "-", "*", "/", "%", "**"],
+                ["&", "|", "^", "~", "<<", ">>", ">>>"],
+                ["==", "!=", "===", "!==", ">", ">=", "<", "<="],
+                ["&&", "||"],
+                ["in", "instanceof"]
+            ],
+            "allowSamePrecedence": true
+        }
+    ]
   },
 
   "globals": {
