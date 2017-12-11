@@ -7,7 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "webpack-dev-server --config webpack.dev.config.js",
     "build": "webpack -d --config webpack.prod.config.js --colors",
-    "start": "serve public/"
+    "start": "serve public/",
+    "lint": "eslint ./src"
   },
   "keywords": [],
   "author": "",
@@ -19,7 +20,8 @@
     "orbit-controls-es6": "^1.0.10",
     "react": "^16.2.0",
     "react-dom": "^16.2.0",
-    "react-tap-event-plugin": "^3.0.2"
+    "react-tap-event-plugin": "^3.0.2",
+    "three": "^0.88.0"
   },
   "devDependencies": {
     "babel-core": "^6.24.1",

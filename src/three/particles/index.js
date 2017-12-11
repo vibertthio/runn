@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import TWEEN from '@tweenjs/tween.js';
-import Stats from '../../libs/stats.min';
+import Stats from 'libs/stats.min';
 
 let stats;
 let mouseX = 0;

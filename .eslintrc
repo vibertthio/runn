@@ -18,13 +18,15 @@
     "global-require": 0,
     "no-restricted-globals": 0,
     "no-shadow": 0,
-    "import/no-extraneous-dependencies": 0,
     "no-console": 0,
     "no-tabs": 0,
     "indent": 0,
     "no-use-before-define": [2, "nofunc"],
     "valid-jsdoc": 0,
     "require-jsdoc": 0,
+
+    "import/no-extraneous-dependencies": 0,
+    "import/no-unresolved": 0,
 
     "react/jsx-filename-extension": [1, { "extensions": [".js", ".jsx"] }],
     "react/prop-types": 0,
