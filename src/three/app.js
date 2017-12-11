@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import OrbitControls from 'orbit-controls-es6';
 
-import vert from './shaders/shader.vert';
-import frag from './shaders/shader.frag';
+// import vert from './shaders/shader.vert';
+// import frag from './shaders/shader.frag';
 
 
 // Three Scene
