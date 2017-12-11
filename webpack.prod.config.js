@@ -14,6 +14,9 @@ module.exports = {
 	},
 	resolve: {
 		extensions: ['.js', '.jsx'],
+		alias: {
+			libs: path.resolve(__dirname, 'src/libs'),
+		},
 	},
 	module: {
 		loaders,
