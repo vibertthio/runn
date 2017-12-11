@@ -32,19 +32,7 @@
 
     "jsx-a11y/anchor-is-valid": 0,
 
-    "no-mixed-operators": [
-      "error",
-        {
-            "groups": [
-                ["+", "-", "*", "/", "%", "**"],
-                ["&", "|", "^", "~", "<<", ">>", ">>>"],
-                ["==", "!=", "===", "!==", ">", ">=", "<", "<="],
-                ["&&", "||"],
-                ["in", "instanceof"]
-            ],
-            "allowSamePrecedence": true
-        }
-    ]
+    "no-mixed-operators": 0,
   },
 
   "globals": {

@@ -13,6 +13,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@tweenjs/tween.js": "^17.1.1",
     "gsap": "^1.19.1",
     "normalize-css": "^2.3.1",
     "orbit-controls-es6": "^1.0.10",

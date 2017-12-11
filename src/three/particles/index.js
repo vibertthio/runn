@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import TWEEN from '@tweenjs/tween.js';
 
 let mouseX = 0;
 let mouseY = 0;
@@ -55,16 +56,30 @@ function init() {
 		blending: THREE.AdditiveBlending,
 	});
 	for (let ix = 0; ix < AMOUNTX; ix += 1) {
-		for (let iy = 0; iy < AMOUNTY; iy += 1) {
+		for (let iz = 0; iz < AMOUNTY; iz += 1) {
 			const particle = new THREE.Sprite(material);
 			particle.scale.x = 16;
 			particle.scale.y = 16;
 
 			const mid = AMOUNTX * (SEPARATION / 2);
-			const x = ix * SEPARATION;
-			const y = iy * SEPARATION;
-			particle.position.x = x - mid;
-			particle.position.z = y - mid;
+			const xd = ix * SEPARATION;
+			const zd = iz * SEPARATION;
+			const x = xd - mid;
+			const z = zd - mid;
+			particle.position.x = x;
+			particle.position.z = z;
+
+			const dest = {
+				x: x + Math.random() * 50,
+				y: Math.random() * 100 - 50,
+			};
+
+			new TWEEN.Tween(particle.position)
+				.easing(TWEEN.Easing.Exponential.Out)
+				.to(dest, 2000)
+				.yoyo(true)
+				.repeat(Infinity)
+				.start();
 
 			scene.add(particle);
 		}
@@ -80,6 +95,8 @@ function animate() {
 	render();
 }
 function render() {
+	TWEEN.update();
+
 	camera.position.x += (mouseX - camera.position.x) * 0.05;
 	camera.position.y += (-mouseY - camera.position.y) * 0.05;
 	camera.lookAt(scene.position);
