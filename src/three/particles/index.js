@@ -78,7 +78,7 @@ function init() {
 			particle.position.z = z;
 
 			const dest = {
-				x: x + Math.random() * 50,
+				x: x + Math.random() * 100 - 50,
 				y: Math.random() * 100 - 50,
 			};
 
