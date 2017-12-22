@@ -84,7 +84,7 @@ function init() {
 
 			new TWEEN.Tween(particle.position)
 				.easing(TWEEN.Easing.Exponential.Out)
-				.to(dest, 2000)
+				.to(dest, 1000)
 				.yoyo(true)
 				.repeat(Infinity)
 				.start();

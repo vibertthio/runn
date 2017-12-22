@@ -18,7 +18,7 @@ module.exports = {
 		extensions: ['.js', '.jsx'],
 		alias: {
 			libs: path.resolve(__dirname, 'src/libs'),
-		}
+		},
 	},
 	module: {
 		loaders,
@@ -43,9 +43,7 @@ module.exports = {
 					},
 				],
 			},
-			{
-				reload: false,
-			},
+			{ reload: false }
 		),
 		new HtmlWebpackPlugin({
 			template: './src/template.html',

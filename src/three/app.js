@@ -8,6 +8,6 @@ particles();
 
 if (module.hot) {
   module.hot.accept(() => {
-    window.location.reload(true);
+    // window.location.reload(true);
   });
 }
