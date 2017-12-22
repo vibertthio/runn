@@ -6,7 +6,7 @@ const loaders = require('./webpack.loaders');
 
 module.exports = {
 	entry: {
-		// main: './src/index.js',
+		main: './src/index.js',
 		three: './src/three/app.js',
 	},
 	output: {
