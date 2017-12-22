@@ -26,25 +26,25 @@ module.exports = {
 	plugins: [
 		new webpack.HotModuleReplacementPlugin(), // Enable HMR
 		new webpack.NamedModulesPlugin(),
-		new BrowserSyncPlugin(
-			{
-				host: 'localhost',
-				port: 3001,
-				proxy: 'http://localhost:8080/',
-				files: [
-					{
-						match: ['**/*.html'],
-						fn: (event) => {
-							if (event === 'change') {
-								const bs = require('browser-sync').get('bs-webpack-plugin');
-								bs.reload();
-							}
-						},
-					},
-				],
-			},
-			{ reload: false }
-		),
+		// new BrowserSyncPlugin(
+		// 	{
+		// 		host: 'localhost',
+		// 		port: 3001,
+		// 		proxy: 'http://localhost:8080/',
+		// 		files: [
+		// 			{
+		// 				match: ['**/*.html'],
+		// 				fn: (event) => {
+		// 					if (event === 'change') {
+		// 						const bs = require('browser-sync').get('bs-webpack-plugin');
+		// 						bs.reload();
+		// 					}
+		// 				},
+		// 			},
+		// 		],
+		// 	},
+		// 	{ reload: false }
+		// ),
 		new HtmlWebpackPlugin({
 			template: './src/template.html',
 			files: {

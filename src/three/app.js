@@ -6,8 +6,10 @@ import particles from './particles/';
 
 particles();
 
-if (module.hot) {
-  module.hot.accept(() => {
-    // window.location.reload(true);
-  });
-}
+
+// HMR Hot Module Replacement
+// if (module.hot) {
+//   module.hot.accept(() => {
+//     window.location.reload(true);
+//   });
+// }
