@@ -5,6 +5,7 @@ const loaders = require('./webpack.loaders');
 
 module.exports = {
 	entry: {
+		// main: './src/index.js',
 		three: './src/three/app.js',
 	},
 	output: {
@@ -22,7 +23,6 @@ module.exports = {
 		loaders,
 	},
 	plugins: [
-		new webpack.NamedModulesPlugin(),
 		new HtmlWebpackPlugin({
 			template: './src/template.html',
 			files: {
