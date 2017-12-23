@@ -4,6 +4,10 @@ const BrowserSyncPlugin = require('browser-sync-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const loaders = require('./webpack.loaders');
 
+const Dashboard = require('webpack-dashboard');
+const DashboardPlugin = require('webpack-dashboard/plugin');
+const dashboard = new Dashboard();
+
 module.exports = {
 	entry: {
 		main: './src/index.js',
@@ -24,27 +28,29 @@ module.exports = {
 		loaders,
 	},
 	plugins: [
-		new webpack.HotModuleReplacementPlugin(), // Enable HMR
+		new DashboardPlugin(dashboard.setData),
 		new webpack.NamedModulesPlugin(),
-		// new BrowserSyncPlugin(
-		// 	{
-		// 		host: 'localhost',
-		// 		port: 3001,
-		// 		proxy: 'http://localhost:8080/',
-		// 		files: [
-		// 			{
-		// 				match: ['**/*.html'],
-		// 				fn: (event) => {
-		// 					if (event === 'change') {
-		// 						const bs = require('browser-sync').get('bs-webpack-plugin');
-		// 						bs.reload();
-		// 					}
-		// 				},
-		// 			},
-		// 		],
-		// 	},
-		// 	{ reload: false }
-		// ),
+		new webpack.HotModuleReplacementPlugin(),
+		new BrowserSyncPlugin(
+			{
+				host: 'localhost',
+				port: 3001,
+				proxy: 'http://localhost:8080/',
+				logLevel: "silent",
+				files: [
+					{
+						match: ['**/*.html'],
+						fn: (event) => {
+							if (event === 'change') {
+								const bs = require('browser-sync').get('bs-webpack-plugin');
+								bs.reload();
+							}
+						},
+					},
+				],
+			},
+			{ reload: false }
+		),
 		new HtmlWebpackPlugin({
 			template: './src/template.html',
 			files: {
@@ -55,6 +61,7 @@ module.exports = {
 	],
 	devServer: {
 		hot: false, // Tell the dev-server we're using HMR
+		quiet: true,
 		contentBase: path.resolve(__dirname, 'public'),
 		publicPath: '/',
 	},

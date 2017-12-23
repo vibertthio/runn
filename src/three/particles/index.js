@@ -69,18 +69,23 @@ function init() {
 			particle.scale.x = 16;
 			particle.scale.y = 16;
 
-			const mid = AMOUNTX * (SEPARATION / 2);
+			const mid = (AMOUNTX - 1) * (SEPARATION / 2);
 			const xd = ix * SEPARATION;
 			const zd = iz * SEPARATION;
 			const x = xd - mid;
 			const z = zd - mid;
 			particle.position.x = x;
 			particle.position.z = z;
-
 			const dest = {
 				x: x + Math.random() * 100 - 50,
 				y: Math.random() * 100 - 50,
 			};
+
+			// particle.position.y = z;
+			// const dest = {
+			// 	x: x + Math.random() * 100 - 50,
+			// 	z: Math.random() * 100 - 50,
+			// };
 
 			new TWEEN.Tween(particle.position)
 				.easing(TWEEN.Easing.Exponential.Out)
