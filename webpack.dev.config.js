@@ -1,32 +1,16 @@
 const webpack = require('webpack');
+const merge = require('webpack-merge');
 const path = require('path');
 const BrowserSyncPlugin = require('browser-sync-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const loaders = require('./webpack.loaders');
+const common = require('./webpack.common.config.js');
 
+// Dashboard
 const Dashboard = require('webpack-dashboard');
 const DashboardPlugin = require('webpack-dashboard/plugin');
 const dashboard = new Dashboard();
 
-module.exports = {
-	entry: {
-		main: './src/index.js',
-		three: './src/three/app.js',
-	},
-	output: {
-		path: path.resolve(__dirname, 'public/'),
-		publicPath: '/',
-		filename: './js/[name].[hash].bundle.js',
-	},
-	resolve: {
-		extensions: ['.js', '.jsx'],
-		alias: {
-			libs: path.resolve(__dirname, 'src/libs'),
-		},
-	},
-	module: {
-		loaders,
-	},
+module.exports = merge(common, {
 	plugins: [
 		new DashboardPlugin(dashboard.setData),
 		new webpack.NamedModulesPlugin(),
@@ -51,13 +35,6 @@ module.exports = {
 			},
 			{ reload: false }
 		),
-		new HtmlWebpackPlugin({
-			template: './src/template.html',
-			files: {
-				js: ['bundle.js'],
-			},
-			filename: 'index.html',
-		}),
 	],
 	devServer: {
 		hot: false, // Tell the dev-server we're using HMR
@@ -67,4 +44,4 @@ module.exports = {
 	},
 	watch: true,
 	devtool: 'cheap-eval-source-map',
-};
+});
