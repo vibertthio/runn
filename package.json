@@ -5,10 +5,10 @@
   "main": "webpack.config.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "webpack-dev-server --config webpack.dev.config.js",
+    "dev": "webpack-dev-server --config ./webpack.dev.config.js",
     "prebuild": "npm run clean && npm run lint",
     "clean": "rimraf public",
-    "build": "webpack -d --config webpack.prod.config.js --colors",
+    "build": "webpack -d --config ./webpack.prod.config.js --colors",
     "start": "serve public/",
     "lint": "eslint ./src"
   },

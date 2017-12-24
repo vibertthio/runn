@@ -1,11 +1,10 @@
 const webpack = require('webpack');
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const loaders = require('./webpack.loaders');
 
 module.exports = {
 	entry: {
-		// main: './src/index.js',
+		main: './src/index.js',
 		three: './src/three/app.js',
 	},
 	output: {
@@ -20,7 +19,37 @@ module.exports = {
 		},
 	},
 	module: {
-		loaders,
+		loaders: [
+			{
+				test: /\.jsx?$/,
+				loader: 'babel-loader',
+				exclude: /(node_modules|public\/)/,
+			},
+			{
+				test: /\.css$/,
+				use: [
+					{ loader: 'style-loader' },
+					{
+						loader: 'css-loader?url=false',
+						options: {
+							module: true,
+							localIdentName: '[name]__[local]--[hash:base64:5]',
+						},
+					},
+				],
+				exclude: ['node_modules'],
+			},
+			{
+				test: /\.(glsl|frag|vert)$/,
+				loader: 'raw-loader',
+				exclude: /node_modules/,
+			},
+			{
+				test: /\.(glsl|frag|vert)$/,
+				loader: 'glslify-loader',
+				exclude: /node_modules/,
+			},
+		]
 	},
 	plugins: [
 		new HtmlWebpackPlugin({
