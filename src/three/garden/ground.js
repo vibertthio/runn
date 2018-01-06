@@ -1,27 +1,10 @@
 import * as THREE from 'three';
 import vert from './shaders/ground.vert';
-import heightMapFrag from './shaders/heightMap.frag';
-import GPUComputationRenderer from './GPUComputationRenderer';
 // import frag from './shaders/ground.frag';
 
 const UNIT = 16;
 const WIDTH = 128;
 const HEIGHT = 64;
-
-function fillTexture(texture) {
-	const pixels = texture.image.data;
-
-	let p = 0;
-	for (let j = 0; j < HEIGHT; j += 1) {
-		for (let i = 0; i < WIDTH; i += 1) {
-			pixels[p + 0] = 0;
-			pixels[p + 1] = 0;
-			pixels[p + 2] = 0;
-			pixels[p + 3] = 1;
-			p += 4;
-		}
-	}
-}
 
 export default class Ground {
 	constructor(renderer) {
@@ -65,26 +48,8 @@ export default class Ground {
 		material.defines.HEIGHT = HEIGHT.toFixed(1);
 		material.defines.UNIT = UNIT.toFixed(1);
 
-		const gpuCompute = new GPUComputationRenderer(WIDTH, WIDTH, this.renderer);
-		const heightmap0 = gpuCompute.createTexture();
-		fillTexture(heightmap0);
-
-		this.tex = heightmap0;
-		this.material = material;
-		this.gpuCompute = gpuCompute;
-
-		this.material.uniforms.heightmap.value = this.tex;
-
-		this.heightmapVariable = gpuCompute.addVariable('heightmap', heightMapFrag, heightmap0);
-		gpuCompute.setVariableDependencies(this.heightmapVariable, [this.heightmapVariable]);
-
-		const error = gpuCompute.init();
-		if (error !== null) {
-			console.error(error);
-		}
-
 		return new THREE.Mesh(
-			new THREE.PlaneBufferGeometry(2048, 1024, 128, 64),
+			new THREE.PlaneBufferGeometry(2048, 1024, 256, 128),
 			material,
 
 			// DEFAULT
@@ -100,7 +65,5 @@ export default class Ground {
 
 	render(time) {
 		this.uniforms.time.value += time;
-		this.gpuCompute.compute();
-		this.material.uniforms.heightmap.value = this.gpuCompute.getCurrentRenderTarget(this.heightmapVariable).texture;
 	}
 }

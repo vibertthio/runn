@@ -29,23 +29,26 @@ void main() {
 	#include <uv2_vertex>
 	#include <color_vertex>
 
-	// #include <beginnormal_vertex>
-	vec3 objectNormal = vec3(
-		( texture2D( heightmap, uv + vec2( - cellSize.x, 0 ) ).x - texture2D( heightmap, uv + vec2( cellSize.x, 0 ) ).x ) / UNIT,
-		( texture2D( heightmap, uv + vec2( 0, - cellSize.y ) ).x - texture2D( heightmap, uv + vec2( 0, cellSize.y ) ).x ) / UNIT,
-	1.0 );
+	#include <beginnormal_vertex>
+	// vec3 objectNormal = vec3(
+	// 	( texture2D( heightmap, uv + vec2( - cellSize.x, 0 ) ).x - texture2D( heightmap, uv + vec2( cellSize.x, 0 ) ).x ) / UNIT,
+	// 	( texture2D( heightmap, uv + vec2( 0, - cellSize.y ) ).x - texture2D( heightmap, uv + vec2( 0, cellSize.y ) ).x ) / UNIT,
+	// 1.0 );
 	#include <morphnormal_vertex>
 	#include <skinbase_vertex>
 	#include <skinnormal_vertex>
 	#include <defaultnormal_vertex>
 
 	// #include <begin_vertex>
-
-	// float sin1 = sin((position.x) * 0.01);
-	// float z = position.z + sin1 * 10.0;
-	// vec3 transformed = vec3(position.x, position.y, z);
-	float heightValue = texture2D( heightmap, uv ).x;
-	vec3 transformed = vec3( position.x, position.y, heightValue );
+	float r = pow(pow(position.x, 2.0) + pow(position.y, 2.0), 0.5);
+	float z = position.z;
+	if (r < 350.0) {
+		z += 50.0 * cos(r * 0.1);
+	}
+	vec3 transformed = vec3(position.x, position.y, z);
+	// vec3 transformed = vec3(position.x, position.y, position.z);
+	// float heightValue = texture2D( heightmap, uv ).x;
+	// vec3 transformed = vec3( position.x, position.y, heightValue );
 
 	#include <morphtarget_vertex>
 	#include <skinning_vertex>
