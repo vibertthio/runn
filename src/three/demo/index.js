@@ -46,8 +46,11 @@ let waterUniforms;
 let rock;
 console.log(THREE.OBJLoader);
 
-// let windowHalfX = window.innerWidth / 2;
-// let windowHalfY = window.innerHeight / 2;
+const cameraInitPos = { x: 0, y: 500, z: 600 };
+let mouseX = 0;
+let mouseY = 0;
+let windowHalfX = window.innerWidth / 2;
+let windowHalfY = window.innerHeight / 2;
 
 init();
 animate();
@@ -59,7 +62,12 @@ function init() {
 	document.body.appendChild(container);
 
 	camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 3000);
-	camera.position.set(0, 200, 350);
+	camera.position.set(
+		cameraInitPos.x,
+		cameraInitPos.y,
+		cameraInitPos.z,
+	);
+
 
 	scene = new THREE.Scene();
 
@@ -77,6 +85,9 @@ function init() {
 	container.appendChild(renderer.domElement);
 
 	controls = new OrbitControls(camera, renderer.domElement);
+	controls.enableZoom = false;
+	controls.enableRotate = false;
+
 
 	stats = new Stats();
 	container.appendChild(stats.dom);
@@ -226,7 +237,7 @@ function loadModels() {
 			console.log(object);
 			rock = object;
 			scene.add(object);
-			initModel()
+			initModel();
 		}, onProgress, onError);
 	});
 }
@@ -253,8 +264,8 @@ function fillTexture(texture) {
 }
 
 function onWindowResize() {
-	// windowHalfX = window.innerWidth / 2;
-	// windowHalfY = window.innerHeight / 2;
+	windowHalfX = window.innerWidth / 2;
+	windowHalfY = window.innerHeight / 2;
 
 	camera.aspect = window.innerWidth / window.innerHeight;
 	camera.updateProjectionMatrix();
@@ -262,31 +273,24 @@ function onWindowResize() {
 	renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
-function setMouseCoords(x, y) {
-	mouseCoords.set(
-		x / renderer.domElement.clientWidth * 2 - 1,
-		-(y / renderer.domElement.clientHeight) * 2 + 1,
-	);
-	mouseMoved = true;
-}
-
 function onDocumentMouseMove(event) {
-	setMouseCoords(event.clientX, event.clientY);
+	mouseX = event.clientX - windowHalfX;
+	mouseY = event.clientY - windowHalfY;
 }
-
 function onDocumentTouchStart(event) {
-	if (event.touches.length === 1) {
+	if (event.touches.length > 1) {
 		event.preventDefault();
 
-		setMouseCoords(event.touches[0].pageX, event.touches[0].pageY);
+		mouseX = event.touches[0].pageX - windowHalfX;
+		mouseY = event.touches[0].pageY - windowHalfY;
 	}
 }
-
 function onDocumentTouchMove(event) {
 	if (event.touches.length === 1) {
 		event.preventDefault();
 
-		setMouseCoords(event.touches[0].pageX, event.touches[0].pageY);
+		mouseX = event.touches[0].pageX - windowHalfX;
+		mouseY = event.touches[0].pageY - windowHalfY;
 	}
 }
 
@@ -322,6 +326,12 @@ function render() {
 
 	// Get compute output in custom uniform
 	waterUniforms.heightmap.value = gpuCompute.getCurrentRenderTarget(heightmapVariable).texture;
+
+	// Control
+	camera.position.x += ((mouseX * 0.4 + cameraInitPos.x) - camera.position.x) * 0.05;
+	camera.position.y += (-(mouseY * 1.0 - cameraInitPos.y * 1.2) - camera.position.y) * 0.1;
+	camera.position.z += ((mouseY * 0.1 + cameraInitPos.z * 1.2) - camera.position.z) * 0.3;
+	camera.lookAt(scene.position);
 
 	// Render
 	renderer.render(scene, camera);
