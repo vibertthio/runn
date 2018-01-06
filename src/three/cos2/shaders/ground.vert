@@ -15,8 +15,8 @@ void main() {
   // float z = position.z + sin1 * 50.0 + sin2 * 10.0 + sin3 * 8.0;
   float radius = pow((pow(position.x, 2.0) + pow(position.y, 2.0)), 0.5);
   float z;
-  if (radius < 40.0) {
-     z = position.z + pow(cos(radius * 0.01), 2.0) * amount;
+  if (radius < 200.0) {
+     z = position.z + pow(cos(radius * 0.05), 2.0) * amount;
   } else {
     z = position.z;
   }

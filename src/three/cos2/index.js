@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import OrbitControls from 'orbit-controls-es6';
 import Stats from 'libs/stats.min';
-import TrackballControls from 'libs/TrackballControls';
 import Ground from './ground';
 
 // Stats
@@ -14,6 +13,7 @@ let clock;
 let renderer;
 let controls;
 let ground;
+let directionalLight;
 
 function initStats() {
 	stats = new Stats();
@@ -29,10 +29,19 @@ function init() {
 
 	controls = new OrbitControls(camera);
 	// controls.enableRotate = false;
-	controls.enableZoom = false;
+	// controls.enableZoom = false;
+
+	directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+	scene.add(directionalLight);
 
 	ground = new Ground();
 	scene.add(ground.obj);
+
+	const geometry = new THREE.BoxGeometry(100, 100, 100);
+	const material = new THREE.MeshLambertMaterial({ color: 0x00ff00 });
+	const cube = new THREE.Mesh(geometry, material);
+	cube.position.set(0, 0, 150);
+	scene.add(cube);
 
 	renderer = new THREE.WebGLRenderer({ antialias: true });
 	renderer.setSize(window.innerWidth, window.innerHeight);

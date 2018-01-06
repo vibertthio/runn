@@ -10,21 +10,34 @@ export default class Ground {
 				value: 0,
 			},
 		};
-		this.obj = this.createObj();
-		this.obj.position.set(0, 0, 0);
-		// this.obj.rotation.set((-0.5 * Math.PI), 0, 0);
-		this.obj.rotation.set(0, 0, 0);
+		const obj = this.createObj();
+
+		obj.position.set(0, 0, 0);
+		obj.rotation.set(0, 0, 0);
+		// obj.rotation.set((-0.5 * Math.PI), 0, 0);
+
+		this.obj = obj;
 	}
+
 	createObj() {
+		const geometry = new THREE.PlaneBufferGeometry(1024, 1024, 64, 64);
+		const material = new THREE.RawShaderMaterial({
+			uniforms: this.uniforms,
+			vertexShader: vert,
+			fragmentShader: frag,
+			transparent: true,
+			side: THREE.DoubleSide,
+			// wireframe: true,
+			customDepthMaterial: new THREE.MeshStandardMaterial(),
+		});
+
+
+		this.geometry = geometry;
+		this.material = material;
+
 		return new THREE.Mesh(
-			new THREE.PlaneBufferGeometry(1024, 1024, 32, 32),
-			new THREE.RawShaderMaterial({
-				uniforms: this.uniforms,
-				vertexShader: vert,
-				fragmentShader: frag,
-				transparent: true,
-				wireframe: true,
-			}),
+			geometry,
+			material,
 		);
 	}
 	render(time) {

@@ -1,10 +1,12 @@
 import React from 'react';
 import { render } from 'react-dom';
 import styles from './index.module.scss';
-import scene from './three/cos2';
+// import scene from './three/cos2';
+import './three/kare';
+// import scene from './three/garden';
 // import scene from './three/ground';
 
-scene();
+// scene();
 
 const App = () => (
   <div className={styles.title}>

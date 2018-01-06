@@ -16,6 +16,7 @@ export default class Ground {
 		};
 		this.renderer = renderer;
 		this.obj = this.createObj();
+		this.obj.customDepthMaterial = new THREE.MeshLambertMaterial();
 		this.obj.position.set(0, 0, 0);
 		this.obj.rotation.set(0, 0, 0);
 	}
