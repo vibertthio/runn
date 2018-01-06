@@ -2,6 +2,7 @@ const webpack = require('webpack');
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
 	entry: {
@@ -16,6 +17,8 @@ module.exports = {
 		extensions: ['.js', '.jsx'],
 		alias: {
 			libs: path.resolve(__dirname, 'src/libs'),
+			'three/OBJLoader': path.join(__dirname, 'node_modules/three/examples/js/loaders/OBJLoader.js'),
+			'three/MTLLoader': path.join(__dirname, 'node_modules/three/examples/js/loaders/MTLLoader.js'),
 		},
 	},
 	module: {
@@ -124,9 +127,22 @@ module.exports = {
 				exclude: /(node_modules|bower_components)/,
 				loader: 'file-loader?name=[name].[ext]'
 			},
+			{
+				test: /\.obj$/,
+				exclude: /(node_modules|bower_components)/,
+				loader: "file-loader"
+			},
+			{
+				test: /\.mtl$/,
+				exclude: /(node_modules|bower_components)/,
+				loader: "file-loader"
+			},
 		],
 	},
 	plugins: [
+		new webpack.ProvidePlugin({
+			'THREE': 'three',
+		}),
 		new ExtractTextPlugin("style.css"),
 		new HtmlWebpackPlugin({
 			template: './src/template.html',
@@ -135,5 +151,9 @@ module.exports = {
 			},
 			filename: 'index.html',
 		}),
+		new CopyWebpackPlugin([
+			{ from: 'src/three/kare/models/rock_1/tex_1.jpg' },
+			{ from: 'src/three/kare/models/rock_2/tex_2.jpg' },
+		]),
 	],
 };
