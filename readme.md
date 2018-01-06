@@ -1,1 +1,1 @@
-![](./assets/sit.jpg)
+![](./assets/sc-01.png)
