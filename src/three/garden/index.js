@@ -14,6 +14,8 @@ let scene;
 let camera;
 let renderer;
 let ground;
+let pointLight;
+let ambientLight;
 
 function onWindowResize() {
 	windowHalfX = window.innerWidth / 2;
@@ -51,16 +53,30 @@ function initStats() {
 	document.body.appendChild(stats.dom);
 }
 function init() {
+	// Scene
 	scene = new THREE.Scene();
-	camera = new THREE.PerspectiveCamera(90, window.innerWidth / window.innerHeight, 1, 10000);
-	camera.position.z = 1000;
-	ground = new Ground();
 
-	scene.add(ground.obj);
+	// Camera
+	camera = new THREE.PerspectiveCamera(90, window.innerWidth / window.innerHeight, 1, 10000);
+	camera.position.set(0, 0, 700);
+
+	// Light
+	pointLight = new THREE.PointLight(0xffffff, 2);
+	pointLight.position.set(0, 500, 500);
+	scene.add(pointLight);
+
+	ambientLight = new THREE.AmbientLight(0xa0a0a0);
+	ambientLight.castShadow = true;
+	scene.add(ambientLight);
+
+	// Renderer
 	renderer = new THREE.WebGLRenderer({ antialias: true });
 	renderer.setSize(window.innerWidth, window.innerHeight);
-
 	document.body.appendChild(renderer.domElement);
+
+	// Objects
+	ground = new Ground();
+	scene.add(ground.obj);
 }
 function animate() {
 	stats.update();
@@ -69,9 +85,11 @@ function animate() {
 }
 function render() {
 	TWEEN.update();
+	const amountX = 0.03;
+	const amountY = 0.1;
 
-	camera.position.x += (mouseX - camera.position.x) * 0.05;
-	camera.position.y += (-mouseY - camera.position.y) * 0.05;
+	camera.position.x += (mouseX * amountX - camera.position.x) * 0.05;
+	camera.position.y += (-mouseY * amountY - camera.position.y) * 0.05;
 	camera.lookAt(scene.position);
 
 	renderer.render(scene, camera);
