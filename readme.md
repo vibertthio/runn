@@ -1,1 +1,1 @@
-![](./assets/sc-01.png)
+![](./assets/karesansui.jpg)
