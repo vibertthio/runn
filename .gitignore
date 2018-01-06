@@ -1,5 +1,5 @@
 # Ignore build files
-public
+public/
 
 # Dependency directory
 node_modules
