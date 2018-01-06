@@ -30,7 +30,7 @@ void main()	{
     heightmapValue.x = pow(sin(uv.x * 200.0), 0.5) * 10.0;
   }
 
-  heightmapValue.x += cnoise2(uv * 1500.0) * 1.5;
+  heightmapValue.x += cnoise2(uv * 2000.0) * 1.7;
 
   gl_FragColor = heightmapValue;
 

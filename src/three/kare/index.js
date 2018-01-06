@@ -4,14 +4,15 @@ import OrbitControls from 'orbit-controls-es6';
 import Stats from 'libs/stats.min';
 import SimplexNoise from 'libs/SimplexNoise';
 import water from './shaders/water.vert';
-import smooth from './shaders/smooth.frag';
 import heightmap from './shaders/heightmap.frag';
+import sand from './textures/sand-1.jpg';
 
 const WIDTH = 512;
 // const NUM_TEXELS = WIDTH * WIDTH;
 
 // Water size in system units
 const BOUNDS = 1024;
+// const BOUNDS = 2048;
 // const BOUNDS_HALF = BOUNDS * 0.5;
 
 let container;
@@ -29,12 +30,11 @@ let meshRay;
 let gpuCompute;
 let heightmapVariable;
 let waterUniforms;
-let smoothShader;
 
 const simplex = new SimplexNoise();
 
-let windowHalfX = window.innerWidth / 2;
-let windowHalfY = window.innerHeight / 2;
+// let windowHalfX = window.innerWidth / 2;
+// let windowHalfY = window.innerHeight / 2;
 
 init();
 animate();
@@ -89,20 +89,36 @@ function init() {
 }
 
 function initWater() {
-	// var materialColor = 0x0040C0;
+	// texture
+	const manager = new THREE.LoadingManager();
+	manager.onProgress = (item, loaded, total) => {
+		console.log(item, loaded, total);
+	};
+
+	const textureLoader = new THREE.TextureLoader(manager);
+	const texture = textureLoader.load(sand);
+	texture.wrapS = THREE.RepeatWrapping;
+	texture.wrapT = THREE.RepeatWrapping;
+	// texture.repeat.set(10000, 10000);
+	// texture.needsUpdate = true;
+	texture.center = new THREE.Vector2(0, 0);
+
 	const materialColor = 0x444444;
 
 	const geometry = new THREE.PlaneBufferGeometry(BOUNDS, BOUNDS, WIDTH - 1, WIDTH - 1);
+	const defines = { USE_MAP: '' };
 
 	// material: make a ShaderMaterial clone of MeshPhongMaterial, with customized vertex shader
 	const material = new THREE.ShaderMaterial({
 		uniforms: THREE.UniformsUtils.merge([
 			THREE.ShaderLib.phong.uniforms,
 			{
+				map: { type: 't', value: null },
 				shininess: { value: 0 },
 				heightmap: { value: null },
 			},
 		]),
+		defines,
 		vertexShader: water,
 		fragmentShader: THREE.ShaderChunk.meshphong_frag,
 	});
@@ -112,13 +128,14 @@ function initWater() {
 	// Material attributes from MeshPhongMaterial
 	material.color = new THREE.Color(materialColor);
 	material.specular = new THREE.Color(0x111111);
-	material.shininess = 50;
+	material.extensions.shaderTextureLOD = true;
 
 	// Sets the uniforms with the material values
-	material.uniforms.diffuse.value = material.color;
+	material.uniforms.map.value = texture;
+	// material.uniforms.diffuse.value = material.color;
 	material.uniforms.specular.value = material.specular;
-	material.uniforms.shininess.value = Math.max(material.shininess, 1e-4);
-	material.uniforms.opacity.value = material.opacity;
+	// material.uniforms.opacity.value = material.opacity;
+	console.log(material);
 
 	// Defines
 	material.defines.WIDTH = WIDTH.toFixed(1);
@@ -169,23 +186,15 @@ function initWater() {
 	if (error !== null) {
 		console.error(error);
 	}
-
-	// Create compute shader to smooth the water surface and velocity
-	smoothShader = gpuCompute.createShaderMaterial(
-		smooth,
-		{ texture: { value: null } },
-	);
 }
 
 function fillTexture(texture) {
-	var waterMaxHeight = 10;
-
-	function noise(x, y, z) {
-		var waterMaxHeight = 10;
+	function noise(x, y) {
+		const waterMaxHeight = 10;
 		let multR = waterMaxHeight;
 		let mult = 0.025;
 		let r = 0;
-		for (let i = 0; i < 15; i++) {
+		for (let i = 0; i < 15; i += 1) {
 			r += multR * simplex.noise(x * mult, y * mult);
 			multR *= 0.53 + 0.025 * i;
 			mult *= 1.25;
@@ -196,8 +205,8 @@ function fillTexture(texture) {
 	const pixels = texture.image.data;
 
 	let p = 0;
-	for (let j = 0; j < WIDTH; j++) {
-		for (let i = 0; i < WIDTH; i++) {
+	for (let j = 0; j < WIDTH; j += 1) {
+		for (let i = 0; i < WIDTH; i += 1) {
 			const x = i * 128 / WIDTH;
 			const y = j * 128 / WIDTH;
 
@@ -212,8 +221,8 @@ function fillTexture(texture) {
 }
 
 function onWindowResize() {
-	windowHalfX = window.innerWidth / 2;
-	windowHalfY = window.innerHeight / 2;
+	// windowHalfX = window.innerWidth / 2;
+	// windowHalfY = window.innerHeight / 2;
 
 	camera.aspect = window.innerWidth / window.innerHeight;
 	camera.updateProjectionMatrix();
