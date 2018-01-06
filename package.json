@@ -10,7 +10,9 @@
     "clean": "rimraf public",
     "build": "webpack -d --config ./webpack.prod.config.js --colors",
     "start": "serve public/",
-    "lint": "eslint ./src"
+    "lint": "eslint ./src",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d public"
   },
   "keywords": [],
   "author": "",
@@ -44,6 +46,7 @@
     "eslint-plugin-jsx-a11y": "^6.0.2",
     "eslint-plugin-react": "^7.5.1",
     "extract-text-webpack-plugin": "2.1.2",
+    "gh-pages": "^1.1.0",
     "glslify-loader": "^1.0.2",
     "html-webpack-plugin": "^2.30.1",
     "node-sass": "^4.7.2",
