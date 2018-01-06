@@ -3538,6 +3538,10 @@ glslify-deps@^1.2.0:
     map-limit "0.0.1"
     resolve "^1.0.0"
 
+glslify-import-loader@^0.1.1:
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/glslify-import-loader/-/glslify-import-loader-0.1.1.tgz#16038885f9aad046d82284a990d4d14059aac51d"
+
 glslify-loader@^1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/glslify-loader/-/glslify-loader-1.0.2.tgz#0b57b0b9c04ae20687b466b1aa0f404fdfd9be30"

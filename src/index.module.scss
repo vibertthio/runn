@@ -1,15 +1,14 @@
 .title {
   position: absolute;
-  /* top: 0px; */
-  top: 50%;
+  top: 12px;
+  // top: 5%;
   width: 100%;
-  /* padding: 5px; */
-  font-family: Oswald, monospace;
-  font-size: 1rem;
+  font-family: monospace;
+  font-size: 0.5rem;
   text-align:center;
   color: #ffffff;
 
-  transform: scale(1, 1.2);
+  // transform: scale(1, 1.2);
 }
 
 .title a {
