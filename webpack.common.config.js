@@ -1,6 +1,7 @@
 const webpack = require('webpack');
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const ExtractTextPlugin = require('extract-text-webpack-plugin');
 
 module.exports = {
 	entry: {
@@ -27,16 +28,19 @@ module.exports = {
 			},
 			{
 				test: /\.css$/,
-				use: [
-					{ loader: 'style-loader' },
-					{
-						loader: 'css-loader?url=false',
-						options: {
-							module: true,
-							localIdentName: '[name]__[local]--[hash:base64:5]',
+				use: ExtractTextPlugin.extract({
+					fallback: 'style-loader',
+					use: [
+						{
+							loader: 'css-loader',
+							query: {
+								modules: true,
+								localIdentName: '[name]__[local]___[hash:base64:5]',
+							},
 						},
-					},
-				],
+						'postcss-loader',
+					],
+				}),
 				exclude: ['node_modules'],
 			},
 			{
@@ -49,9 +53,10 @@ module.exports = {
 				loader: 'glslify-loader',
 				exclude: /node_modules/,
 			},
-		]
+		],
 	},
 	plugins: [
+		new ExtractTextPlugin("style.css"),
 		new HtmlWebpackPlugin({
 			template: './src/template.html',
 			files: {
