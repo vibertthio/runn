@@ -1,0 +1,25 @@
+.title {
+  position: absolute;
+  /* top: 0px; */
+  top: 50%;
+  width: 100%;
+  /* padding: 5px; */
+  font-family: Oswald, monospace;
+  font-size: 1rem;
+  text-align:center;
+  color: #ffffff;
+
+  transform: scale(1, 1.2);
+}
+
+.title a {
+  color: #aaa;
+  text-align:center;
+  letter-spacing: 0.5rem;
+  text-decoration: none;
+
+  user-select: none;
+}
+.title a:hover {
+  color: #ccc;
+}

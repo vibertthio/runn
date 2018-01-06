@@ -44,6 +44,29 @@ module.exports = {
 				exclude: ['node_modules'],
 			},
 			{
+				test: /\.scss$/,
+				exclude: /node_modules/,
+				use: ExtractTextPlugin.extract({
+					fallback: 'style-loader',
+
+					// Could also be write as follow:
+					// use: 'css-loader?modules&importLoader=2&sourceMap&localIdentName=[name]__[local]___[hash:base64:5]!sass-loader'
+					use: [
+						{
+							loader: 'css-loader',
+							query: {
+								modules: true,
+								sourceMap: true,
+								importLoaders: 2,
+								localIdentName: '[name]__[local]___[hash:base64:5]',
+							},
+						},
+						'postcss-loader',
+						'sass-loader',
+					],
+				}),
+			},
+			{
 				test: /\.(glsl|frag|vert)$/,
 				loader: 'raw-loader',
 				exclude: /node_modules/,

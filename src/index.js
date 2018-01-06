@@ -1,6 +1,6 @@
 import React from 'react';
 import { render } from 'react-dom';
-import styles from './index.module.css';
+import styles from './index.module.scss';
 
 const App = () => (
   <div className={styles.title}>
