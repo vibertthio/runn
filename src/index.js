@@ -1,7 +1,9 @@
 import React from 'react';
 import { render } from 'react-dom';
 import styles from './index.module.scss';
-import './three/demo';
+// import './three/demo';
+// import './three/kare';
+import './three/exp';
 
 const App = () => (
   <div className={styles.title}>

@@ -18,7 +18,7 @@ let directionalLight;
 function initStats() {
 	stats = new Stats();
 	stats.showPanel(0); // 0: fps, 1: ms, 2: mb, 3+: custom
-	document.body.appendChild(stats.dom);
+	// document.body.appendChild(stats.dom);
 }
 
 function init() {
@@ -41,7 +41,7 @@ function init() {
 	const material = new THREE.MeshLambertMaterial({ color: 0x00ff00 });
 	const cube = new THREE.Mesh(geometry, material);
 	cube.position.set(0, 0, 150);
-	scene.add(cube);
+	// scene.add(cube);
 
 	renderer = new THREE.WebGLRenderer({ antialias: true });
 	renderer.setSize(window.innerWidth, window.innerHeight);

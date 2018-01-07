@@ -59,7 +59,8 @@ function init() {
 	document.body.appendChild(container);
 
 	camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 3000);
-	camera.position.set(0, 200, 350);
+	camera.position.set(0, 1000, 0);
+	// camera.position.set(0, 200, 350);
 
 	scene = new THREE.Scene();
 
@@ -79,7 +80,7 @@ function init() {
 	controls = new OrbitControls(camera, renderer.domElement);
 
 	stats = new Stats();
-	container.appendChild(stats.dom);
+	// container.appendChild(stats.dom);
 
 	document.addEventListener('mousemove', onDocumentMouseMove, false);
 	document.addEventListener('touchstart', onDocumentTouchStart, false);

@@ -5,11 +5,8 @@ import 'three/OBJLoader';
 import 'three/MTLLoader';
 
 import OrbitControls from 'orbit-controls-es6';
-// import MTLLoader from 'three-mtl-loader';
 import Stats from 'libs/stats.min';
 
-// import 'three/OBJLoader';
-// import OBJLoader from './models/OBJLoader';
 import water from './shaders/water.vert';
 import heightmap from './shaders/heightmap.frag';
 import sand from './textures/sand-3.jpg';
@@ -18,13 +15,11 @@ import rockObj from './models/rock_1/rock_1.obj';
 import rockMtl from './models/rock_1/rock_1.mtl';
 
 
-const WIDTH = 512;
 // const NUM_TEXELS = WIDTH * WIDTH;
+const WIDTH = 512;
 
 // Water size in system units
 const BOUNDS = 1024;
-// const BOUNDS = 2048;
-// const BOUNDS_HALF = BOUNDS * 0.5;
 
 let container;
 let stats;
