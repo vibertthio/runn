@@ -38,18 +38,21 @@ let groundUniforms;
 
 // Rocks
 let rock;
-let rockPosition = [
+let rockPosition;
+const rockScale = 70;
+const rockPositionY = -11;
+let rockScaleAni;
+
+// Circular Wave
+let circularWavePosition = [
 	// Default
 	new THREE.Vector3(0.1, 0.2, 1.0),
 	new THREE.Vector3(0.8, 0.4, 1.0),
 	new THREE.Vector3(0.3, 0.8, 1.0),
 ];
-let rockScale = 70;
-
-// Circular Wave
-let circularWavePosition;
 let circularWaveRadius;
 let masterScaleAni;
+let layoutChanging = false;
 
 init();
 animate();
@@ -98,8 +101,7 @@ function initLayout() {
 	const index = 2;
 	const rockX = lerp(0, 1.0, -HALF_BOUNDS, HALF_BOUNDS, circularWavePosition[index].x);
 	const rockZ = lerp(0, 1.0, HALF_BOUNDS, -HALF_BOUNDS, circularWavePosition[index].y);
-	rockPosition = new THREE.Vector3(rockX, -20, rockZ);
-	rockScale = 70;
+	rockPosition = new THREE.Vector3(rockX, rockPositionY, rockZ);
 }
 
 function initScene() {
@@ -113,6 +115,16 @@ function initScene() {
 
 	const sun1 = new THREE.DirectionalLight(0xffffff, 1.0);
 	sun1.position.set(300, 400, 175);
+	sun1.castShadow = true;
+	sun1.shadow.mapSize.width = 2048;
+	sun1.shadow.mapSize.height = 2048;
+	sun1.shadow.camera.near = 200;
+	sun1.shadow.camera.far = 1500;
+	sun1.shadow.camera.left = -500;
+	sun1.shadow.camera.right = 500;
+	sun1.shadow.camera.top = 500;
+	sun1.shadow.camera.bottom = -500;
+	sun1.shadow.bias = -0.005;
 	scene.add(sun1);
 
 	const sun2 = new THREE.DirectionalLight(0x444444, 0.6);
@@ -122,6 +134,9 @@ function initScene() {
 	renderer = new THREE.WebGLRenderer();
 	renderer.setPixelRatio(window.devicePixelRatio);
 	renderer.setSize(window.innerWidth, window.innerHeight);
+	renderer.shadowMap.enabled = true;
+	// renderer.shadowMap.soft = true;
+	// renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 	container.appendChild(renderer.domElement);
 }
 
@@ -133,7 +148,11 @@ function initStats() {
 function initControl() {
 	// OrbitControls
 	controls = new THREE.OrbitControls(camera, renderer.domElement);
-	controls.maxZoom = 100;
+	controls.maxDistance = 1500;
+	controls.minDistance = 600;
+	controls.maxPolarAngle = Math.PI * 0.35;
+
+	// controls.maxDistance = 100;
 
 	// TrackballControls
 	// controls = new THREE.TrackballControls(camera, renderer.domElement);
@@ -187,6 +206,7 @@ function initGround() {
 	groundMesh = new THREE.Mesh(geometry, material);
 	groundMesh.rotation.x = -Math.PI / 2;
 	groundMesh.matrixAutoUpdate = false;
+	groundMesh.receiveShadow = true;
 	groundMesh.updateMatrix();
 
 	scene.add(groundMesh);
@@ -263,6 +283,18 @@ function loadModels() {
 		objLoader.load(
 			rockObj,
 			(object) => {
+				console.log(object);
+				const { children } = object;
+				// object.traverse((node) => {
+				// 	if (node instanceof THREE.Mesh) {
+				// 		console.log('in');
+				// 		node.castShadow = true;
+				// 		node.receiveShadow = true;
+				// 		node.receiveShadow = true;
+				// 	}
+				// });
+				children[0].castShadow = true;
+				children[0].receiveShadow = true;
 				rock = object;
 				scene.add(object);
 				initModel();
@@ -381,46 +413,59 @@ function rayCasterUpdate() {
 
 function modelUpdate() {
 	if (rock) {
-		rock.rotation.y += 0.002;
+		// rock.rotation.y += 0.002;
 	}
 }
 
 /* Event Handing */
+
 function initAnimations() {
+	const rockPositionYDisplace = -200;
 	const scale = { value: 1 };
 	const { uniforms } = heightmapVariable.material;
-	const aniRockIn = new TWEEN.Tween(scale)
-		.easing(TWEEN.Easing.Exponential.In)
-		.to({ value: 1 }, 1000)
+	const rockEasingIn = TWEEN.Easing.Quadratic.In;
+	const rockEasingOut = TWEEN.Easing.Quadratic.Out;
+	const sandEasingIn = TWEEN.Easing.Quintic.In;
+	const sandEasingOut = TWEEN.Easing.Quintic.Out;
+
+	const rockScaleAniBack = new TWEEN.Tween(scale)
+		.easing(rockEasingOut)
+		.to({ value: 1 }, 400)
 		.onUpdate((scale) => {
-			const d = rockScale * scale.value;
-			rock.scale.set(d, d, d);
+			const scl = rockScale * scale.value;
+			rock.scale.set(scl, scl, scl);
+			rock.position.setY(lerp(1, 0, rockPositionY, rockPositionYDisplace, scale.value));
 		});
 
-	const aniOut = new TWEEN.Tween(uniforms.uMasterScale)
-		.easing(TWEEN.Easing.Exponential.In)
-		.to({ value: 1 }, 1000)
-		.chain(aniRockIn);
-
-	const aniRockOut = new TWEEN.Tween(scale)
-		.easing(TWEEN.Easing.Exponential.In)
-		.to({ value: 0.1 }, 1000)
+	rockScaleAni = new TWEEN.Tween(scale)
+		.easing(rockEasingIn)
+		.to({ value: 0 }, 900)
 		.onUpdate((scale) => {
-			console.log(scale.value);
-			const d = rockScale * scale.value;
-			rock.scale.set(d, d, d);
+			const scl = rockScale * (scale.value * 0.5 + 0.5);
+			rock.scale.set(scl, scl, scl);
+			rock.position.setY(lerp(1, 0, rockPositionY, rockPositionYDisplace, scale.value));
 		})
 		.onComplete(() => {
-			rock.position.set(rockPosition.x, rockPosition.y, rockPosition.z);
-			uniforms.uCircularWave.value = circularWavePosition;
-			uniforms.uCircularWaveRadius.value = circularWaveRadius;
+			rock.position.setX(rockPosition.x);
+			rock.position.setZ(rockPosition.z);
 		})
-		.chain(aniOut);
+		.chain(rockScaleAniBack);
+
+	const masterScaleAniBack = new TWEEN.Tween(uniforms.uMasterScale)
+		.easing(sandEasingOut)
+		.to({ value: 1 }, 900)
+		.onComplete(() => {
+			layoutChanging = false;
+		});
 
 	masterScaleAni = new TWEEN.Tween(uniforms.uMasterScale)
-		.easing(TWEEN.Easing.Exponential.In)
+		.easing(sandEasingIn)
 		.to({ value: 0 }, 1000)
-		.chain(aniRockOut);
+		.chain(masterScaleAniBack)
+		.onComplete(() => {
+			uniforms.uCircularWave.value = circularWavePosition;
+			uniforms.uCircularWaveRadius.value = circularWaveRadius;
+		});
 }
 
 function handleKeyDown(event) {
@@ -428,7 +473,26 @@ function handleKeyDown(event) {
 		groundMesh.material.wireframe = !groundMesh.material.wireframe;
 		groundMesh.material.needsUpdate = true;
 	} else if (event.keyCode === 32) {
+		changeLayout();
+	}
+}
+
+function changeLayout() {
+	if (!layoutChanging) {
+		layoutChanging = true;
 		initLayout();
+		rockScaleAni.start();
 		masterScaleAni.start();
 	}
 }
+
+/* debug */
+
+// function testCube() {
+// 	const geometry = new THREE.BoxGeometry(100, 100, 100);
+// 	const material = new THREE.MeshLambertMaterial();
+// 	const mesh = new THREE.Mesh(geometry, material);
+// 	mesh.position.set(0, 200, 0);
+// 	mesh.castShadow = true;
+// 	scene.add(mesh);
+// }

@@ -35,8 +35,8 @@ void main()	{
   }
 
   // Bumps of Sands
-  heightmapValue.x += cnoise2(uv * 2000.0) * 1.7;
   heightmapValue.x *= uMasterScale;
+  heightmapValue.x += cnoise2(uv * 2000.0) * 2.0;
 
   gl_FragColor = heightmapValue;
 
