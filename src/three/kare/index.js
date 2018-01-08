@@ -6,6 +6,7 @@ import 'three/loaders/MTLLoader';
 import 'three/controls/TrackballControls';
 import 'three/controls/OrbitControls';
 
+import lerp from 'utils/lerp';
 import Stats from 'libs/stats.min';
 import GPUComputationRenderer from './GPUComputationRenderer';
 import water from './shaders/water.vert';
@@ -14,9 +15,9 @@ import sand from './textures/sand-3.jpg';
 import rockObj from './models/rock_1/rock_1.obj';
 import rockMtl from './models/rock_1/rock_1.mtl';
 
-
 const WIDTH = 512; // Water size in cells
 const BOUNDS = 1024; // Water size in system units
+const HALF_BOUNDS = BOUNDS * 0.5; // Water size in system units
 
 let container;
 let stats;
@@ -34,8 +35,19 @@ let gpuCompute;
 let heightmapVariable;
 let groundUniforms;
 
-// rocks
+// Rocks
 let rock;
+let rockPosition = [
+	// Default
+	new THREE.Vector3(0.1, 0.2, 1.0),
+	new THREE.Vector3(0.8, 0.4, 1.0),
+	new THREE.Vector3(0.3, 0.8, 1.0),
+];
+let rockScale = 70;
+
+// Circular Wave
+let circularWavePosition;
+let circularWaveRadius;
 
 init();
 animate();
@@ -43,6 +55,7 @@ animate();
 function init() {
 	initScene();
 	initStats();
+	initLayout();
 	initControl();
 	initGround();
 	loadModels();
@@ -64,14 +77,46 @@ function init() {
 	window.addEventListener('resize', onWindowResize, false);
 }
 
+function initLayout() {
+	// Circular Wave
+	circularWavePosition = [
+		new THREE.Vector3(
+			lerp(0, 1, 0.2, 0.25, Math.random()),
+			lerp(0, 1, 0.1, 0.7, Math.random()),
+			1.0,
+		),
+		new THREE.Vector3(
+			lerp(0, 1, 0.7, 0.9, Math.random()),
+			lerp(0, 1, 0.3, 0.5, Math.random()),
+			1.0,
+		),
+		new THREE.Vector3(
+			lerp(0, 1, 0.2, 0.8, Math.random()),
+			lerp(0, 1, 0.3, 0.9, Math.random()),
+			1.0,
+		),
+	];
+	circularWaveRadius = [
+		new THREE.Vector2(0.2, 0.05),
+		new THREE.Vector2(0.1, 0.0),
+		new THREE.Vector2(0.3, 0.03),
+	];
+
+	const index = 2;
+	const rockX = lerp(0, 1.0, -HALF_BOUNDS, HALF_BOUNDS, circularWavePosition[index].x);
+	const rockZ = lerp(0, 1.0, HALF_BOUNDS, -HALF_BOUNDS, circularWavePosition[index].y);
+	rockPosition = new THREE.Vector3(rockX, -20, rockZ);
+	rockScale = 70;
+}
+
 function initScene() {
 	container = document.createElement('div');
 	document.body.appendChild(container);
 
 	scene = new THREE.Scene();
 	camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 3000);
-	camera.position.set(0, 200, 350);
-	// camera.position.set(0, 1000, 0);
+	// camera.position.set(0, 200, 350);
+	camera.position.set(0, 1000, 0);
 
 	const sun1 = new THREE.DirectionalLight(0xffffff, 1.0);
 	sun1.position.set(300, 400, 175);
@@ -164,6 +209,10 @@ function initGround() {
 	meshRay.updateMatrix();
 	scene.add(meshRay);
 
+	initHeightMap();
+}
+
+function initHeightMap() {
 	// Creates the gpu computation class and sets it up
 	gpuCompute = new GPUComputationRenderer(WIDTH, WIDTH, renderer);
 
@@ -171,29 +220,17 @@ function initGround() {
 
 	fillTexture(heightmap0);
 
-	heightmapVariable = gpuCompute.addVariable(
-		'heightmap',
-		heightmap,
-		heightmap0,
-	);
+	heightmapVariable = gpuCompute.addVariable('heightmap', heightmap, heightmap0);
 
 	gpuCompute.setVariableDependencies(heightmapVariable, [heightmapVariable]);
 
 	heightmapVariable.material.uniforms = {
 		mousePos: { value: new THREE.Vector2(10000, 10000) },
 		circularWave: {
-			value: [
-				new THREE.Vector3(0.1, 0.2, 1.0),
-				new THREE.Vector3(0.8, 0.4, 1.0),
-				new THREE.Vector3(0.3, 0.6, 1.0),
-			],
+			value: circularWavePosition,
 		},
 		circularWaveRadius: {
-			value: [
-				new THREE.Vector2(0.2, 0.05),
-				new THREE.Vector2(0.1, 0.03),
-				new THREE.Vector2(0.3, 0.03),
-			],
+			value: circularWaveRadius,
 		},
 	};
 
@@ -224,19 +261,22 @@ function loadModels() {
 		const objLoader = new THREE.OBJLoader(manager);
 		objLoader.setMaterials(materials);
 		// objLoader.setPath( 'obj/male02/' );
-		objLoader.load(rockObj, (object) => {
-			rock = object;
-			scene.add(object);
-			initModel();
-		}, onProgress, onError);
+		objLoader.load(
+			rockObj,
+			(object) => {
+				rock = object;
+				scene.add(object);
+				initModel();
+			},
+			onProgress,
+			onError,
+		);
 	});
 }
 
 function initModel() {
-	const scale = 70;
-	// rock.children[0].scale.set(scale, scale, scale);
-	rock.scale.set(scale, scale, scale);
-	rock.position.set(-200, -20, -150);
+	rock.scale.set(rockScale, rockScale, rockScale);
+	rock.position.set(rockPosition.x, rockPosition.y, rockPosition.z);
 }
 
 function fillTexture(texture) {
@@ -299,6 +339,26 @@ function animate() {
 }
 
 function render() {
+	// Do the gpu computation
+	gpuCompute.compute();
+
+	// Get compute output in custom uniform
+	groundUniforms.heightmap.value = gpuCompute.getCurrentRenderTarget(heightmapVariable).texture;
+
+	// Controls
+	controls.update();
+
+	// Detect Mouse
+	rayCasterUpdate();
+
+	// Rock
+	modelUpdate();
+
+	// Render
+	renderer.render(scene, camera);
+}
+
+function rayCasterUpdate() {
 	// Set uniforms: mouse interaction
 	const { uniforms } = heightmapVariable.material;
 	if (mouseMoved) {
@@ -315,16 +375,10 @@ function render() {
 	} else {
 		uniforms.mousePos.value.set(10000, 10000);
 	}
+}
 
-	// Do the gpu computation
-	gpuCompute.compute();
-
-	// Get compute output in custom uniform
-	groundUniforms.heightmap.value = gpuCompute.getCurrentRenderTarget(heightmapVariable).texture;
-
-	// Controls
-	// controls.update();
-
-	// Render
-	renderer.render(scene, camera);
+function modelUpdate() {
+	if (rock) {
+		rock.rotation.y += 0.002;
+	}
 }
