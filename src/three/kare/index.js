@@ -6,6 +6,7 @@ import 'three/loaders/MTLLoader';
 import 'three/controls/TrackballControls';
 import 'three/controls/OrbitControls';
 
+import TWEEN from '@tweenjs/tween.js';
 import lerp from 'utils/lerp';
 import Stats from 'libs/stats.min';
 import GPUComputationRenderer from './GPUComputationRenderer';
@@ -48,6 +49,7 @@ let rockScale = 70;
 // Circular Wave
 let circularWavePosition;
 let circularWaveRadius;
+let masterScaleAni;
 
 init();
 animate();
@@ -58,22 +60,13 @@ function init() {
 	initLayout();
 	initControl();
 	initGround();
+	initAnimations();
 	loadModels();
 
 	document.addEventListener('mousemove', onDocumentMouseMove, false);
 	document.addEventListener('touchstart', onDocumentTouchStart, false);
 	document.addEventListener('touchmove', onDocumentTouchMove, false);
-	document.addEventListener(
-		'keydown',
-		(event) => {
-			// W Pressed: Toggle wireframe
-			if (event.keyCode === 87) {
-				groundMesh.material.wireframe = !groundMesh.material.wireframe;
-				groundMesh.material.needsUpdate = true;
-			}
-		},
-		false,
-	);
+	document.addEventListener('keydown', handleKeyDown, false);
 	window.addEventListener('resize', onWindowResize, false);
 }
 
@@ -212,6 +205,10 @@ function initGround() {
 	initHeightMap();
 }
 
+/* TODO
+ * 1. grid
+ * 2. multiple dots
+ */
 function initHeightMap() {
 	// Creates the gpu computation class and sets it up
 	gpuCompute = new GPUComputationRenderer(WIDTH, WIDTH, renderer);
@@ -225,11 +222,13 @@ function initHeightMap() {
 	gpuCompute.setVariableDependencies(heightmapVariable, [heightmapVariable]);
 
 	heightmapVariable.material.uniforms = {
-		mousePos: { value: new THREE.Vector2(10000, 10000) },
-		circularWave: {
+		uMasterScale: { value: 1.0 },
+		uBackgroundWaveScale: { value: 1.0 },
+		uMousePos: { value: new THREE.Vector2(10000, 10000) },
+		uCircularWave: {
 			value: circularWavePosition,
 		},
-		circularWaveRadius: {
+		uCircularWaveRadius: {
 			value: circularWaveRadius,
 		},
 	};
@@ -246,7 +245,7 @@ function loadModels() {
 	const onProgress = (xhr) => {
 		if (xhr.lengthComputable) {
 			const percentComplete = xhr.loaded / xhr.total * 100;
-			console.log(`${Math.round(percentComplete, 2)} % downloaded`);
+			console.log(`downloading..${Math.round(percentComplete, 2)}%`);
 		}
 	};
 
@@ -351,6 +350,9 @@ function render() {
 	// Detect Mouse
 	rayCasterUpdate();
 
+	// Animations
+	TWEEN.update();
+
 	// Rock
 	modelUpdate();
 
@@ -367,18 +369,66 @@ function rayCasterUpdate() {
 
 		if (intersects.length > 0) {
 			const { point } = intersects[0];
-			uniforms.mousePos.value.set(point.x, point.z);
+			uniforms.uMousePos.value.set(point.x, point.z);
 		} else {
-			uniforms.mousePos.value.set(10000, 10000);
+			uniforms.uMousePos.value.set(10000, 10000);
 		}
 		mouseMoved = false;
 	} else {
-		uniforms.mousePos.value.set(10000, 10000);
+		uniforms.uMousePos.value.set(10000, 10000);
 	}
 }
 
 function modelUpdate() {
 	if (rock) {
 		rock.rotation.y += 0.002;
+	}
+}
+
+/* Event Handing */
+function initAnimations() {
+	const scale = { value: 1 };
+	const { uniforms } = heightmapVariable.material;
+	const aniRockIn = new TWEEN.Tween(scale)
+		.easing(TWEEN.Easing.Exponential.In)
+		.to({ value: 1 }, 1000)
+		.onUpdate((scale) => {
+			const d = rockScale * scale.value;
+			rock.scale.set(d, d, d);
+		});
+
+	const aniOut = new TWEEN.Tween(uniforms.uMasterScale)
+		.easing(TWEEN.Easing.Exponential.In)
+		.to({ value: 1 }, 1000)
+		.chain(aniRockIn);
+
+	const aniRockOut = new TWEEN.Tween(scale)
+		.easing(TWEEN.Easing.Exponential.In)
+		.to({ value: 0.1 }, 1000)
+		.onUpdate((scale) => {
+			console.log(scale.value);
+			const d = rockScale * scale.value;
+			rock.scale.set(d, d, d);
+		})
+		.onComplete(() => {
+			rock.position.set(rockPosition.x, rockPosition.y, rockPosition.z);
+			uniforms.uCircularWave.value = circularWavePosition;
+			uniforms.uCircularWaveRadius.value = circularWaveRadius;
+		})
+		.chain(aniOut);
+
+	masterScaleAni = new TWEEN.Tween(uniforms.uMasterScale)
+		.easing(TWEEN.Easing.Exponential.In)
+		.to({ value: 0 }, 1000)
+		.chain(aniRockOut);
+}
+
+function handleKeyDown(event) {
+	if (event.keyCode === 87) {
+		groundMesh.material.wireframe = !groundMesh.material.wireframe;
+		groundMesh.material.needsUpdate = true;
+	} else if (event.keyCode === 32) {
+		initLayout();
+		masterScaleAni.start();
 	}
 }
