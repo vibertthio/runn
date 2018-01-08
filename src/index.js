@@ -2,8 +2,7 @@ import React from 'react';
 import { render } from 'react-dom';
 import styles from './index.module.scss';
 // import './three/demo';
-// import './three/kare';
-import './three/exp';
+import './three/kare';
 
 const App = () => (
   <div className={styles.title}>

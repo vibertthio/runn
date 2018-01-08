@@ -17,8 +17,10 @@ module.exports = {
 		extensions: ['.js', '.jsx'],
 		alias: {
 			libs: path.resolve(__dirname, 'src/libs'),
-			'three/OBJLoader': path.join(__dirname, 'node_modules/three/examples/js/loaders/OBJLoader.js'),
-			'three/MTLLoader': path.join(__dirname, 'node_modules/three/examples/js/loaders/MTLLoader.js'),
+			'three/loaders': path.join(__dirname, 'node_modules/three/examples/js/loaders'),
+			'three/controls': path.join(__dirname, 'node_modules/three/examples/js/controls'),
+			// 'three/OBJLoader': path.join(__dirname, 'node_modules/three/examples/js/loaders/OBJLoader.js'),
+			// 'three/MTLLoader': path.join(__dirname, 'node_modules/three/examples/js/loaders/MTLLoader.js'),
 		},
 	},
 	module: {
