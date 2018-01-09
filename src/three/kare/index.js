@@ -38,10 +38,13 @@ let groundUniforms;
 
 // Rocks
 let rock;
+let mouseOnRock = false;
 let rockPosition;
 const rockScale = 70;
 const rockPositionY = -11;
 let rockScaleAni;
+let rockRotateAni;
+let rockAngle = 0;
 
 // Circular Wave
 let circularWavePosition = [
@@ -70,6 +73,7 @@ function init() {
 	document.addEventListener('touchstart', onDocumentTouchStart, false);
 	document.addEventListener('touchmove', onDocumentTouchMove, false);
 	document.addEventListener('keydown', handleKeyDown, false);
+	document.addEventListener('click', onDocumentClick, false);
 	window.addEventListener('resize', onWindowResize, false);
 }
 
@@ -142,7 +146,7 @@ function initScene() {
 
 function initStats() {
 	stats = new Stats();
-	// container.appendChild(stats.dom);
+	container.appendChild(stats.dom);
 }
 
 function initControl() {
@@ -205,8 +209,8 @@ function initGround() {
 	groundUniforms = material.uniforms;
 	groundMesh = new THREE.Mesh(geometry, material);
 	groundMesh.rotation.x = -Math.PI / 2;
-	groundMesh.matrixAutoUpdate = false;
 	groundMesh.receiveShadow = true;
+	groundMesh.matrixAutoUpdate = false;
 	groundMesh.updateMatrix();
 
 	scene.add(groundMesh);
@@ -251,6 +255,9 @@ function initHeightMap() {
 		uCircularWaveRadius: {
 			value: circularWaveRadius,
 		},
+		uGridUnit: { value: 1.0 },
+		uWaveTransform: { value: [0.8, 0.6, -0.6, 0.8] },
+		uWaveStart: { value: -20.0 },
 	};
 
 	heightmapVariable.material.defines.BOUNDS = BOUNDS.toFixed(1);
@@ -283,8 +290,9 @@ function loadModels() {
 		objLoader.load(
 			rockObj,
 			(object) => {
-				console.log(object);
 				const { children } = object;
+
+				console.log(object);
 				// object.traverse((node) => {
 				// 	if (node instanceof THREE.Mesh) {
 				// 		console.log('in');
@@ -293,6 +301,7 @@ function loadModels() {
 				// 		node.receiveShadow = true;
 				// 	}
 				// });
+
 				children[0].castShadow = true;
 				children[0].receiveShadow = true;
 				rock = object;
@@ -362,6 +371,12 @@ function onDocumentTouchMove(event) {
 	}
 }
 
+function onDocumentClick() {
+	if (mouseOnRock) {
+		rockRotateAni.start();
+	}
+}
+
 function animate() {
 	requestAnimationFrame(animate);
 
@@ -395,14 +410,17 @@ function render() {
 function rayCasterUpdate() {
 	// Set uniforms: mouse interaction
 	const { uniforms } = heightmapVariable.material;
-	if (mouseMoved) {
+	if (mouseMoved && rock) {
 		raycaster.setFromCamera(mouseCoords, camera);
-		const intersects = raycaster.intersectObject(meshRay);
+		// const intersects = raycaster.intersectObject(meshRay);
+		const intersects = raycaster.intersectObject(rock.children[0]);
 
 		if (intersects.length > 0) {
+			mouseOnRock = true;
 			const { point } = intersects[0];
 			uniforms.uMousePos.value.set(point.x, point.z);
 		} else {
+			mouseOnRock = false;
 			uniforms.uMousePos.value.set(10000, 10000);
 		}
 		mouseMoved = false;
@@ -422,11 +440,14 @@ function modelUpdate() {
 function initAnimations() {
 	const rockPositionYDisplace = -200;
 	const scale = { value: 1 };
+	const rockRotate = { value: 0 };
 	const { uniforms } = heightmapVariable.material;
 	const rockEasingIn = TWEEN.Easing.Quadratic.In;
 	const rockEasingOut = TWEEN.Easing.Quadratic.Out;
 	const sandEasingIn = TWEEN.Easing.Quintic.In;
 	const sandEasingOut = TWEEN.Easing.Quintic.Out;
+	// const sandEasingIn = TWEEN.Easing.Back.In;
+	// const sandEasingOut = TWEEN.Easing.Back.Out;
 
 	const rockScaleAniBack = new TWEEN.Tween(scale)
 		.easing(rockEasingOut)
@@ -451,6 +472,18 @@ function initAnimations() {
 		})
 		.chain(rockScaleAniBack);
 
+	rockRotateAni = new TWEEN.Tween(rockRotate)
+		.easing(TWEEN.Easing.Back.Out)
+		.to({ value: 1 }, 900)
+		.onUpdate((rockRotate) => {
+			const rate = rockAngle + Math.PI * (rockRotate.value * 0.5);
+			rock.rotation.y = rate;
+		})
+		.onComplete(() => {
+			rockAngle = rock.rotation.y;
+			rockRotate.value = 0;
+		});
+
 	const masterScaleAniBack = new TWEEN.Tween(uniforms.uMasterScale)
 		.easing(sandEasingOut)
 		.to({ value: 1 }, 900)
@@ -463,10 +496,12 @@ function initAnimations() {
 		.to({ value: 0 }, 1000)
 		.chain(masterScaleAniBack)
 		.onComplete(() => {
+			changeGridUnit();
 			uniforms.uCircularWave.value = circularWavePosition;
 			uniforms.uCircularWaveRadius.value = circularWaveRadius;
 		});
 }
+
 
 function handleKeyDown(event) {
 	if (event.keyCode === 87) {
@@ -474,7 +509,24 @@ function handleKeyDown(event) {
 		groundMesh.material.needsUpdate = true;
 	} else if (event.keyCode === 32) {
 		changeLayout();
+	} else if (event.keyCode === 49) {
+		changeGridUnit();
 	}
+}
+
+function changeGridUnit() {
+	const { uniforms } = heightmapVariable.material;
+	const { value } = uniforms.uGridUnit;
+	if (value > 1.0) {
+		uniforms.uGridUnit.value = 1.0;
+	} else {
+		uniforms.uGridUnit.value = Math.random() * 5 + 4.0;
+	}
+
+	const angle = Math.random() * Math.PI * 2;
+	const c = Math.cos(angle);
+	const s = Math.sin(angle);
+	uniforms.uWaveTransform.value = [c, s, -s, c];
 }
 
 function changeLayout() {
