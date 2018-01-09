@@ -90,9 +90,8 @@ void main()	{
     if (sum > uWaveStart * M_PI && sum < (uWaveStart + 30.0) * M_PI) {
       heightmapValue.x = pow(sin(sum), 0.5) * 10.0 * uBackgroundWaveScale;
     } else {
-      heightmapValue.x = pow(sin(uv.x * 200.0), 0.5) * 10.0 * uBackgroundWaveScale;
+      // heightmapValue.x = pow(sin(uv.x * 200.0), 0.5) * 10.0 * uBackgroundWaveScale;
     }
-    heightmapValue.x = pow(sin(uv.x * 200.0), 0.5) * 10.0 * uBackgroundWaveScale;
   }
 
   // Circular Waves

@@ -520,7 +520,7 @@ function changeGridUnit() {
 	if (value > 1.0) {
 		uniforms.uGridUnit.value = 1.0;
 	} else {
-		uniforms.uGridUnit.value = Math.random() * 5 + 4.0;
+		// uniforms.uGridUnit.value = Math.random() * 5 + 4.0;
 	}
 
 	const angle = Math.random() * Math.PI * 2;
