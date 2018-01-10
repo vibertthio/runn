@@ -29,6 +29,7 @@ let controls;
 let mouseMoved = false;
 const mouseCoords = new THREE.Vector2();
 const raycaster = new THREE.Raycaster();
+const clock = new THREE.Clock();
 
 let groundMesh;
 let meshRay;
@@ -258,6 +259,7 @@ function initHeightMap() {
 		uGridUnit: { value: 1.0 },
 		uWaveTransform: { value: [0.8, 0.6, -0.6, 0.8] },
 		uWaveStart: { value: -20.0 },
+		uTime: { value: 0 },
 	};
 
 	heightmapVariable.material.defines.BOUNDS = BOUNDS.toFixed(1);
@@ -400,8 +402,9 @@ function render() {
 	// Animations
 	TWEEN.update();
 
-	// Rock
-	modelUpdate();
+	// Rock and Ground
+	const clockDelta = clock.getDelta();
+	sceneUpdate(clockDelta);
 
 	// Render
 	renderer.render(scene, camera);
@@ -429,10 +432,14 @@ function rayCasterUpdate() {
 	}
 }
 
-function modelUpdate() {
+function sceneUpdate(time) {
 	if (rock) {
 		// rock.rotation.y += 0.002;
 	}
+
+	// const { uniforms } = heightmapVariable.material;
+	const { uTime } = heightmapVariable.material.uniforms;
+	uTime.value += time;
 }
 
 /* Event Handing */
@@ -501,7 +508,6 @@ function initAnimations() {
 			uniforms.uCircularWaveRadius.value = circularWaveRadius;
 		});
 }
-
 
 function handleKeyDown(event) {
 	if (event.keyCode === 87) {

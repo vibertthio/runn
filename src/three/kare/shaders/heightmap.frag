@@ -10,6 +10,7 @@ uniform vec2 uCircularWaveRadius[ 3 ];
 uniform float uGridUnit;
 uniform float uWaveStart;
 uniform mat2 uWaveTransform;
+uniform float uTime;
 
 // mat2 uWaveTransform = mat2(0.8, 0.6, -0.6, 0.8);
 
@@ -129,10 +130,23 @@ void main()	{
 
   // Bumps of Sands
   float d = length(uv - uCircularWave[2].xy);
+
+  // wave
+  // float rate = 0.5;
+  // float phase = 5.0;
+  // float amount = 15.0;
+  // float sin1 = sin((uv.x + uv.y) * phase + uTime * rate);
+  // float sin2 = sin((uv.x - uv.y) * phase * 2.0 + uTime * rate * 4.0);
+  // float sin3 = sin((uv.x + uv.y) * phase * -3.0 + uTime * rate * 2.0);
+  // heightmapValue.x += (sin1 * amount * 2.0 + sin2 * amount * 0.4 + sin3 * amount * 0.32) * d;
+
+  // master
   heightmapValue.x *= pow(uMasterScale, (d + 0.02) * 15.0);
   if (heightmapValue.x < 10.0 && heightmapValue.x > -5.0) {
     heightmapValue.x += cnoise2(uv * 2000.0) * 2.0;
   }
+
+  // Ocean
 
   gl_FragColor = heightmapValue;
 
