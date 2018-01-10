@@ -77,12 +77,12 @@ void main()	{
   } else {
 
     // original
-    // float angle = uvNew.x * 200.0;
-    // float wave = sin(uvNew.y * 10.0) * 8.0;
+    float angle = uvNew.x * 200.0;
+    float wave = sin(uvNew.y * 10.0) * 8.0;
 
     // Cool Shit
-    float angle = uv.x * uv.y * 200.0;
-    float wave = sin(uvNew.y * 10.0 + sin(uvNew.x * 10.0) * 0.8) * 8.0;
+    // float angle = uv.x * uv.y * 200.0;
+    // float wave = sin(uvNew.y * 10.0 + sin(uvNew.x * 10.0) * 0.8) * 8.0;
     // float wave = sin(uvNew.y * 10.0 + sin(uvNew.y * 10.0)) * 8.0;
     // float wave = sin(uvNew.y * 10.0 + sin(uv.y * 10.0) * 2.0) * 8.0;
 
@@ -92,7 +92,6 @@ void main()	{
     } else {
       heightmapValue.x = pow(sin(uv.x * 200.0), 0.5) * 10.0 * uBackgroundWaveScale;
     }
-    heightmapValue.x = pow(sin(uv.x * 200.0), 0.5) * 10.0 * uBackgroundWaveScale;
   }
 
   // Circular Waves
@@ -117,14 +116,14 @@ void main()	{
       }
 
       // cool
-      if (dist < uCircularWaveRadius[i].x && dist > uCircularWaveRadius[i].y && i == 2) {
-        heightmapValue.x = pow(sin(dist * 200.0), 0.5) * 10.0;
-      }
-
-      // original
-      // if (dist < uCircularWaveRadius[i].x && dist > uCircularWaveRadius[i].y) {
+      // if (dist < uCircularWaveRadius[i].x && dist > uCircularWaveRadius[i].y && i == 2) {
       //   heightmapValue.x = pow(sin(dist * 200.0), 0.5) * 10.0;
       // }
+
+      // original
+      if (dist < uCircularWaveRadius[i].x && dist > uCircularWaveRadius[i].y) {
+        heightmapValue.x = pow(sin(dist * 200.0), 0.5) * 10.0;
+      }
     }
   }
 
