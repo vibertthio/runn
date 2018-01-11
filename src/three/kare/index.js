@@ -6,6 +6,7 @@ import 'three/loaders/MTLLoader';
 import 'three/controls/TrackballControls';
 import 'three/controls/OrbitControls';
 
+import { Player } from 'tone';
 import TWEEN from '@tweenjs/tween.js';
 import lerp from 'utils/lerp';
 import Stats from 'libs/stats.min';
@@ -16,6 +17,8 @@ import heightmap from './shaders/heightmap.frag';
 import sand from './textures/sand-3.jpg';
 import rockObj from './models/rock_1/rock_1.obj';
 import rockMtl from './models/rock_1/rock_1.mtl';
+import woodenFish from './sound/wf.mp3';
+import meditation from './sound/med.mp3';
 
 const WIDTH = 512; // Water size in cells
 const BOUNDS = 1024; // Water size in system units
@@ -61,6 +64,9 @@ let circularWaveRadius;
 let masterScaleAni;
 let layoutChanging = false;
 
+// Sound
+let meditationPlayer;
+
 init();
 animate();
 
@@ -72,6 +78,7 @@ function init() {
 	initGround();
 	initAnimations();
 	loadModels();
+	initSound();
 
 	document.addEventListener('mousedown', onDocumentMouseDown, false);
 	document.addEventListener('mouseup', onDocumentMouseUp, false);
@@ -237,6 +244,28 @@ function initGround() {
 	initHeightMap();
 }
 
+function initSound() {
+	const p1 = new Player(woodenFish).toMaster();
+	p1.autostart = true;
+	p1.loop = true;
+
+	const p2 = new Player(meditation).toMaster();
+	p2.autostart = true;
+	p2.loop = true;
+	p2.fadeOut = '1.0';
+	p2.fadeIn = '45.0';
+
+	meditationPlayer = p2;
+}
+
+function adjustVolume(dif) {
+	const { value } = meditationPlayer.volume;
+	const vNew = value + dif * 10;
+	if (vNew > -30 && vNew < 1) {
+		meditationPlayer.volume.value = vNew;
+	}
+}
+
 /* TODO
  * 1. grid
  * 2. multiple dots
@@ -365,8 +394,17 @@ function onMouseWheel(e) {
 	if (mouseOnRock) {
 		controls.enabled = false;
 		const dY = e.deltaY * 0.02;
-		rockAngle += dY;
-		rock.rotation.y += dY;
+		// rockAngle += dY;
+		// rock.rotation.y += dY;
+
+		// adjustVolume(dY);
+		const { value } = meditationPlayer.volume;
+		const vNew = value + dY * 5;
+		if (vNew > -30 && vNew < 1) {
+			rockAngle += dY;
+			rock.rotation.y += dY;
+			meditationPlayer.volume.value = vNew;
+		}
 	} else {
 		controls.enabled = true;
 	}
