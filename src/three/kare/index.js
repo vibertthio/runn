@@ -12,6 +12,7 @@ import Stats from 'libs/stats.min';
 import GPUComputationRenderer from './GPUComputationRenderer';
 import water from './shaders/water.vert';
 import heightmap from './shaders/heightmap.frag';
+// import heightmap from './shaders/heightmapGrass.frag';
 import sand from './textures/sand-3.jpg';
 import rockObj from './models/rock_1/rock_1.obj';
 import rockMtl from './models/rock_1/rock_1.mtl';
@@ -40,12 +41,14 @@ let groundUniforms;
 // Rocks
 let rock;
 let mouseOnRock = false;
+// let draggingOnRock = false;
 let rockPosition;
 const rockScale = 70;
 const rockPositionY = -11;
 let rockScaleAni;
 let rockRotateAni;
 let rockAngle = 0;
+const rockRotate = { value: 0 };
 
 // Circular Wave
 let circularWavePosition = [
@@ -70,8 +73,12 @@ function init() {
 	initAnimations();
 	loadModels();
 
+	document.addEventListener('mousedown', onDocumentMouseDown, false);
+	document.addEventListener('mouseup', onDocumentMouseUp, false);
+	document.addEventListener('wheel', onMouseWheel, false);
 	document.addEventListener('mousemove', onDocumentMouseMove, false);
 	document.addEventListener('touchstart', onDocumentTouchStart, false);
+	document.addEventListener('touchend', onDocumentTouchEnd, false);
 	document.addEventListener('touchmove', onDocumentTouchMove, false);
 	document.addEventListener('keydown', handleKeyDown, false);
 	document.addEventListener('click', onDocumentClick, false);
@@ -335,11 +342,12 @@ function fillTexture(texture) {
 	}
 }
 
+// let deltaY = 0;
 function setMouseCoords(x, y) {
-	mouseCoords.set(
-		x / renderer.domElement.clientWidth * 2 - 1,
-		-(y / renderer.domElement.clientHeight) * 2 + 1,
-	);
+	const xNew = x / renderer.domElement.clientWidth * 2 - 1;
+	const yNew = -(y / renderer.domElement.clientHeight) * 2 + 1;
+	// deltaY = xNew - mouseCoords.x;
+	mouseCoords.set(xNew, yNew);
 	mouseMoved = true;
 }
 
@@ -353,15 +361,50 @@ function onWindowResize() {
 	renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
+function onMouseWheel(e) {
+	if (mouseOnRock) {
+		controls.enabled = false;
+		const dY = e.deltaY * 0.02;
+		rockAngle += dY;
+		rock.rotation.y += dY;
+	} else {
+		controls.enabled = true;
+	}
+}
+
+let mouseDowning = false;
+function onDocumentMouseDown() {
+	console.log('down');
+	mouseDowning = true;
+}
+
+function onDocumentMouseUp() {
+	console.log('up');
+	mouseDowning = false;
+}
+
 function onDocumentMouseMove(event) {
 	setMouseCoords(event.clientX, event.clientY);
+	if (mouseOnRock && !mouseDowning) {
+		controls.enabled = false;
+	} else {
+		controls.enabled = true;
+	}
+	// if (draggingOnRock) {
+	// 	rock.rotation.y += deltaY * 50;
+	// }
 }
 
 function onDocumentTouchStart(event) {
 	if (event.touches.length === 1) {
 		event.preventDefault();
-
 		setMouseCoords(event.touches[0].pageX, event.touches[0].pageY);
+	}
+}
+
+function onDocumentTouchEnd() {
+	if (mouseOnRock) {
+		rockRotateAni.start();
 	}
 }
 
@@ -374,6 +417,7 @@ function onDocumentTouchMove(event) {
 }
 
 function onDocumentClick() {
+	console.log('click');
 	if (mouseOnRock) {
 		rockRotateAni.start();
 	}
@@ -420,10 +464,12 @@ function rayCasterUpdate() {
 
 		if (intersects.length > 0) {
 			mouseOnRock = true;
+			// controls.enabled = false;
 			const { point } = intersects[0];
 			uniforms.uMousePos.value.set(point.x, point.z);
 		} else {
 			mouseOnRock = false;
+			// controls.enabled = true;
 			uniforms.uMousePos.value.set(10000, 10000);
 		}
 		mouseMoved = false;
@@ -447,7 +493,6 @@ function sceneUpdate(time) {
 function initAnimations() {
 	const rockPositionYDisplace = -200;
 	const scale = { value: 1 };
-	const rockRotate = { value: 0 };
 	const { uniforms } = heightmapVariable.material;
 	const rockEasingIn = TWEEN.Easing.Quadratic.In;
 	const rockEasingOut = TWEEN.Easing.Quadratic.Out;

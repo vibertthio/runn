@@ -77,12 +77,12 @@ void main()	{
   } else {
 
     // original
-    // float angle = uvNew.x * 200.0;
-    // float wave = sin(uvNew.y * 10.0) * 8.0;
+    float angle = uvNew.x * 200.0;
+    float wave = sin(uvNew.y * 10.0) * 8.0;
 
     // Cool Shit
-    float angle = uv.x * uv.y * 200.0;
-    float wave = sin(uvNew.y * 10.0 + sin(uvNew.x * 10.0) * 0.8) * 8.0;
+    // float angle = uv.x * uv.y * 200.0;
+    // float wave = sin(uvNew.y * 10.0 + sin(uvNew.x * 10.0) * 0.8) * 8.0;
     // float wave = sin(uvNew.y * 10.0 + sin(uvNew.y * 10.0)) * 8.0;
     // float wave = sin(uvNew.y * 10.0 + sin(uv.y * 10.0) * 2.0) * 8.0;
 
