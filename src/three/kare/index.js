@@ -12,8 +12,8 @@ import lerp from 'utils/lerp';
 import Stats from 'libs/stats.min';
 import GPUComputationRenderer from './GPUComputationRenderer';
 import water from './shaders/water.vert';
-// import heightmap from './shaders/heightmap.frag';
-import heightmap from './shaders/heightmapGrass.frag';
+import heightmap from './shaders/heightmap.frag';
+// import heightmap from './shaders/heightmapGrass.frag';
 import sand from './textures/sand-3.jpg';
 import rockObj from './models/rock_1/rock_1.obj';
 import rockMtl from './models/rock_1/rock_1.mtl';
@@ -161,7 +161,7 @@ function initScene() {
 
 function initStats() {
   stats = new Stats();
-  container.appendChild(stats.dom);
+  // container.appendChild(stats.dom);
 }
 
 function initControl() {
