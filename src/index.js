@@ -13,34 +13,38 @@ class App extends Component {
     };
   }
 
-	onClick() {
-		const { open } = this.state;
-		if (open) {
-			this.closeMenu();
-		} else {
-			this.openMenu();
-		}
-	}
+  onClick() {
+    const { open } = this.state;
+    if (open) {
+      this.closeMenu();
+    } else {
+      this.openMenu();
+    }
+  }
 
-	openMenu() {
-		document.getElementById('menu').style.height = '100%';
-		this.setState({
-			open: true,
-		});
-	}
+  openMenu() {
+    document.getElementById('menu').style.height = '100%';
+    this.setState({
+      open: true,
+    });
+  }
 
-	closeMenu() {
-		document.getElementById('menu').style.height = '0%';
-		this.setState({
-			open: false,
-		});
-	}
+  closeMenu() {
+    document.getElementById('menu').style.height = '0%';
+    this.setState({
+      open: false,
+    });
+  }
 
   render() {
     return (
       <div>
         <div className={styles.title}>
-          <a href="https://github.com/vibertthio/karesansui" target="_blank" rel="noreferrer noopener">
+          <a
+            href="https://github.com/vibertthio/karesansui"
+            target="_blank"
+            rel="noreferrer noopener"
+          >
             枯山水 | かれさんすい | Karesansui
           </a>
           <button className={styles.btn} onClick={() => this.onClick()}>
@@ -52,11 +56,25 @@ class App extends Component {
             Vibert Thio
           </a>
         </div>
-        <button className={styles.overlayBtn} onClick={() => this.onClick()}>
-          <div id="menu" className={styles.overlay}>
-            <p>Press space to change scene. Wheel on rock to rotate and feel.</p>
+        <div id="menu" className={styles.overlay}>
+          <button className={styles.overlayBtn} onClick={() => this.onClick()} />
+          <div className={styles.intro}>
+            <p>
+              Press space to change scene. Wheel on rock to rotate and feel. Made by{' '}
+              <a href="https://vibertthio.com/portfolio/" target="_blank" rel="noreferrer noopener">
+                Vibert Thio
+              </a>.{' '}
+              <a
+                href="https://github.com/vibertthio/karesansui"
+                target="_blank"
+                rel="noreferrer noopener"
+                >
+                Source code is on GitHub.
+              </a>
+            </p>
           </div>
-        </button>
+          <button className={styles.overlayBtn} onClick={() => this.onClick()} />
+        </div>
       </div>
     );
   }

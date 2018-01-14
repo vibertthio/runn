@@ -43,23 +43,54 @@
 	height: 0%;
 	width: 100%;
 	position: fixed; /* Stay in place */
-	z-index: 3;
+	z-index: 1;
 	left: 0;
 	top: 0;
 	background-color: rgb(0, 0, 0); /* Black fallback color */
-	background-color: rgba(20, 20, 20, 0.95); /* Black w/opacity */
+	background-color: rgba(0, 0, 0, 0.85); /* Black w/opacity */
 	overflow-x: hidden; /* Disable horizontal scroll */
 	transition: 0.5s; /* 0.5 second transition effect to slide in or slide down the overlay (height or width, depending on reveal) */
   -webkit-transition: 0.5s;
 	/*text-align: center;*/
-}
 
-.overlay p {
-  text-align: center;
-  font-family: monospace;
-  font-size: 3.5rem;
-  margin: 10rem 7rem;
-  color: #ffffff;
+  .intro {
+    max-width: 800px;
+    margin: 0rem auto;
+
+    p {
+      z-index: 3;
+      font-size: 2.5rem;
+
+      @media screen and (max-width: 980px) {
+        font-size: 2.0rem;
+      }
+
+      @media screen and (max-width: 560px) {
+        font-size: 1.5rem;
+        margin: 0rem 2rem;
+      }
+      text-align: center;
+      font-family: monospace;
+      // margin: 10rem 7rem;
+      // margin: 0rem 7rem;
+      color: #ffffff;
+
+      a {
+        color: white;
+        font-style: italic;
+      }
+    }
+  }
+
+  .overlayBtn {
+    z-index: 2;
+
+    @extend .no-btn-style;
+    // position: fixed;
+    top: 0;
+    width: 100%;
+    height: 30%;
+  }
 }
 
 .btn {
@@ -73,8 +104,4 @@
   img {
     width: 12px;
   }
-}
-
-.overlayBtn {
-  @extend .no-btn-style;
 }
