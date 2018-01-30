@@ -43,5 +43,5 @@ module.exports = merge(common, {
 		publicPath: '/',
 	},
 	watch: true,
-	devtool: 'cheap-eval-source-map',
+	// devtool: 'cheap-eval-source-map',
 });
