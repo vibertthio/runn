@@ -68,7 +68,7 @@ class App extends Component {
                 href="https://github.com/vibertthio/karesansui"
                 target="_blank"
                 rel="noreferrer noopener"
-                >
+              >
                 Source code is on GitHub.
               </a>
             </p>
