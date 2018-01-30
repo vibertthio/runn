@@ -4,7 +4,6 @@ import woodenFish from './sound/wf.mp3';
 import meditation from './sound/med.mp3';
 
 // Sound
-let meditationPlayer;
 
 init();
 
@@ -32,17 +31,10 @@ function initSound() {
   const p2 = new Player(meditation).toMaster();
   p2.autostart = true;
   p2.loop = true;
-
-  meditationPlayer = p2;
 }
 
 function handleKeyDown(event) {
   if (event.keyCode === 32) {
-    console.log(meditationPlayer.state);
-    if (meditationPlayer.state === 'stopped') {
-      meditationPlayer.start();
-    } else {
-      meditationPlayer.stop();
-    }
+    console.log('debug');
   }
 }
