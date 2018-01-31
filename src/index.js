@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
 import { render } from 'react-dom';
+import uuid4 from 'uuid/v4';
 import styles from './index.module.scss';
 import info from './assets/info.png';
 import SamplesManager from './music/samples-manager';
-import uuid4 from 'uuid/v4';
 
 class App extends Component {
   constructor() {
@@ -45,7 +45,6 @@ class App extends Component {
       }
       if (event.keyCode === 65) {
         // a
-        this.state.samplesManager.triggerRandomSamples();
       }
     }
   }

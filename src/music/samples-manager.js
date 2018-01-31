@@ -5,8 +5,8 @@ export default class SamplesManager {
   currentKey: Number;
   samples: Array;
   table: Array;
+  playingTableIndex: Number;
   currentTableIndex: Number;
-  currentSamplesIndex: Array;
   loadingSamples: Boolean;
   loadingStatus: Number;
   loadingSamplesCallback: Function;
@@ -28,6 +28,7 @@ export default class SamplesManager {
 
     Transport.schedule(() => {
       const currentTable = this.table[this.currentTableIndex];
+      this.playingTableIndex = this.currentTableIndex;
       for (let i = 0; i < 4; i += 1) {
         this.samples[i][currentTable[i]].start();
       }
@@ -50,7 +51,6 @@ export default class SamplesManager {
 
   loadSamples() {
     console.log('start loading samples..');
-    this.currentSamplesIndex = [0, 0, 0, 0];
 
     for (let i = 0; i < 4; i += 1) {
       this.samples[i] = [];
@@ -62,15 +62,6 @@ export default class SamplesManager {
         this.samples[i][j].loop = true;
       }
     }
-  }
-
-  triggerRandomSamples() {
-    for (let i = 0; i < 4; i += 1) {
-      this.samples[i][this.currentSamplesIndex[i]].stop('@4m');
-      const rand = Math.floor(Math.random() * 4);
-      this.currentSamplesIndex[i] = rand;
-    }
-    console.log(this.currentSamplesIndex);
   }
 
   triggerTableSamples(index) {
@@ -85,11 +76,10 @@ export default class SamplesManager {
   }
 
   trigger() {
-    const currentTable = this.table[this.currentTableIndex];
+    const currentTable = this.table[this.playingTableIndex];
     if (Transport.state === 'started') {
       Transport.stop();
       for (let i = 0; i < 4; i += 1) {
-        // this.samples[i][this.currentSamplesIndex[i]].stop();
         this.samples[i][currentTable[i]].stop();
       }
       return false;
