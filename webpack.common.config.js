@@ -158,6 +158,8 @@ module.exports = {
 			},
 			filename: 'index.html',
 		}),
-		new CopyWebpackPlugin(),
+		new CopyWebpackPlugin([
+			{ from: 'src/assets/looop.ico' },
+		]),
 	],
 };
