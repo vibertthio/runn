@@ -73,20 +73,29 @@ export default class SamplesManager {
     console.log(this.currentSamplesIndex);
   }
 
-  triggerTableSamples(i) {
-    this.currentTableIndex = i;
+  triggerTableSamples(index) {
+    const currentTable = this.table[this.currentTableIndex];
+    for (let i = 0; i < 4; i += 1) {
+      if (currentTable[i] !== this.table[index][i]) {
+        this.samples[i][currentTable[i]].stop('@4m');
+      }
+    }
+    this.currentTableIndex = index;
+    console.log(`[${this.currentTableIndex}]: ${this.table[this.currentTableIndex]}`);
   }
 
   trigger() {
+    const currentTable = this.table[this.currentTableIndex];
     if (Transport.state === 'started') {
       Transport.stop();
       for (let i = 0; i < 4; i += 1) {
-        this.samples[i][this.currentSamplesIndex[i]].stop();
+        // this.samples[i][this.currentSamplesIndex[i]].stop();
+        this.samples[i][currentTable[i]].stop();
       }
       return false;
     }
 
-    console.log(this.currentSamplesIndex);
+    console.log(`[${this.currentTableIndex}]: ${currentTable}`);
     Transport.start();
     return true;
   }

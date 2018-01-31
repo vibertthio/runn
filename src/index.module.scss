@@ -51,7 +51,10 @@
 	overflow-x: hidden; /* Disable horizontal scroll */
 	transition: 0.5s; /* 0.5 second transition effect to slide in or slide down the overlay (height or width, depending on reveal) */
   -webkit-transition: 0.5s;
-	/*text-align: center;*/
+
+
+
+
 
   .intro {
     max-width: 600px;
@@ -60,12 +63,16 @@
     p {
       z-index: 3;
       font-size: 2.5rem;
+      letter-spacing: 0.2rem;
+      line-height: 50px;
 
       @media screen and (max-width: 980px) {
+        line-height: 40px;
         font-size: 2.0rem;
       }
 
-      @media screen and (max-width: 560px) {
+      @media screen and (max-width: 650px) {
+        line-height: 30px;
         font-size: 1.5rem;
         margin: 0rem 2rem;
       }
@@ -133,6 +140,14 @@
   &.stop {
     .musicBtn {
       background: #444;
+
+      &.current {
+        background: #666;
+      }
+
+      &:hover {
+        background: #c0392b;
+      }
     }
   }
 
@@ -146,6 +161,14 @@
     border-radius: 10%;
     background: #666;
 
+    &.current {
+      background: #aaa;
+    }
+
+    &:hover {
+      background: #e67e22;
+    }
+
     box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 
     @media screen and (max-width: 340px) {
@@ -153,10 +176,6 @@
       height: 70px;
       margin: 0.5rem;
     }
-  }
-
-  .musicBtn:hover {
-    background: #e67e22;
   }
 }
 

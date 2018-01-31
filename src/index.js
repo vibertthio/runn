@@ -3,6 +3,7 @@ import { render } from 'react-dom';
 import styles from './index.module.scss';
 import info from './assets/info.png';
 import SamplesManager from './music/samples-manager';
+import uuid4 from 'uuid/v4';
 
 class App extends Component {
   constructor() {
@@ -35,19 +36,22 @@ class App extends Component {
   onKeyDown(event) {
     const { loadingSamples } = this.state;
     if (!loadingSamples) {
-      if (event.keyCode === 32) { // space
+      if (event.keyCode === 32) {
+        // space
         const playing = this.state.samplesManager.trigger();
         this.setState({
           playing,
         });
       }
-      if (event.keyCode === 65) { // a
+      if (event.keyCode === 65) {
+        // a
         this.state.samplesManager.triggerRandomSamples();
       }
     }
   }
 
   changeTableIndex(currentTableIndex) {
+    this.state.samplesManager.triggerTableSamples(currentTableIndex);
     this.setState({
       currentTableIndex,
     });
@@ -80,7 +84,7 @@ class App extends Component {
 
   render() {
     const loadingText = `loading..${this.state.loadingProgress}/16`;
-    const { playing } = this.state;
+    const { playing, currentTableIndex } = this.state;
     const arr = Array.from(Array(12).keys());
     return (
       <div>
@@ -97,12 +101,16 @@ class App extends Component {
             <p>{loadingText}</p>
           </div>
         ) : (
-          <div className={`${styles.interactive} ${(playing === true) ? '' : styles.stop}`}>
-            {arr.map((i) => {
-              return (
-                <button className={styles.musicBtn} />
-              );
-            })}
+          <div className={`${styles.interactive} ${playing === true ? '' : styles.stop}`}>
+            {arr.map(i => (
+              <button
+                key={uuid4()}
+                className={`${styles.musicBtn} ${currentTableIndex === i ? styles.current : ''}`}
+                onClick={() => {
+                  this.changeTableIndex(i);
+                }}
+              />
+            ))}
           </div>
         )}
 
@@ -115,7 +123,7 @@ class App extends Component {
           <button className={styles.overlayBtn} onClick={() => this.onClick()} />
           <div className={styles.intro}>
             <p>
-              Press space to change scene. Wheel on rock to rotate and feel. Made by{' '}
+              <strong>Looop</strong> <br />Press space to play/stop the music. Click on any block to change clips. Made by{' '}
               <a href="https://vibertthio.com/portfolio/" target="_blank" rel="noreferrer noopener">
                 Vibert Thio
               </a>.{' Source code is on '}
