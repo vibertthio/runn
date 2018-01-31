@@ -75,7 +75,9 @@ class App extends Component {
       loadingProgress: amt,
     });
     if (amt === 16) {
+      const playing = this.state.samplesManager.trigger();
       this.setState({
+        playing,
         loadingSamples: false,
       });
     }

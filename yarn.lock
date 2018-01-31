@@ -6432,6 +6432,10 @@ ssri@^5.0.0:
   dependencies:
     safe-buffer "^5.1.0"
 
+startaudiocontext@^1.2.1:
+  version "1.2.1"
+  resolved "https://registry.yarnpkg.com/startaudiocontext/-/startaudiocontext-1.2.1.tgz#46d2cab5462c791180acc7223e3bbbc3272c8595"
+
 static-eval@~0.2.0:
   version "0.2.4"
   resolved "https://registry.yarnpkg.com/static-eval/-/static-eval-0.2.4.tgz#b7d34d838937b969f9641ca07d48f8ede263ea7b"

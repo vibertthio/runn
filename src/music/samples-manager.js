@@ -1,4 +1,5 @@
-import { Transport, Player } from 'tone';
+import Tone, { Transport, Player } from 'tone';
+import StartAudioContext from 'startaudiocontext';
 import { drumUrls, bassUrls, keysUrls, saxUrls } from './sound';
 
 export default class SamplesManager {
@@ -12,6 +13,7 @@ export default class SamplesManager {
   loadingSamplesCallback: Function;
 
   constructor(callback) {
+    StartAudioContext(Tone.context);
     this.currentKey = null;
     this.samples = [];
     this.loadingStatus = 0;
