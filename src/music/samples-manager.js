@@ -85,7 +85,7 @@ export default class SamplesManager {
       return false;
     }
 
-    console.log(`[${this.currentTableIndex}]: ${currentTable}`);
+    console.log(`[${this.currentTableIndex}]: ${this.table[this.currentTableIndex]}`);
     Transport.start();
     return true;
   }
