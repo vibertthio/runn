@@ -132,6 +132,11 @@ module.exports = {
 				loader: 'file-loader?name=[name].[ext]'
 			},
 			{
+				test: /\.wav$/,
+				exclude: /(node_modules|bower_components)/,
+				loader: 'file-loader?name=[name].[ext]'
+			},
+			{
 				test: /\.obj$/,
 				exclude: /(node_modules|bower_components)/,
 				loader: "file-loader"
@@ -155,9 +160,6 @@ module.exports = {
 			},
 			filename: 'index.html',
 		}),
-		new CopyWebpackPlugin([
-			{ from: 'src/three/kare/models/rock_1/tex_1.jpg' },
-			{ from: 'src/three/kare/models/rock_2/tex_2.jpg' },
-		]),
+		new CopyWebpackPlugin(),
 	],
 };

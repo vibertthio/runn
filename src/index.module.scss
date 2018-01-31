@@ -54,7 +54,7 @@
 	/*text-align: center;*/
 
   .intro {
-    max-width: 800px;
+    max-width: 600px;
     margin: 0rem auto;
 
     p {
@@ -69,7 +69,7 @@
         font-size: 1.5rem;
         margin: 0rem 2rem;
       }
-      text-align: center;
+      // text-align: center;
       font-family: monospace;
       // margin: 10rem 7rem;
       // margin: 0rem 7rem;
@@ -103,5 +103,76 @@
 
   img {
     width: 12px;
+  }
+}
+.interactive {
+  display: flex;
+  flex-flow: row wrap;
+  justify-content: space-around;
+
+  position: absolute;
+  // width: 100%;
+  // height: 100%;
+  z-index: -1;
+  max-width: 500px;
+  max-height: 500px;
+
+
+  top: 0;
+
+  @media screen and (max-height: 750px) {
+    top:10%;
+  }
+
+  bottom: 0;
+  left: 0;
+  right: 0;
+
+  margin: auto;
+
+  &.stop {
+    .musicBtn {
+      background: #444;
+    }
+  }
+
+  .musicBtn {
+    @extend .no-btn-style;
+    width: 80px;
+    height: 80px;
+    position: relative;
+
+    margin: 1rem;
+    border-radius: 10%;
+    background: #666;
+
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+
+    @media screen and (max-width: 340px) {
+      width: 70px;
+      height: 70px;
+      margin: 0.5rem;
+    }
+  }
+
+  .musicBtn:hover {
+    background: #e67e22;
+  }
+}
+
+.loadingText {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  top:0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: auto;
+
+  p {
+    font-size: 1rem;
+    font-family: monospace;
+    color: #ffffff;
   }
 }

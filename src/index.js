@@ -2,15 +2,25 @@ import React, { Component } from 'react';
 import { render } from 'react-dom';
 import styles from './index.module.scss';
 import info from './assets/info.png';
-// import './three/demo';
-import './three/kare';
+import SamplesManager from './music/samples-manager';
 
 class App extends Component {
   constructor() {
     super();
+
     this.state = {
       open: false,
+      playing: false,
+      loadingProgress: 0,
+      loadingSamples: true,
+      currentTableIndex: 0,
+      samplesManager: new SamplesManager((i) => {
+        this.handleLoadingSamples(i);
+      }),
     };
+
+    this.onKeyDown = this.onKeyDown.bind(this);
+    document.addEventListener('keydown', this.onKeyDown, false);
   }
 
   onClick() {
@@ -20,6 +30,27 @@ class App extends Component {
     } else {
       this.openMenu();
     }
+  }
+
+  onKeyDown(event) {
+    const { loadingSamples } = this.state;
+    if (!loadingSamples) {
+      if (event.keyCode === 32) { // space
+        const playing = this.state.samplesManager.trigger();
+        this.setState({
+          playing,
+        });
+      }
+      if (event.keyCode === 65) { // a
+        this.state.samplesManager.triggerRandomSamples();
+      }
+    }
+  }
+
+  changeTableIndex(currentTableIndex) {
+    this.setState({
+      currentTableIndex,
+    });
   }
 
   openMenu() {
@@ -36,21 +67,45 @@ class App extends Component {
     });
   }
 
+  handleLoadingSamples(amt) {
+    this.setState({
+      loadingProgress: amt,
+    });
+    if (amt === 16) {
+      this.setState({
+        loadingSamples: false,
+      });
+    }
+  }
+
   render() {
+    const loadingText = `loading..${this.state.loadingProgress}/16`;
+    const { playing } = this.state;
+    const arr = Array.from(Array(12).keys());
     return (
       <div>
         <div className={styles.title}>
-          <a
-            href="https://github.com/vibertthio/karesansui"
-            target="_blank"
-            rel="noreferrer noopener"
-          >
-            枯山水 | かれさんすい | Karesansui
+          <a href="https://github.com/vibertthio/looop" target="_blank" rel="noreferrer noopener">
+            Looop | Generative Jazz
           </a>
           <button className={styles.btn} onClick={() => this.onClick()}>
             <img alt="info" src={info} />
           </button>
         </div>
+        {this.state.loadingSamples ? (
+          <div className={styles.loadingText}>
+            <p>{loadingText}</p>
+          </div>
+        ) : (
+          <div className={`${styles.interactive} ${(playing === true) ? '' : styles.stop}`}>
+            {arr.map((i) => {
+              return (
+                <button className={styles.musicBtn} />
+              );
+            })}
+          </div>
+        )}
+
         <div className={styles.foot}>
           <a href="https://vibertthio.com/portfolio/" target="_blank" rel="noreferrer noopener">
             Vibert Thio
@@ -63,13 +118,13 @@ class App extends Component {
               Press space to change scene. Wheel on rock to rotate and feel. Made by{' '}
               <a href="https://vibertthio.com/portfolio/" target="_blank" rel="noreferrer noopener">
                 Vibert Thio
-              </a>.{' '}
+              </a>.{' Source code is on '}
               <a
                 href="https://github.com/vibertthio/karesansui"
                 target="_blank"
                 rel="noreferrer noopener"
               >
-                Source code is on GitHub.
+                GitHub.
               </a>
             </p>
           </div>

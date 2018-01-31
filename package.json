@@ -1,5 +1,5 @@
 {
-  "name": "karesansui",
+  "name": "looop",
   "version": "1.0.0",
   "description": "",
   "main": "webpack.config.js",
@@ -27,7 +27,8 @@
     "react-dom": "^16.2.0",
     "react-tap-event-plugin": "^3.0.2",
     "three": "^0.88.0",
-    "tone": "^0.11.11"
+    "tone": "^0.11.11",
+    "uuid": "^3.2.1"
   },
   "devDependencies": {
     "autoprefixer": "^7.2.4",
