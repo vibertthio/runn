@@ -51,7 +51,11 @@ class App extends Component {
   }
 
   getDrumVAE() {
-    fetch('http://140.109.135.76:5000/api/rand', {
+    const url = [
+      'http://140.109.135.76:5000/api/rand',
+      'http://140.109.21.193:5000/api/rand',
+    ];
+    fetch(url[1], {
       headers: {
         'content-type': 'application/json'
       },
@@ -64,7 +68,7 @@ class App extends Component {
         this.state.samplesManager.changeTable(d['result'][4]);
         this.state.samplesManager.start();
       })
-      .catch(err => console.error(err));
+      .catch(e => console.log(e));
   }
 
   update() {
