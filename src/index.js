@@ -16,7 +16,7 @@ class App extends Component {
       playing: false,
       loadingProgress: 0,
       loadingSamples: true,
-      currentTableIndex: 0,
+      currentTableIndex: 4,
       samplesManager: new SamplesManager((i) => {
         this.handleLoadingSamples(i);
       }),
@@ -28,19 +28,50 @@ class App extends Component {
     };
 
     this.canvas = [];
+    this.beat = 0;
     this.onKeyDown = this.onKeyDown.bind(this);
     document.addEventListener('keydown', this.onKeyDown, false);
   }
 
   componentDidMount() {
     this.renderer = new Renderer(this.canvas);
-    this.renderer.draw(this.state.screen);
+    if (!this.state.loadingSamples) {
+      this.renderer.draw(this.state.screen);
+    }
     window.addEventListener('resize', this.handleResize.bind(this, false));
+    window.addEventListener('click', this.handleClick.bind(this));
     requestAnimationFrame(() => { this.update() });
+    
+    this.getDrumVAE();
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('click', this.handleClick);
+    window.addEventListener('resize', this.handleResize.bind(this, false));
+  }
+
+  getDrumVAE() {
+    fetch('http://140.109.135.76:5000/api/rand', {
+      headers: {
+        'content-type': 'application/json'
+      },
+      method: 'GET', // *GET, POST, PUT, DELETE, etc.
+    })
+      .then(r => r.json())
+      .then(d => {
+        this.matrix = d['result'];
+        this.renderer.changeMatrix(d['result']);
+        this.state.samplesManager.changeTable(d['result'][4]);
+        this.state.samplesManager.start();
+      })
+      .catch(err => console.error(err));
   }
 
   update() {
-    this.renderer.draw(this.state.screen);
+    const b = this.state.samplesManager.beat;
+    if (!this.state.loadingSamples) {
+      this.renderer.draw(this.state.screen, b);
+    }
     requestAnimationFrame(() => { this.update() });
   }
 
@@ -52,6 +83,12 @@ class App extends Component {
         ratio: window.devicePixelRatio || 1,
       }
     });
+  }
+
+  handleClick(e) {
+    e.stopPropagation();
+    const index = this.renderer.handleClick(e);
+    this.changeTableIndex(index);
   }
 
   onClick() {
@@ -80,7 +117,7 @@ class App extends Component {
   }
 
   changeTableIndex(currentTableIndex) {
-    this.state.samplesManager.triggerSamples(currentTableIndex);
+    this.state.samplesManager.changeTable(this.matrix[currentTableIndex]);
     this.setState({
       currentTableIndex,
     });
@@ -122,7 +159,7 @@ class App extends Component {
       <div>
         <div className={styles.title}>
           <a href="https://github.com/vibertthio/looop" target="_blank" rel="noreferrer noopener">
-            Drum VAE | Generative Music
+            Drum VAE | MAC Lab
           </a>
           <button className={styles.btn} onClick={() => this.onClick()}>
             <img alt="info" src={info} />

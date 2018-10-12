@@ -3,12 +3,12 @@ import StartAudioContext from 'startaudiocontext';
 import drumUrls from './sound';
 
 export default class SamplesManager {
-  constructor(callback) {
+  constructor(loadingSamplesCallback) {
     StartAudioContext(Tone.context);
     this.currentIndex = 0;
     this.samples = [];
     this.loadingStatus = 0;
-    this.loadingSamplesCallback = callback;
+    this.loadingSamplesCallback = loadingSamplesCallback;
     this.drumUrls = drumUrls;
     this.beat = 0;
     this.preset = [
@@ -37,19 +37,22 @@ export default class SamplesManager {
 
     this.sequence = new Sequence((time, col) => {
       this.beat = col;
-      // console.log(`col: [${col}]`);
       const column = this.matrix[col];
-        for (let i = 0; i < 9; i += 1) {
-          if (column[i] === 1) {
-            this.samples[i].start(time);
-          }
+      for (let i = 0; i < 9; i += 1) {
+        if (column[i] === 1) {
+          this.samples[i].start(time);
         }
-    }, Array.from(Array(this.matrix.length).keys()), '16n');
+      }
+    }, Array.from(Array(96).keys()), '96n');
     Transport.start();
   }
 
   initTable() {
-    this.matrix = this.preset;
+    this.matrix = new Array(96).fill(new Array(9).fill(0));
+  }
+
+  changeTable(mat) {
+    this.matrix = mat;
   }
 
   loadSamples() {
@@ -68,6 +71,10 @@ export default class SamplesManager {
     this.currentIndex = index;
   }
 
+  start() {
+    this.sequence.stop();
+    this.sequence.start();
+  }
   trigger() {
     if (this.sequence.state === 'started') {
       this.sequence.stop();
