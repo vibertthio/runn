@@ -4,6 +4,8 @@ import uuid4 from 'uuid/v4';
 import styles from './index.module.scss';
 import info from './assets/info.png';
 import SamplesManager from './music/samples-manager';
+import Renderer from './renderer';
+import { timestamp } from 'most';
 
 class App extends Component {
   constructor(props) {
@@ -25,48 +27,20 @@ class App extends Component {
       },
     };
 
-    this.canvas = []
+    this.canvas = [];
     this.onKeyDown = this.onKeyDown.bind(this);
     document.addEventListener('keydown', this.onKeyDown, false);
   }
 
   componentDidMount() {
-
-    const ctx = this.canvas.getContext('2d');
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
-    ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-    
+    this.renderer = new Renderer(this.canvas);
+    this.renderer.draw(this.state.screen);
     window.addEventListener('resize', this.handleResize.bind(this, false));
     requestAnimationFrame(() => { this.update() });
   }
 
   update() {
-    const width = this.state.screen.width;
-    const height = this.state.screen.height;
-    const ctx = this.canvas.getContext('2d');
-    ctx.save();
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
-    ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-    
-    const w = width * 0.1;
-    const h = w;
-
-    ctx.translate(width * 0.5, height * 0.5);
-    
-    for (let i = 0; i < 9; i += 1) {
-      const x = Math.floor(i / 3) - 1;
-      const y = i % 3 - 1;
-      ctx.save();
-      
-      ctx.translate(x * w * 0.5, y * w * 0.5);
-      
-      ctx.fillStyle = 'rgba(255, 255, 255, 1.0)';
-      ctx.translate(-w * 0.5, -h * 0.5);
-      ctx.fillRect(0, 0, w, h);
-      ctx.restore();
-    }
-
-    ctx.restore();
+    this.renderer.draw(this.state.screen);
     requestAnimationFrame(() => { this.update() });
   }
 
