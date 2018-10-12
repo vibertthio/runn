@@ -1,94 +1,79 @@
-import Tone, { Transport, Player } from 'tone';
+import Tone, { Transport, Player, Sequence } from 'tone';
 import StartAudioContext from 'startaudiocontext';
-import { drumUrls, bassUrls, keysUrls, saxUrls } from './sound';
+import drumUrls from './sound';
 
 export default class SamplesManager {
-  currentKey: Number;
-  samples: Array;
-  table: Array;
-  playingTableIndex: Number;
-  currentTableIndex: Number;
-  loadingSamples: Boolean;
-  loadingStatus: Number;
-  loadingSamplesCallback: Function;
-
   constructor(callback) {
     StartAudioContext(Tone.context);
-    this.currentKey = null;
+    this.currentIndex = 0;
     this.samples = [];
     this.loadingStatus = 0;
     this.loadingSamplesCallback = callback;
-    this.urls = [drumUrls, bassUrls, keysUrls, saxUrls];
+    this.drumUrls = drumUrls;
+    this.beat = 0;
+    this.preset = [
+      [1, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 1, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [1, 1, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 1, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [1, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 1, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [1, 1, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 1, 1, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    ];
 
     this.loadSamples();
     this.initTable();
 
-    Transport.bpm.value = 90;
-    Transport.loopStart = 0;
-    Transport.loopEnd = '4m';
-    Transport.loop = true;
+    Transport.bpm.value = 120;
 
-    Transport.schedule(() => {
-      const currentTable = this.table[this.currentTableIndex];
-      this.playingTableIndex = this.currentTableIndex;
-      for (let i = 0; i < 4; i += 1) {
-        this.samples[i][currentTable[i]].start();
-      }
-    }, '0');
-    Transport.scheduleRepeat(() => {
-      console.log(Transport.position);
-    }, '1m');
+    this.sequence = new Sequence((time, col) => {
+      this.beat = col;
+      // console.log(`col: [${col}]`);
+      const column = this.matrix[col];
+        for (let i = 0; i < 9; i += 1) {
+          if (column[i] === 1) {
+            this.samples[i].start(time);
+          }
+        }
+    }, Array.from(Array(this.matrix.length).keys()), '16n');
+    Transport.start();
   }
 
   initTable() {
-    this.currentTableIndex = 0;
-    this.table = [];
-    for (let i = 0; i < 12; i += 1) {
-      this.table[i] = [];
-      for (let j = 0; j < 4; j += 1) {
-        this.table[i][j] = Math.floor(Math.random() * 4);
-      }
-    }
+    this.matrix = this.preset;
   }
 
   loadSamples() {
     console.log('start loading samples..');
-
-    for (let i = 0; i < 4; i += 1) {
-      this.samples[i] = [];
-      for (let j = 0; j < 4; j += 1) {
-        this.samples[i][j] = new Player(this.urls[i][j], () => {
-          this.loadingStatus += 1;
-          this.loadingSamplesCallback(this.loadingStatus);
-        }).toMaster();
-        this.samples[i][j].loop = true;
-      }
+    this.samples = [];
+    for (let i = 0; i < 9; i += 1) {
+      this.samples[i] = new Player(this.drumUrls[i], () => {
+        this.loadingStatus += 1;
+        console.log(`finish...${this.loadingStatus}/9: ${this.drumUrls[i]}`);
+        this.loadingSamplesCallback(this.loadingStatus);
+      }).toMaster();
     }
   }
 
-  triggerTableSamples(index) {
-    const currentTable = this.table[this.currentTableIndex];
-    for (let i = 0; i < 4; i += 1) {
-      if (currentTable[i] !== this.table[index][i]) {
-        this.samples[i][currentTable[i]].stop('@4m');
-      }
-    }
-    this.currentTableIndex = index;
-    console.log(`[${this.currentTableIndex}]: ${this.table[this.currentTableIndex]}`);
+  triggerSamples(index) {
+    this.currentIndex = index;
   }
 
   trigger() {
-    const currentTable = this.table[this.playingTableIndex];
-    if (Transport.state === 'started') {
-      Transport.stop();
-      for (let i = 0; i < 4; i += 1) {
-        this.samples[i][currentTable[i]].stop();
-      }
+    if (this.sequence.state === 'started') {
+      this.sequence.stop();
       return false;
     }
-
-    console.log(`[${this.currentTableIndex}]: ${this.table[this.currentTableIndex]}`);
-    Transport.start();
+    this.sequence.start();
     return true;
   }
 }
