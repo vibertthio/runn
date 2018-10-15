@@ -42,7 +42,6 @@ class App extends Component {
     window.addEventListener('click', this.handleClick.bind(this));
     requestAnimationFrame(() => { this.update() });
     
-    // this.getDrumVaeRandom();
     this.getDrumVaeStatic();
   }
 
@@ -185,6 +184,10 @@ class App extends Component {
         console.log(`random dims: ${i}`);
         this.setDrumVaeDim(i[0], i[1]);
       }
+      if (event.keyCode === 82) {
+        // r
+        this.getDrumVaeRandom();
+      }
       if (event.keyCode === 38) {
         // up
         this.getDrumVaeStaticShift(0, 0.01);
@@ -201,6 +204,7 @@ class App extends Component {
         // right
         this.getDrumVaeStaticShift(3, 0.01);
       }
+
     }
   }
 
