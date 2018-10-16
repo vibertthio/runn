@@ -1,5 +1,17 @@
 import { clamp } from './utils/utils';
 
+function lerpColor(a, b, amount) {
+  var ah = +a.replace('#', '0x'),
+    bh = +b.replace('#', '0x'),
+    ar = ah >> 16, ag = ah >> 8 & 0xff, ab = ah & 0xff,
+    br = bh >> 16, bg = bh >> 8 & 0xff, bb = bh & 0xff,
+    rr = ar + amount * (br - ar),
+    rg = ag + amount * (bg - ag),
+    rb = ab + amount * (bb - ab);
+
+  return '#' + ((1 << 24) + (rr << 16) + (rg << 8) + rb | 0).toString(16).slice(1);
+}
+
 export default class Renderer {
   constructor(canvas) {
     this.canvas = canvas;
@@ -13,7 +25,9 @@ export default class Renderer {
     this.backgroundColor = 'rgba(50, 50, 50, 0.85)';
     this.gridColor = 'rgba(255, 255, 255, 1.0)';
     this.gridCurrentColor = 'rgba(255, 100, 100, 1.0)';
-    this.boxColor = 'rgba(100, 100, 100, 1.0)';
+    this.boxColor = 'rgba(200, 200, 200, 1.0)';
+    this.extendAlpha = 0;
+    this.currentUpdateDir = 0;
     this.initMatrix();
   }
 
@@ -64,9 +78,9 @@ export default class Renderer {
     ctx.fillStyle = this.backgroundColor;
     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-    const w = Math.min(width, height) * 0.2;
+    const w = Math.min(width, height) * 0.18;
     const h = w;
-    const dist = w * 1.5;
+    const dist = w * 1.2;
     this.dist = dist;
     const yshift = w * 0.02;
     ctx.translate(width * 0.5, height * 0.5 - yshift);
@@ -86,6 +100,7 @@ export default class Renderer {
       ctx.restore();
     }
 
+    this.drawExtend(ctx, w, h);
     ctx.restore();
   }
 
@@ -106,6 +121,99 @@ export default class Renderer {
             ctx.fillRect(0, 0, w_step, h_step * 0.5);
           }
           
+        } else {
+          ctx.save();
+          ctx.fillStyle = this.boxColor;
+          ctx.translate(0, h_step * 0.25);
+          ctx.fillRect(0, 0, w_step * 0.04, h_step * 0.1);
+          ctx.restore();
+        }
+        ctx.restore();
+      }
+    }
+  }
+
+  triggerExtend() {
+    this.extendAlpha = 1;
+  }
+
+  updateExtend() {
+    this.extendAlpha = this.extendAlpha * 0.8;
+  }
+
+  drawExtend(ctx, w, h) {
+    this.updateExtend();
+    for (let i = 0; i < 4; i += 1) {
+      this.drawExtendEach(ctx, w, h, i);
+    }
+  }
+
+  drawExtendEach(ctx, w, h, dir) {
+    const dist = this.dist;
+    let colors = [
+      '#FFFFFF',
+      '#999999',
+      '#555555',
+    ];
+    const colorsExtend = [
+      lerpColor(colors[0], '#FF0000', this.extendAlpha),
+      lerpColor(colors[1], '#FF0000', this.extendAlpha),
+      lerpColor(colors[2], '#FF0000', this.extendAlpha),
+    ];
+
+    if (dir == this.currentUpdateDir) {
+      colors = colorsExtend;
+    }
+
+    if (dir == 0) {
+      for (let j = 0; j < 3; j += 1) {
+        const y = -2;
+        const x = j - 1;
+        ctx.save();
+        ctx.translate(x * dist, (y + 0.4) * dist)
+        for (let k = 0; k < 3; k += 1) {
+          ctx.fillStyle = colors[k];
+          ctx.fillRect(0, 0, w * 0.02, h * 0.02);
+          ctx.translate(0, w * -0.08);
+        }
+        ctx.restore();
+      }
+    } else if (dir == 1) {
+      for (let j = 0; j < 3; j += 1) {
+        const y = 2;
+        const x = j - 1;
+        ctx.save();
+        ctx.translate(x * dist, (y - 0.4) * dist)
+        for (let k = 0; k < 3; k += 1) {
+          ctx.fillStyle = colors[k];
+          ctx.fillRect(0, 0, w * 0.02, h * 0.02);
+          ctx.translate(0, w * 0.08);
+        }
+        ctx.restore();
+      }
+    } else if (dir == 2) {
+      for (let j = 0; j < 3; j += 1) {
+        const x = -2;
+        const y = j - 1;
+        ctx.save();
+        ctx.translate((x + 0.4) * dist, y * dist)
+        for (let k = 0; k < 3; k += 1) {
+          ctx.fillStyle = colors[k];
+          ctx.fillRect(0, 0, w * 0.02, h * 0.02);
+          ctx.translate(w * -0.08, 0);
+        }
+        ctx.restore();
+      }
+    } else if (dir == 3) {
+      for (let j = 0; j < 3; j += 1) {
+        const x = 2;
+        const y = j - 1;
+        ctx.save();
+        ctx.translate((x - 0.4) * dist, y * dist)
+        for (let k = 0; k < 3; k += 1) {
+          ctx.fillStyle = colors[k];
+          ctx.fillRect(0, 0, w * 0.02, h * 0.02);
+          ctx.translate(w * 0.08, 0);
         }
         ctx.restore();
       }

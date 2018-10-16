@@ -1,11 +1,9 @@
 import React, { Component } from 'react';
 import { render } from 'react-dom';
-import uuid4 from 'uuid/v4';
 import styles from './index.module.scss';
 import info from './assets/info.png';
 import SamplesManager from './music/samples-manager';
 import Renderer from './renderer';
-import { timestamp } from 'most';
 
 class App extends Component {
   constructor(props) {
@@ -190,19 +188,27 @@ class App extends Component {
       }
       if (event.keyCode === 38) {
         // up
+        this.renderer.triggerExtend();
         this.getDrumVaeStaticShift(0, 0.01);
+        this.renderer.currentUpdateDir = 0;
       }
       if (event.keyCode === 40) {
         // down
+        this.renderer.triggerExtend();
         this.getDrumVaeStaticShift(1, 0.01);
+        this.renderer.currentUpdateDir = 1;
       }
       if (event.keyCode === 37) {
         // left
+        this.renderer.triggerExtend();
         this.getDrumVaeStaticShift(2, 0.01);
+        this.renderer.currentUpdateDir = 2;
       }
       if (event.keyCode === 39) {
         // right
+        this.renderer.triggerExtend();
         this.getDrumVaeStaticShift(3, 0.01);
+        this.renderer.currentUpdateDir = 3;
       }
 
     }
@@ -256,6 +262,7 @@ class App extends Component {
           <button className={styles.btn} onClick={() => this.onClick()}>
             <img alt="info" src={info} />
           </button>
+
         </div>
         <div>
           {this.state.loadingSamples && (
@@ -281,17 +288,23 @@ class App extends Component {
           <button className={styles.overlayBtn} onClick={() => this.onClick()} />
           <div className={styles.intro}>
             <p>
-              <strong>Drum VAE</strong> <br />Press space to play/stop the music. Click on any block to change samples. Made by{' '}
+              <strong>$ Drum VAE $</strong> <br />Press space to play/stop the music. Click on any block to change samples. Made by{' '}
               <a href="https://vibertthio.com/portfolio/" target="_blank" rel="noreferrer noopener">
                 Vibert Thio
               </a>.{' Source code is on '}
               <a
-                href="https://github.com/vibertthio/karesansui"
+                href="https://github.com/vibertthio"
                 target="_blank"
                 rel="noreferrer noopener"
               >
                 GitHub.
               </a>
+            </p>
+            <p>
+              <strong>$ How to use $</strong>
+              <br /> [←, →, ↑, ↓]: move in latent space
+              <br /> [r]: random sample
+              <br /> [c]: random dimension
             </p>
           </div>
           <button className={styles.overlayBtn} onClick={() => this.onClick()} />
