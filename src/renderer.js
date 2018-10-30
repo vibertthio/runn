@@ -12,10 +12,15 @@ function lerpColor(a, b, amount) {
   return '#' + ((1 << 24) + (rr << 16) + (rg << 8) + rb | 0).toString(16).slice(1);
 }
 
+function lerp(v, s1, e1, s2, e2) {
+  return (v - s1) * (e2 - s2) / (e1 - s1);
+}
+
 export default class Renderer {
   constructor(canvas) {
     this.canvas = canvas;
     this.matrix = [];
+    this.latent = [];
     this.dist = 0;
     this.beat = 0;
     this.currentIndex = 4;
@@ -28,7 +33,9 @@ export default class Renderer {
     this.boxColor = 'rgba(200, 200, 200, 1.0)';
     this.extendAlpha = 0;
     this.currentUpdateDir = 0;
+    this.selectedLatent = 0;
     this.initMatrix();
+
   }
 
   initMatrix() {
@@ -40,6 +47,10 @@ export default class Renderer {
           this.matrix[i][t][d] = (Math.random() > 0.5 ? 1 : 0);
         }
       }
+    }
+
+    for (let i = 0; i < 32; i += 1) {
+      this.latent[i] = 0;
     }
   }
 
@@ -72,6 +83,7 @@ export default class Renderer {
     this.height = scr.height;
     const width = scr.width;
     const height = scr.height;
+    ctx.font = "15px monospace";
 
       
     ctx.save();
@@ -101,6 +113,7 @@ export default class Renderer {
     }
 
     this.drawExtend(ctx, w, h);
+    this.drawLatentGraph(ctx);
     ctx.restore();
   }
 
@@ -224,13 +237,211 @@ export default class Renderer {
     let cx = e.clientX;
     let cy = e.clientY;
     
-    cx -= (this.width - this.dist) * 0.5;
-    cy -= (this.height - this.dist) * 0.5;
-    const ix = clamp(Math.floor(cx / this.dist) + 1, 0, 2);
-    const iy = clamp(Math.floor(cy / this.dist) + 1, 0, 2);
+    cx -= this.width * 0.5;
+    cy -= this.height * 0.5;
+
+    const cxShift = cx + (this.dist * 0.5);
+    const cyShift = cy + (this.dist * 0.5);
     
-    const index = ix + iy * 3;
-    this.currentIndex = index;
-    return index;
+    const ix = Math.floor(cxShift / this.dist) + 1;
+    const iy = Math.floor(cyShift / this.dist) + 1;
+
+    if (ix > -1 && ix < 3 && iy > -1 && iy < 3) {
+      const index = ix + iy * 3;
+      this.currentIndex = index;
+    }
+    return this.currentIndex;
+  }
+
+  handleLatentGraphClick(x, y) {
+    const r = Math.pow(this.dist, 2);
+    const angle = 2 * Math.PI / 16;
+
+    if (Math.pow(x - this.dist * 3.0, 2) + Math.pow(y, 2) < r) {
+      const xpos = x - this.dist * 3.0;
+      const ypos = y;
+      let theta = Math.atan2(ypos, xpos) + 0.5 * angle;
+      if (theta < 0) {
+        theta += Math.PI * 2;
+      }
+      const id = Math.floor(theta / angle);
+      this.selectedLatent = id;
+      return true;
+
+    } else if (Math.pow(x + this.dist * 3.0, 2) + Math.pow(y, 2) < r) {
+      const xpos = x + this.dist * 3.0;
+      const ypos = y;
+      let theta = Math.atan2(ypos, xpos) + 0.5 * angle;
+      if (theta < 0) {
+        theta += Math.PI * 2;
+      }
+      const id = Math.floor(theta / angle);
+      this.selectedLatent = id + 16;
+      return true;
+    }
+    return false;
+  }
+
+  handleMouseDown(e) {
+    let cx = e.clientX - this.width * 0.5;;
+    let cy = e.clientY - this.height * 0.5;
+
+    return this.handleLatentGraphClick(cx, cy);
+  }
+
+  handleMouseMove(e) {
+    const r = Math.pow(this.dist, 2);
+    let x = e.clientX - this.width * 0.5;;
+    let y = e.clientY - this.height * 0.5;
+    let d1 = Math.pow(x - this.dist * 3.0, 2) + Math.pow(y, 2);
+    let d2 = Math.pow(x + this.dist * 3.0, 2) + Math.pow(y, 2);
+    if (d1 < r * 1.2 & d1 > r * 0.1) {
+      const d = Math.sqrt(d1);
+      const v = lerp(d, 0.7 * this.dist, 0.9 * this.dist, 0, 0.1);
+      this.latent[this.currentIndex][this.selectedLatent] = v;
+    } else if (d2 < r * 1.2 & d2 > r * 0.1) {
+      const d = Math.sqrt(d2);
+      const v = lerp(d, 0.7 * this.dist, 0.9 * this.dist, 0, 0.1);
+      this.latent[this.currentIndex][this.selectedLatent] = v;
+    }
+  }
+  
+  // draw circle
+  drawLatentGraph(ctx) {
+    ctx.save();
+
+    ctx.save();
+    ctx.translate(this.dist * 3.0, 0);
+
+    const a = 2 * (Math.PI / 40.0);
+    for (let i = 0; i < 40; i += 1) {
+      ctx.beginPath();
+      ctx.arc(0, 0, this.dist * 0.7, i * a, i * a + 0.1);
+      ctx.strokeStyle = '#888';
+      ctx.stroke();
+    }
+    const angle = 2 * Math.PI / 16;
+
+    let xPrev;
+    let yPrev;
+    let xFirst;
+    let yFirst;
+    for (let i = 0; i < 16; i += 1) {
+      const ii = i;
+      const value = this.latent[this.currentIndex][ii];
+      ctx.save();
+      const radius = (value * 2 + 0.7) * this.dist;
+      const x = radius * Math.cos(angle * i);
+      const y = radius * Math.sin(angle * i);
+
+      ctx.beginPath();
+      ctx.moveTo(
+        0.7 * this.dist * Math.cos(angle * i),
+        0.7 * this.dist * Math.sin(angle * i),
+      );
+      ctx.lineTo(x, y);
+      ctx.strokeStyle = '#F00';
+      ctx.stroke();
+
+      if (i > 0) {
+        ctx.beginPath();
+        ctx.moveTo(xPrev, yPrev);
+        ctx.lineTo(x, y);
+        ctx.strokeStyle = '#AAA';
+        ctx.stroke();
+      } else {
+        xFirst = x;
+        yFirst = y;
+      }
+      if (i === 15) {
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(xFirst, yFirst);
+        ctx.strokeStyle = '#AAA';
+        ctx.stroke();
+      }
+      xPrev = x;
+      yPrev = y;
+
+      ctx.translate(x, y);
+      ctx.beginPath();
+      ctx.arc(0, 0, this.dist * 0.02, 0, Math.PI * 2, true);
+      ctx.fillStyle = '#CCC';
+      if (ii === this.selectedLatent) {
+        ctx.fillStyle = '#C00';
+        ctx.fillText((Math.round(value * 100000) / 100000).toString(), 0, -10);
+      }
+      ctx.fill();
+      ctx.restore();
+    }
+    
+    ctx.restore();
+
+
+    ctx.save();
+    ctx.translate(this.dist * -3.0, 0);
+
+    for (let i = 0; i < 40; i += 1) {
+      ctx.beginPath();
+      ctx.arc(0, 0, this.dist * 0.7, i * a, i * a + 0.1);
+      ctx.strokeStyle = '#888';
+      ctx.stroke();
+    }
+
+
+    for (let i = 0; i < 16; i += 1) {
+      const ii = i + 16;
+      const value = this.latent[this.currentIndex][ii];
+      ctx.save();
+      const radius = (value * 2 + 0.7) * this.dist;
+      const x = radius * Math.cos(angle * i);
+      const y = radius * Math.sin(angle * i);
+
+      ctx.beginPath();
+      ctx.moveTo(
+        0.7 * this.dist * Math.cos(angle * i),
+        0.7 * this.dist * Math.sin(angle * i),
+      );
+      ctx.lineTo(x, y);
+      ctx.strokeStyle = '#F00';
+      ctx.stroke();
+
+
+      if (i > 0) {
+        ctx.beginPath();
+        ctx.moveTo(xPrev, yPrev);
+        ctx.lineTo(x, y);
+        ctx.strokeStyle = '#AAA';
+        ctx.stroke();
+      } else {
+        xFirst = x;
+        yFirst = y;
+      }
+      if (i === 15) {
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(xFirst, yFirst);
+        ctx.strokeStyle = '#AAA';
+        ctx.stroke();
+      }
+      xPrev = x;
+      yPrev = y;
+
+      ctx.translate(x, y);
+      ctx.beginPath();
+      ctx.arc(0, 0, this.dist * 0.02, 0, Math.PI * 2, true);
+      ctx.fillStyle = '#CCC';
+      if (ii === this.selectedLatent) {
+        ctx.fillStyle = '#C00';
+        ctx.fillText((Math.round(value * 100000) / 100000).toString(), 0, -10);
+
+      }
+      ctx.fill();
+
+      ctx.restore();
+    }
+    ctx.restore();
+
+    ctx.restore();
   }
 }

@@ -12,6 +12,7 @@ class App extends Component {
     this.state = {
       open: false,
       playing: false,
+      dragging: false,
       loadingProgress: 0,
       loadingSamples: true,
       currentTableIndex: 4,
@@ -38,6 +39,9 @@ class App extends Component {
     }
     window.addEventListener('resize', this.handleResize.bind(this, false));
     window.addEventListener('click', this.handleClick.bind(this));
+    window.addEventListener('mousedown', this.handleMouseDown.bind(this));
+    window.addEventListener('mousemove', this.handleMouseMove.bind(this));
+    window.addEventListener('mouseup', this.handleMouseUp.bind(this));
     requestAnimationFrame(() => { this.update() });
     
     this.getDrumVaeStatic();
@@ -45,15 +49,15 @@ class App extends Component {
 
   componentWillUnmount() {
     window.removeEventListener('click', this.handleClick);
-    window.addEventListener('resize', this.handleResize.bind(this, false));
+    window.removeEventListener('mousedown', this.handleMouseDown);
+    window.removeEventListener('mousemove', this.handleMouseMove);
+    window.removeEventListener('mouseup', this.handleMouseUp);
+    window.removeEventListener('resize', this.handleResize.bind(this, false));
   }
 
   getDrumVaeRandom() {
-    const url = [
-      'http://140.109.135.76:5000/rand',
-      'http://140.109.21.193:5000/rand',
-    ]
-    fetch(url[1], {
+    const url = 'http://140.109.21.193:5001/rand';
+    fetch(url, {
       headers: {
         'content-type': 'application/json'
       },
@@ -63,14 +67,15 @@ class App extends Component {
       .then(d => {
         this.matrix = d['result'];
         this.renderer.changeMatrix(d['result']);
-        this.state.samplesManager.changeTable(d['result'][4]);
+        this.renderer.latent = d['latent'];
+        this.state.samplesManager.changeTable(d['result'][this.renderer.currentIndex]);
         this.state.samplesManager.start();
       })
       .catch(e => console.log(e));
   }
 
   getDrumVaeStatic() {
-    const url = 'http://140.109.21.193:5000/static'
+    const url = 'http://140.109.21.193:5001/static';
     fetch(url, {
       headers: {
         'content-type': 'application/json'
@@ -81,14 +86,15 @@ class App extends Component {
       .then(d => {
         this.matrix = d['result'];
         this.renderer.changeMatrix(d['result']);
-        this.state.samplesManager.changeTable(d['result'][4]);
+        this.renderer.latent = d['latent'];
+        this.state.samplesManager.changeTable(d['result'][this.renderer.currentIndex]);
         this.state.samplesManager.start();
       })
       .catch(e => console.log(e));
   }
 
   getDrumVaeStaticShift(dir = 0, step = 0.2) {
-    const url = 'http://140.109.21.193:5000/static/' + dir.toString() + '/' + step.toString();
+    const url = 'http://140.109.21.193:5001/static/' + dir.toString() + '/' + step.toString();
     fetch(url, {
       headers: {
         'content-type': 'application/json'
@@ -99,14 +105,15 @@ class App extends Component {
       .then(d => {
         this.matrix = d['result'];
         this.renderer.changeMatrix(d['result']);
-        this.state.samplesManager.changeTable(d['result'][4]);
+        this.renderer.latent = d['latent'];
+        this.state.samplesManager.changeTable(d['result'][this.renderer.currentIndex]);
         this.state.samplesManager.start();
       })
       .catch(e => console.log(e));
   }
 
   setDrumVaeDim(d1 = 3, d2 = 2) {
-    const url = 'http://140.109.21.193:5000/dim/' + d1.toString() + '/' + d2.toString();
+    const url = 'http://140.109.21.193:5001/dim/' + d1.toString() + '/' + d2.toString();
     fetch(url, {
       headers: {
         'content-type': 'application/json'
@@ -117,8 +124,28 @@ class App extends Component {
       .then(d => {
         this.matrix = d['result'];
         this.renderer.changeMatrix(d['result']);
-        this.state.samplesManager.changeTable(d['result'][4]);
+        this.renderer.latent = d['latent'];
+        this.state.samplesManager.changeTable(d['result'][this.renderer.currentIndex]);
         this.state.samplesManager.start();
+      })
+      .catch(e => console.log(e));
+  }
+
+  getDrumVaeAdjust(dim, value) {
+    const url = 'http://140.109.21.193:5001/adjust/' + dim.toString() + '/' + value.toString();
+    fetch(url, {
+      headers: {
+        'content-type': 'application/json'
+      },
+      method: 'GET', // *GET, POST, PUT, DELETE, etc.
+    })
+      .then(r => r.json())
+      .then(d => {
+        this.matrix = d['result'];
+        this.renderer.changeMatrix(d['result']);
+        this.renderer.latent = d['latent'];
+        this.state.samplesManager.changeTable(d['result'][this.renderer.currentIndex]);
+        // this.state.samplesManager.start();
       })
       .catch(e => console.log(e));
   }
@@ -145,6 +172,36 @@ class App extends Component {
     e.stopPropagation();
     const index = this.renderer.handleClick(e);
     this.changeTableIndex(index);
+  }
+
+  handleMouseDown(e) {
+    e.stopPropagation();
+    const dragging = this.renderer.handleMouseDown(e);
+    this.setState({
+      dragging,
+    });
+  }
+
+  handleMouseUp(e) {
+    e.stopPropagation();
+    const dragging = this.renderer.handleMouseDown(e);
+    const { selectedLatent, latent, currentIndex } = this.renderer;
+    // console.log(`changed dim:[${selectedLatent}]`);
+    // console.log(`value: ${latent[currentIndex][selectedLatent]}`);
+    if (this.state.dragging) {
+      this.getDrumVaeAdjust(selectedLatent, latent[currentIndex][selectedLatent]);
+    }
+
+    this.setState({
+      dragging: false,
+    });
+  }
+
+  handleMouseMove(e) {
+    if (this.state.dragging) {      
+      e.stopPropagation();
+      this.renderer.handleMouseMove(e);
+    }
   }
 
   onClick() {
