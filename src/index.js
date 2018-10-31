@@ -55,8 +55,7 @@ class App extends Component {
     window.removeEventListener('resize', this.handleResize.bind(this, false));
   }
 
-  getDrumVaeRandom() {
-    const url = 'http://140.109.21.193:5001/rand';
+  getDrumVae(url, restart = true) {
     fetch(url, {
       headers: {
         'content-type': 'application/json'
@@ -69,85 +68,36 @@ class App extends Component {
         this.renderer.changeMatrix(d['result']);
         this.renderer.latent = d['latent'];
         this.state.samplesManager.changeTable(d['result'][this.renderer.currentIndex]);
-        this.state.samplesManager.start();
+        if (restart) {
+          this.state.samplesManager.start();
+        }
       })
       .catch(e => console.log(e));
+  }
+
+  getDrumVaeRandom() {
+    const url = 'http://140.109.21.193:5001/rand';
+    this.getDrumVae(url);
   }
 
   getDrumVaeStatic() {
     const url = 'http://140.109.21.193:5001/static';
-    fetch(url, {
-      headers: {
-        'content-type': 'application/json'
-      },
-      method: 'GET', // *GET, POST, PUT, DELETE, etc.
-    })
-      .then(r => r.json())
-      .then(d => {
-        this.matrix = d['result'];
-        this.renderer.changeMatrix(d['result']);
-        this.renderer.latent = d['latent'];
-        this.state.samplesManager.changeTable(d['result'][this.renderer.currentIndex]);
-        this.state.samplesManager.start();
-      })
-      .catch(e => console.log(e));
+    this.getDrumVae(url);
   }
 
   getDrumVaeStaticShift(dir = 0, step = 0.2) {
     const url = 'http://140.109.21.193:5001/static/' + dir.toString() + '/' + step.toString();
-    fetch(url, {
-      headers: {
-        'content-type': 'application/json'
-      },
-      method: 'GET', // *GET, POST, PUT, DELETE, etc.
-    })
-      .then(r => r.json())
-      .then(d => {
-        this.matrix = d['result'];
-        this.renderer.changeMatrix(d['result']);
-        this.renderer.latent = d['latent'];
-        this.state.samplesManager.changeTable(d['result'][this.renderer.currentIndex]);
-        this.state.samplesManager.start();
-      })
-      .catch(e => console.log(e));
+    this.getDrumVae(url);
   }
 
   setDrumVaeDim(d1 = 3, d2 = 2) {
     const url = 'http://140.109.21.193:5001/dim/' + d1.toString() + '/' + d2.toString();
-    fetch(url, {
-      headers: {
-        'content-type': 'application/json'
-      },
-      method: 'GET', // *GET, POST, PUT, DELETE, etc.
-    })
-      .then(r => r.json())
-      .then(d => {
-        this.matrix = d['result'];
-        this.renderer.changeMatrix(d['result']);
-        this.renderer.latent = d['latent'];
-        this.state.samplesManager.changeTable(d['result'][this.renderer.currentIndex]);
-        this.state.samplesManager.start();
-      })
-      .catch(e => console.log(e));
+    this.getDrumVae(url);
   }
 
   getDrumVaeAdjust(dim, value) {
     const url = 'http://140.109.21.193:5001/adjust/' + dim.toString() + '/' + value.toString();
-    fetch(url, {
-      headers: {
-        'content-type': 'application/json'
-      },
-      method: 'GET', // *GET, POST, PUT, DELETE, etc.
-    })
-      .then(r => r.json())
-      .then(d => {
-        this.matrix = d['result'];
-        this.renderer.changeMatrix(d['result']);
-        this.renderer.latent = d['latent'];
-        this.state.samplesManager.changeTable(d['result'][this.renderer.currentIndex]);
-        // this.state.samplesManager.start();
-      })
-      .catch(e => console.log(e));
+    this.getDrumVae(url, false);
   }
 
   update() {
@@ -170,8 +120,8 @@ class App extends Component {
 
   handleClick(e) {
     e.stopPropagation();
-    const index = this.renderer.handleClick(e);
-    this.changeTableIndex(index);
+    // const index = this.renderer.handleClick(e);
+    // this.changeTableIndex(index);
   }
 
   handleMouseDown(e) {

@@ -90,29 +90,32 @@ export default class Renderer {
     ctx.fillStyle = this.backgroundColor;
     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-    const w = Math.min(width, height) * 0.18;
-    const h = w;
-    const dist = w * 1.2;
+    const h = Math.min(width, height) * 0.18;
+    const w = width * 0.5;
+    const dist = h * 1.2;
     this.dist = dist;
-    const yshift = w * 0.02;
-    ctx.translate(width * 0.5, height * 0.5 - yshift);
+    const yshift = -h * 1.5;
+    ctx.translate(width * 0.5, height * 0.5);
 
-    for (let i = 0; i < 9; i += 1) {
-      const x = i % 3 - 1;
-      const y = Math.floor(i / 3) - 1;
-      ctx.save();
+    ctx.save();
+    ctx.translate(0, yshift)
+    ctx.translate(-w * 0.5, -h * 0.5);
+    this.drawGrid(ctx, w, h, 4);
+    ctx.restore();
+    // for (let i = 0; i < 9; i += 1) {
+    //   const x = i % 3 - 1;
+    //   const y = Math.floor(i / 3) - 1;
+    //   ctx.save();
 
-      ctx.translate(x * dist, y * dist);
-      ctx.translate(-w * 0.5, -h * 0.5);
+    //   ctx.translate(x * dist, y * dist);
+    //   ctx.translate(-w * 0.5, -h * 0.5);
 
-      // ctx.fillStyle = this.boxColor;
-      // ctx.fillRect(0, 0, w, h);
+    //   this.drawGrid(ctx, w, h, i);
+    //   ctx.restore();
+    // }
 
-      this.drawGrid(ctx, w, h, i);
-      ctx.restore();
-    }
 
-    this.drawExtend(ctx, w, h);
+    // this.drawExtend(ctx, w, h);
     this.drawLatentGraph(ctx);
     ctx.restore();
   }
