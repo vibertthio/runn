@@ -94,7 +94,7 @@ export default class Renderer {
     const w = width * 0.5;
     const dist = h * 1.2;
     this.dist = dist;
-    const yshift = -h * 1.5;
+    const yshift = -h * 1.5 ;
     ctx.translate(width * 0.5, height * 0.5);
 
     ctx.save();
@@ -131,7 +131,7 @@ export default class Renderer {
           
           if (i === this.currentIndex && Math.abs(this.beat - t) < 3) {
             ctx.fillStyle = this.gridCurrentColor;
-            ctx.fillRect(0, 0, w_step * 2.0, h_step * 0.5);
+            ctx.fillRect(0, 0, w_step * 1.2, h_step * 0.5);
           } else {
             ctx.fillStyle = this.gridColor;
             ctx.fillRect(0, 0, w_step, h_step * 0.5);
@@ -258,11 +258,11 @@ export default class Renderer {
 
   handleLatentGraphClick(x, y) {
     const r = Math.pow(this.dist, 2);
-    const angle = 2 * Math.PI / 16;
+    const angle = 2 * Math.PI / 32;
 
-    if (Math.pow(x - this.dist * 3.0, 2) + Math.pow(y, 2) < r) {
-      const xpos = x - this.dist * 3.0;
-      const ypos = y;
+    if (Math.pow(x, 2) + Math.pow(y - this.dist * 0.5, 2) < r) {
+      const xpos = x;
+      const ypos = y - this.dist * 0.5;
       let theta = Math.atan2(ypos, xpos) + 0.5 * angle;
       if (theta < 0) {
         theta += Math.PI * 2;
@@ -271,16 +271,6 @@ export default class Renderer {
       this.selectedLatent = id;
       return true;
 
-    } else if (Math.pow(x + this.dist * 3.0, 2) + Math.pow(y, 2) < r) {
-      const xpos = x + this.dist * 3.0;
-      const ypos = y;
-      let theta = Math.atan2(ypos, xpos) + 0.5 * angle;
-      if (theta < 0) {
-        theta += Math.PI * 2;
-      }
-      const id = Math.floor(theta / angle);
-      this.selectedLatent = id + 16;
-      return true;
     }
     return false;
   }
@@ -296,14 +286,9 @@ export default class Renderer {
     const r = Math.pow(this.dist, 2);
     let x = e.clientX - this.width * 0.5;;
     let y = e.clientY - this.height * 0.5;
-    let d1 = Math.pow(x - this.dist * 3.0, 2) + Math.pow(y, 2);
-    let d2 = Math.pow(x + this.dist * 3.0, 2) + Math.pow(y, 2);
+    let d1 = Math.pow(x, 2) + Math.pow(y - this.dist * 0.5, 2);
     if (d1 < r * 1.2 & d1 > r * 0.1) {
       const d = Math.sqrt(d1);
-      const v = lerp(d, 0.7 * this.dist, 0.9 * this.dist, 0, 0.1);
-      this.latent[this.currentIndex][this.selectedLatent] = v;
-    } else if (d2 < r * 1.2 & d2 > r * 0.1) {
-      const d = Math.sqrt(d2);
       const v = lerp(d, 0.7 * this.dist, 0.9 * this.dist, 0, 0.1);
       this.latent[this.currentIndex][this.selectedLatent] = v;
     }
@@ -312,9 +297,8 @@ export default class Renderer {
   // draw circle
   drawLatentGraph(ctx) {
     ctx.save();
-
-    ctx.save();
-    ctx.translate(this.dist * 3.0, 0);
+    
+    ctx.translate(0, this.dist * 0.5);
 
     const a = 2 * (Math.PI / 40.0);
     for (let i = 0; i < 40; i += 1) {
@@ -323,13 +307,13 @@ export default class Renderer {
       ctx.strokeStyle = '#888';
       ctx.stroke();
     }
-    const angle = 2 * Math.PI / 16;
+    const angle = 2 * Math.PI / 32;
 
     let xPrev;
     let yPrev;
     let xFirst;
     let yFirst;
-    for (let i = 0; i < 16; i += 1) {
+    for (let i = 0; i < 32; i += 1) {
       const ii = i;
       const value = this.latent[this.currentIndex][ii];
       ctx.save();
@@ -356,7 +340,7 @@ export default class Renderer {
         xFirst = x;
         yFirst = y;
       }
-      if (i === 15) {
+      if (i === 31) {
         ctx.beginPath();
         ctx.moveTo(x, y);
         ctx.lineTo(xFirst, yFirst);
@@ -378,73 +362,6 @@ export default class Renderer {
       ctx.restore();
     }
     
-    ctx.restore();
-
-
-    ctx.save();
-    ctx.translate(this.dist * -3.0, 0);
-
-    for (let i = 0; i < 40; i += 1) {
-      ctx.beginPath();
-      ctx.arc(0, 0, this.dist * 0.7, i * a, i * a + 0.1);
-      ctx.strokeStyle = '#888';
-      ctx.stroke();
-    }
-
-
-    for (let i = 0; i < 16; i += 1) {
-      const ii = i + 16;
-      const value = this.latent[this.currentIndex][ii];
-      ctx.save();
-      const radius = (value * 2 + 0.7) * this.dist;
-      const x = radius * Math.cos(angle * i);
-      const y = radius * Math.sin(angle * i);
-
-      ctx.beginPath();
-      ctx.moveTo(
-        0.7 * this.dist * Math.cos(angle * i),
-        0.7 * this.dist * Math.sin(angle * i),
-      );
-      ctx.lineTo(x, y);
-      ctx.strokeStyle = '#F00';
-      ctx.stroke();
-
-
-      if (i > 0) {
-        ctx.beginPath();
-        ctx.moveTo(xPrev, yPrev);
-        ctx.lineTo(x, y);
-        ctx.strokeStyle = '#AAA';
-        ctx.stroke();
-      } else {
-        xFirst = x;
-        yFirst = y;
-      }
-      if (i === 15) {
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-        ctx.lineTo(xFirst, yFirst);
-        ctx.strokeStyle = '#AAA';
-        ctx.stroke();
-      }
-      xPrev = x;
-      yPrev = y;
-
-      ctx.translate(x, y);
-      ctx.beginPath();
-      ctx.arc(0, 0, this.dist * 0.02, 0, Math.PI * 2, true);
-      ctx.fillStyle = '#CCC';
-      if (ii === this.selectedLatent) {
-        ctx.fillStyle = '#C00';
-        ctx.fillText((Math.round(value * 100000) / 100000).toString(), 0, -10);
-
-      }
-      ctx.fill();
-
-      ctx.restore();
-    }
-    ctx.restore();
-
     ctx.restore();
   }
 }
