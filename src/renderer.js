@@ -21,12 +21,13 @@ export default class Renderer {
     this.latent = [];
     this.dist = 0;
     this.beat = 0;
-    this.currentIndex = 4;
+
     this.frameCount = 0;
     this.halt = true;
     
     this.backgroundColor = 'rgba(37, 38, 35, 1.0)';
     this.noteOnColor = 'rgba(255, 255, 255, 1.0)';
+    this.mouseOnColor = 'rgba(150, 150, 150, 1.0)';
     this.noteOnCurrentColor = 'rgba(255, 100, 100, 1.0)';
     this.boxColor = 'rgba(200, 200, 200, 1.0)';
     this.extendAlpha = 0;
@@ -38,22 +39,21 @@ export default class Renderer {
     this.gridHeight = 0;
     this.gridXShift = 0;
     this.gridYShift = 0;
+    this.mouseOnIndex = [-1, -1];
 
     this.dims = 32;
     this.graphX = 0;
     this.graphY = 0;
     this.graphRadius = 0;
     this.graphRadiusRatio = 2;
+
   }
 
   initMatrix() {
-    for (let i = 0; i < 9; i += 1) {
+    for (let i = 0; i < 96; i += 1) {
       this.matrix[i] = [];
-      for (let t = 0; t < 96; t += 1) {
-        this.matrix[i][t] = [];
-        for (let d = 0; d < 9; d += 1) {
-          this.matrix[i][t][d] = (Math.random() > 0.5 ? 1 : 0);
-        }
+      for (let t = 0; t < 9; t += 1) {
+        this.matrix[i][t] = (Math.random() > 0.5 ? 1 : 0);
       }
     }
 
@@ -63,11 +63,9 @@ export default class Renderer {
   }
 
   randomMatrix() {
-    for (let i = 0; i < 9; i += 1) {
-      for (let t = 0; t < 96; t += 1) {
-        for (let d = 0; d < 9; d += 1) {
-          this.matrix[i][t][d] = (Math.random() > 0.9 ? 1 : 0);
-        }
+    for (let i = 0; i < 96; i += 1) {
+      for (let t = 0; t < 9; t += 1) {
+        this.matrix[i][t] = (Math.random() > 0.9 ? 1 : 0);
       }
     }
   }
@@ -110,12 +108,12 @@ export default class Renderer {
     this.gridYShift = -h * 1.5 ;
     ctx.translate(width * 0.5, height * 0.5);
 
-    this.drawGrid(ctx, w, h, 4);
+    this.drawGrid(ctx, w, h);
     this.drawLatentGraph(ctx);
     ctx.restore();
   }
 
-  drawGrid(ctx, w, h, i) {
+  drawGrid(ctx, w, h) {
     ctx.save();
     ctx.translate(this.gridXShift, this.gridYShift)
 
@@ -128,16 +126,21 @@ export default class Renderer {
       for (let d = 0; d < 9; d += 1) {
         ctx.save();
         ctx.translate(t * w_step, d * h_step);
-        if (this.matrix[i][t][8 - d] > 0) {
+        if (this.matrix[t][8 - d] > 0) {
           
-          if (i === this.currentIndex && Math.abs(this.beat - t) < 3) {
+          if (Math.abs(this.beat - t) < 3) {
             ctx.fillStyle = this.noteOnCurrentColor;
             ctx.fillRect(0, 0, w_step * 1.2, h_step * 0.5);
           } else {
             ctx.fillStyle = this.noteOnColor;
             ctx.fillRect(0, 0, w_step, h_step * 0.5);
           }
-          
+        } else if (
+          t === this.mouseOnIndex[0] &&
+          d === this.mouseOnIndex[1]
+        ) {
+          ctx.fillStyle = this.mouseOnColor;
+          ctx.fillRect(0, 0, w_step * 1.2, h_step * 0.5);
         } else {
           ctx.save();
           ctx.fillStyle = this.boxColor;
@@ -149,27 +152,6 @@ export default class Renderer {
       }
     }
     ctx.restore();
-  }
-
-
-  handleClick(e) {
-    let cx = e.clientX;
-    let cy = e.clientY;
-    
-    cx -= this.width * 0.5;
-    cy -= this.height * 0.5;
-
-    const cxShift = cx + (this.dist * 0.5);
-    const cyShift = cy + (this.dist * 0.5);
-    
-    const ix = Math.floor(cxShift / this.dist) + 1;
-    const iy = Math.floor(cyShift / this.dist) + 1;
-
-    if (ix > -1 && ix < 3 && iy > -1 && iy < 3) {
-      const index = ix + iy * 3;
-      this.currentIndex = index;
-    }
-    return this.currentIndex;
   }
 
   handleLatentGraphClick(x, y) {
@@ -195,10 +177,13 @@ export default class Renderer {
     let cx = e.clientX - this.width * 0.5;;
     let cy = e.clientY - this.height * 0.5;
 
-    return this.handleLatentGraphClick(cx, cy);
+    return [
+      this.handleLatentGraphClick(cx, cy),
+      this.handleMouseDownOnGrid(),
+    ];
   }
 
-  handleMouseMove(e) {
+  handleMouseMoveOnGraph(e) {
     const r = Math.pow(this.dist, 2);
     let x = e.clientX - this.width * 0.5;
     let y = e.clientY - this.height * 0.5;
@@ -208,8 +193,34 @@ export default class Renderer {
       const range = 0.1;
       const radius = range * this.graphRadiusRatio * this.dist + this.graphRadius;
       const v = lerp(d, this.graphRadius, radius, 0, range);
-      this.latent[this.currentIndex][this.selectedLatent] = v;
+      this.latent[this.selectedLatent] = v;
     }
+  }
+
+  handleMouseMove(e) {
+    const x = e.clientX - (this.width * 0.5 + this.gridXShift - this.gridWidth * 0.5);
+    const y = e.clientY - (this.height * 0.5 + this.gridYShift - this.gridHeight * 0.5);
+    const w = this.gridWidth;
+    const h = this.gridHeight;
+    const w_step = w / 96;
+    const h_step = h / 9;
+    
+    if (x > 0 && x < w && y > 0 && y < h) {
+      const xpos = Math.floor(x / w_step);
+      const ypos = Math.floor(y / h_step);
+      this.mouseOnIndex = [xpos, ypos];
+      // console.log(`${xpos}, ${ypos}`);
+    } else {
+      this.mouseOnIndex = [-1, -1];
+    }
+  }
+
+  handleMouseDownOnGrid() {
+    const p = this.mouseOnIndex;
+    if (p[0] != -1 && p[1] != -1) {
+      return true;
+    }
+    return false;
   }
   
   // draw graph
@@ -228,8 +239,7 @@ export default class Renderer {
     let xFirst;
     let yFirst;
     for (let i = 0; i < dims; i += 1) {
-      const ii = i;
-      const value = this.latent[this.currentIndex][ii];
+      const value = this.latent[i];
       ctx.save();
       const radius = value * this.graphRadiusRatio * this.dist + this.graphRadius;
       const x = radius * Math.cos(angle * i);
@@ -268,7 +278,7 @@ export default class Renderer {
       ctx.beginPath();
       ctx.arc(0, 0, this.dist * 0.02, 0, Math.PI * 2, true);
       ctx.fillStyle = '#CCC';
-      if (ii === this.selectedLatent) {
+      if (i === this.selectedLatent) {
         ctx.fillStyle = '#C00';
         ctx.fillText((Math.round(value * 100000) / 100000).toString(), 0, -10);
       }

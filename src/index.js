@@ -33,7 +33,7 @@ class App extends Component {
     this.matrix = [];
     this.rawMatrix = [];
     this.beat = 0;
-    this.serverUrl = 'http://140.109.21.193:5001/';
+    this.serverUrl = 'http://140.109.21.193:5002/';
     
     this.onKeyDown = this.onKeyDown.bind(this);
     document.addEventListener('keydown', this.onKeyDown, false);
@@ -69,12 +69,12 @@ class App extends Component {
 
   updateMatrix() {
     const { gate } = this.state;
-    const m = this.rawMatrix.map(c => c.map(
-      r => r.map((x) => (x > gate ? 1 : 0)))
-    );
+    const m = this.rawMatrix.map(
+      c => c.map(x => (x > gate ? 1 : 0)
+    ));
     this.matrix = m;
     this.renderer.changeMatrix(m);
-    this.state.samplesManager.changeMatrix(m[this.renderer.currentIndex]);
+    this.state.samplesManager.changeMatrix(m);
   }
 
   getDrumVae(url, restart = true) {
@@ -87,10 +87,7 @@ class App extends Component {
       .then(r => r.json())
       .then(d => {
         this.changeMatrix(d['result']);
-        // this.matrix = d['result'];
-        // this.renderer.changeMatrix(d['result']);
         this.renderer.latent = d['latent'];
-        // this.state.samplesManager.changeMatrix(d['result'][this.renderer.currentIndex]);
         if (restart) {
           this.state.samplesManager.start();
         }
@@ -149,20 +146,25 @@ class App extends Component {
 
   handleMouseDown(e) {
     e.stopPropagation();
-    const dragging = this.renderer.handleMouseDown(e);
-    this.setState({
-      dragging,
-    });
+    const [dragging, onGrid] = this.renderer.handleMouseDown(e);
+    if (onGrid) {
+      console.log('send pattern');
+    }
+    if (dragging) {
+      this.setState({
+        dragging,
+      });
+    }
   }
 
   handleMouseUp(e) {
     e.stopPropagation();
     const dragging = this.renderer.handleMouseDown(e);
-    const { selectedLatent, latent, currentIndex } = this.renderer;
+    const { selectedLatent, latent } = this.renderer;
     // console.log(`changed dim:[${selectedLatent}]`);
     // console.log(`value: ${latent[currentIndex][selectedLatent]}`);
     if (this.state.dragging) {
-      this.getDrumVaeAdjust(selectedLatent, latent[currentIndex][selectedLatent]);
+      this.getDrumVaeAdjust(selectedLatent, latent[selectedLatent]);
     }
 
     this.setState({
@@ -171,13 +173,15 @@ class App extends Component {
   }
 
   handleMouseMove(e) {
+    e.stopPropagation();
     if (this.state.dragging) {      
-      e.stopPropagation();
+      this.renderer.handleMouseMoveOnGraph(e);
+    } else {
       this.renderer.handleMouseMove(e);
     }
   }
 
-  onClick() {
+  handleClickMenu() {
     const { open } = this.state;
     if (open) {
       this.closeMenu();
@@ -307,7 +311,7 @@ class App extends Component {
           <a href="https://github.com/vibertthio/looop" target="_blank" rel="noreferrer noopener">
             Drum VAE | MAC Lab
           </a>
-          <button className={styles.btn} onClick={() => this.onClick()}>
+          <button className={styles.btn} onClick={() => this.handleClickMenu()}>
             <img alt="info" src={info} />
           </button>
 
@@ -342,7 +346,7 @@ class App extends Component {
           </a>
         </div> */}
         <div id="menu" className={styles.overlay}>
-          <button className={styles.overlayBtn} onClick={() => this.onClick()} />
+          <button className={styles.overlayBtn} onClick={() => this.handleClickMenu()} />
           <div className={styles.intro}>
             <p>
               <strong>$ Drum VAE $</strong> <br />Press space to play/stop the music. Click on any block to change samples. Made by{' '}
@@ -364,7 +368,7 @@ class App extends Component {
               <br /> [c]: random dimension
             </p>
           </div>
-          <button className={styles.overlayBtn} onClick={() => this.onClick()} />
+          <button className={styles.overlayBtn} onClick={() => this.handleClickMenu()} />
         </div>
       </div>
     );
