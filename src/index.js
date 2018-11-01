@@ -33,6 +33,7 @@ class App extends Component {
     this.matrix = [];
     this.rawMatrix = [];
     this.beat = 0;
+    this.serverUrl = 'http://140.109.21.193:5001/';
     
     this.onKeyDown = this.onKeyDown.bind(this);
     document.addEventListener('keydown', this.onKeyDown, false);
@@ -98,27 +99,27 @@ class App extends Component {
   }
 
   getDrumVaeRandom() {
-    const url = 'http://140.109.21.193:5001/rand';
+    const url = this.serverUrl + 'rand';
     this.getDrumVae(url);
   }
 
   getDrumVaeStatic() {
-    const url = 'http://140.109.21.193:5001/static';
+    const url = this.serverUrl + 'static';
     this.getDrumVae(url);
   }
 
   getDrumVaeStaticShift(dir = 0, step = 0.2) {
-    const url = 'http://140.109.21.193:5001/static/' + dir.toString() + '/' + step.toString();
+    const url = this.serverUrl + 'static/' + dir.toString() + '/' + step.toString();
     this.getDrumVae(url);
   }
 
   setDrumVaeDim(d1 = 3, d2 = 2) {
-    const url = 'http://140.109.21.193:5001/dim/' + d1.toString() + '/' + d2.toString();
+    const url = this.serverUrl + 'dim/' + d1.toString() + '/' + d2.toString();
     this.getDrumVae(url);
   }
 
   getDrumVaeAdjust(dim, value) {
-    const url = 'http://140.109.21.193:5001/adjust/' + dim.toString() + '/' + value.toString();
+    const url = this.serverUrl + 'adjust/' + dim.toString() + '/' + value.toString();
     this.getDrumVae(url, false);
   }
 

@@ -1,5 +1,3 @@
-import { clamp } from './utils/utils';
-
 function lerpColor(a, b, amount) {
   var ah = +a.replace('#', '0x'),
     bh = +b.replace('#', '0x'),
