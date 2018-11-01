@@ -5,6 +5,7 @@ import info from './assets/info.png';
 import SamplesManager from './music/samples-manager';
 import Renderer from './renderer';
 import playSvg from './assets/play.png';
+import pauseSvg from './assets/pause.png';
 
 class App extends Component {
   constructor(props) {
@@ -19,9 +20,6 @@ class App extends Component {
       currentTableIndex: 4,
       gate: 0.2,
       bpm: 120,
-      samplesManager: new SamplesManager((i) => {
-        this.handleLoadingSamples(i);
-      }),
       screen: {
         width: window.innerWidth,
         height: window.innerHeight,
@@ -29,14 +27,14 @@ class App extends Component {
       },
     };
 
+    this.samplesManager = new SamplesManager((i) => {
+      this.handleLoadingSamples(i);
+    }),
     this.canvas = [];
     this.matrix = [];
     this.rawMatrix = [];
     this.beat = 0;
     this.serverUrl = 'http://140.109.21.193:5002/';
-    
-    this.onKeyDown = this.onKeyDown.bind(this);
-    document.addEventListener('keydown', this.onKeyDown, false);
   }
 
   componentDidMount() {
@@ -44,21 +42,23 @@ class App extends Component {
     if (!this.state.loadingSamples) {
       this.renderer.draw(this.state.screen);
     }
+    window.addEventListener('keydown', this.onKeyDown.bind(this), false);
     window.addEventListener('resize', this.handleResize.bind(this, false));
     window.addEventListener('click', this.handleClick.bind(this));
     window.addEventListener('mousedown', this.handleMouseDown.bind(this));
     window.addEventListener('mousemove', this.handleMouseMove.bind(this));
     window.addEventListener('mouseup', this.handleMouseUp.bind(this));
+
     requestAnimationFrame(() => { this.update() });
-    
     this.getDrumVaeStatic();
   }
 
   componentWillUnmount() {
-    window.removeEventListener('click', this.handleClick);
-    window.removeEventListener('mousedown', this.handleMouseDown);
-    window.removeEventListener('mousemove', this.handleMouseMove);
-    window.removeEventListener('mouseup', this.handleMouseUp);
+    window.removeEventListener('keydown', this.onKeyDown.bind(this));
+    window.removeEventListener('click', this.handleClick.bind(this));
+    window.removeEventListener('mousedown', this.handleMouseDown.bind(this));
+    window.removeEventListener('mousemove', this.handleMouseMove.bind(this));
+    window.removeEventListener('mouseup', this.handleMouseUp.bind(this));
     window.removeEventListener('resize', this.handleResize.bind(this, false));
   }
 
@@ -74,7 +74,7 @@ class App extends Component {
     ));
     this.matrix = m;
     this.renderer.changeMatrix(m);
-    this.state.samplesManager.changeMatrix(m);
+    this.samplesManager.changeMatrix(m);
   }
 
   getDrumVae(url, restart = true) {
@@ -89,7 +89,7 @@ class App extends Component {
         this.changeMatrix(d['result']);
         this.renderer.latent = d['latent'];
         if (restart) {
-          this.state.samplesManager.start();
+          this.samplesManager.start();
         }
       })
       .catch(e => console.log(e));
@@ -116,12 +116,23 @@ class App extends Component {
   }
 
   getDrumVaeAdjust(dim, value) {
-    const url = this.serverUrl + 'adjust/' + dim.toString() + '/' + value.toString();
+    const url = this.serverUrl + 'adjust-latent/' + dim.toString() + '/' + value.toString();
+    this.getDrumVae(url, false);
+  }
+
+  getDrumVaeAdjustData(i, j, value) {
+    const url = this.serverUrl
+      + 'adjust-data/'
+      + i.toString()
+      + '/'
+      + j.toString()
+      + '/'
+      + value.toString();
     this.getDrumVae(url, false);
   }
 
   update() {
-    const b = this.state.samplesManager.beat;
+    const b = this.samplesManager.beat;
     if (!this.state.loadingSamples) {
       this.renderer.draw(this.state.screen, b);
     }
@@ -148,7 +159,12 @@ class App extends Component {
     e.stopPropagation();
     const [dragging, onGrid] = this.renderer.handleMouseDown(e);
     if (onGrid) {
-      console.log('send pattern');
+      // console.log('send pattern');
+      const [i, j_reverse] = this.renderer.mouseOnIndex;
+      const j = 8 - j_reverse;
+      this.rawMatrix[i][j] = (this.rawMatrix[i][j] < this.state.gate ? 1 : 0);
+      this.updateMatrix();
+      this.getDrumVaeAdjustData(i, j, this.rawMatrix[i][j])
     }
     if (dragging) {
       this.setState({
@@ -159,10 +175,8 @@ class App extends Component {
 
   handleMouseUp(e) {
     e.stopPropagation();
-    const dragging = this.renderer.handleMouseDown(e);
+    // const dragging = this.renderer.handleMouseDown(e);
     const { selectedLatent, latent } = this.renderer;
-    // console.log(`changed dim:[${selectedLatent}]`);
-    // console.log(`value: ${latent[currentIndex][selectedLatent]}`);
     if (this.state.dragging) {
       this.getDrumVaeAdjust(selectedLatent, latent[selectedLatent]);
     }
@@ -174,7 +188,7 @@ class App extends Component {
 
   handleMouseMove(e) {
     e.stopPropagation();
-    if (this.state.dragging) {      
+    if (this.state.dragging) {
       this.renderer.handleMouseMoveOnGraph(e);
     } else {
       this.renderer.handleMouseMove(e);
@@ -191,65 +205,29 @@ class App extends Component {
   }
 
   onKeyDown(event) {
+    event.stopPropagation();
     const { loadingSamples } = this.state;
     if (!loadingSamples) {
       if (event.keyCode === 32) {
         // space
-        const playing = this.state.samplesManager.trigger();
+        const playing = this.samplesManager.trigger();
         this.setState({
           playing,
         });
       }
       if (event.keyCode === 65) {
         // a
-        console.log('dims: 3, 2');
-        this.setDrumVaeDim(3, 2);
-      }
-      if (event.keyCode === 66) {
-        // b
-        console.log('dims: 5, 6');
-        this.setDrumVaeDim(5, 6);
-      }
-      if (event.keyCode === 67) {
-        // c
-        const i = [Math.floor(Math.random() * 32), Math.floor(Math.random() * 32)];
-        console.log(`random dims: ${i}`);
-        this.setDrumVaeDim(i[0], i[1]);
+        this.renderer.triggerDisplay();
       }
       if (event.keyCode === 82) {
         // r
         this.getDrumVaeRandom();
       }
-      if (event.keyCode === 38) {
-        // up
-        this.renderer.triggerExtend();
-        this.getDrumVaeStaticShift(0, 0.01);
-        this.renderer.currentUpdateDir = 0;
-      }
-      if (event.keyCode === 40) {
-        // down
-        this.renderer.triggerExtend();
-        this.getDrumVaeStaticShift(1, 0.01);
-        this.renderer.currentUpdateDir = 1;
-      }
-      if (event.keyCode === 37) {
-        // left
-        this.renderer.triggerExtend();
-        this.getDrumVaeStaticShift(2, 0.01);
-        this.renderer.currentUpdateDir = 2;
-      }
-      if (event.keyCode === 39) {
-        // right
-        this.renderer.triggerExtend();
-        this.getDrumVaeStaticShift(3, 0.01);
-        this.renderer.currentUpdateDir = 3;
-      }
-
     }
   }
 
   changeTableIndex(currentTableIndex) {
-    this.state.samplesManager.changeTable(this.matrix[currentTableIndex]);
+    this.samplesManager.changeTable(this.matrix[currentTableIndex]);
     this.setState({
       currentTableIndex,
     });
@@ -274,7 +252,7 @@ class App extends Component {
       loadingProgress: amt,
     });
     if (amt === 8) {
-      const playing = this.state.samplesManager.trigger();
+      const playing = this.samplesManager.trigger();
       this.setState({
         playing,
         loadingSamples: false,
@@ -296,7 +274,14 @@ class App extends Component {
     const bpm = v;
     console.log(`bpm changed: ${bpm}`);
     this.setState({ bpm });
-    this.state.samplesManager.changeBpm(bpm);
+    this.samplesManager.changeBpm(bpm);
+  }
+
+  handleClickPlayButton() {
+    const playing = this.samplesManager.trigger();
+    this.setState({
+      playing,
+    });
   }
 
   render() {
@@ -311,10 +296,13 @@ class App extends Component {
           <a href="https://github.com/vibertthio/looop" target="_blank" rel="noreferrer noopener">
             Drum VAE | MAC Lab
           </a>
-          <button className={styles.btn} onClick={() => this.handleClickMenu()}>
+          <button
+            className={styles.btn}
+            onClick={() => this.handleClickMenu()}
+            onKeyDown={e => e.preventDefault()}
+          >
             <img alt="info" src={info} />
           </button>
-
         </div>
         <div>
           {this.state.loadingSamples && (
@@ -334,8 +322,12 @@ class App extends Component {
         <div className={styles.control}>
           <div className={styles.slider}>
             <input type="range" min="1" max="100" value={gate * 100} onChange={this.handleChangeGateValue.bind(this)}/>
-            <button>
-              <img src={playSvg} width="30" height="30" alt="submit" />
+            <button onClick={this.handleClickPlayButton.bind(this)} onKeyDown={e => e.preventDefault()}>
+              {
+                !this.state.playing ?
+                  (<img src={playSvg} width="30" height="30" alt="submit" />) :
+                  (<img src={pauseSvg} width="30" height="30" alt="submit" />)
+              }
             </button>
             <input type="range" min="60" max="180" value={bpm} onChange={this.handleChangeBpmValue.bind(this)}/>
           </div>

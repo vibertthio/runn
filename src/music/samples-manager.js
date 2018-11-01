@@ -7,6 +7,17 @@ export default class SamplesManager {
     StartAudioContext(Tone.context);
     this.currentIndex = 0;
     this.samples = [];
+    this.mixing = [
+      -5,   // kick
+      -7,   // snare
+      -15,  // ch
+      -12,  // oh
+      -11,    // low tom
+      -11,    // mid tom
+      -11,    // hi tom
+      -12,    // crash
+      -12,    // cymbal
+    ];
     this.loadingStatus = 0;
     this.loadingSamplesCallback = loadingSamplesCallback;
     this.drumUrls = drumUrls;
@@ -68,6 +79,7 @@ export default class SamplesManager {
         console.log(`finish...${this.loadingStatus}/9: ${this.drumUrls[i]}`);
         this.loadingSamplesCallback(this.loadingStatus);
       }).toMaster();
+      this.samples[i].volume.value = this.mixing[i];
     }
   }
 
