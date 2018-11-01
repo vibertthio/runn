@@ -55,6 +55,10 @@ export default class SamplesManager {
     this.matrix = mat;
   }
 
+  changeBpm(b) {
+    Transport.bpm.value = b;
+  }
+
   loadSamples() {
     console.log('start loading samples..');
     this.samples = [];
@@ -75,6 +79,7 @@ export default class SamplesManager {
     this.sequence.stop();
     this.sequence.start();
   }
+
   trigger() {
     if (this.sequence.state === 'started') {
       this.sequence.stop();

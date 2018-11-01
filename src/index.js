@@ -17,6 +17,8 @@ class App extends Component {
       loadingProgress: 0,
       loadingSamples: true,
       currentTableIndex: 4,
+      gate: 0.2,
+      bpm: 120,
       samplesManager: new SamplesManager((i) => {
         this.handleLoadingSamples(i);
       }),
@@ -31,6 +33,7 @@ class App extends Component {
     this.matrix = [];
     this.rawMatrix = [];
     this.beat = 0;
+    
     this.onKeyDown = this.onKeyDown.bind(this);
     document.addEventListener('keydown', this.onKeyDown, false);
   }
@@ -59,11 +62,15 @@ class App extends Component {
   }
 
   changeMatrix(mat) {
-    console.log(mat);
     this.rawMatrix = mat;
-    const m = mat.map(c => c.map(r => r.map((x) => {
-      return (x > 0.2 ? 1 : 0);
-    })));
+    this.updateMatrix()
+  }
+
+  updateMatrix() {
+    const { gate } = this.state;
+    const m = this.rawMatrix.map(c => c.map(
+      r => r.map((x) => (x > gate ? 1 : 0)))
+    );
     this.matrix = m;
     this.renderer.changeMatrix(m);
     this.state.samplesManager.changeMatrix(m[this.renderer.currentIndex]);
@@ -270,11 +277,29 @@ class App extends Component {
     }
   }
 
+  handleChangeGateValue(e) {
+    const v = e.target.value;
+    const gate = v / 100;
+    console.log(`gate changed: ${gate}`);
+    this.setState({ gate });
+    this.updateMatrix();
+  }
+
+  handleChangeBpmValue(e) {
+    const v = e.target.value;
+    // 0~100 -> 60~120
+    const bpm = v;
+    console.log(`bpm changed: ${bpm}`);
+    this.setState({ bpm });
+    this.state.samplesManager.changeBpm(bpm);
+  }
+
   render() {
     const loadingText = `loading..${this.state.loadingProgress}/9`;
     const { playing, currentTableIndex } = this.state;
     const arr = Array.from(Array(9).keys());
     const mat = Array.from(Array(9 * 16).keys());
+    const { gate, bpm } = this.state;
     return (
       <div>
         <div className={styles.title}>
@@ -303,11 +328,11 @@ class App extends Component {
         </div>
         <div className={styles.control}>
           <div className={styles.slider}>
-            <input type="range" min="1" max="100"/>
+            <input type="range" min="1" max="100" value={gate * 100} onChange={this.handleChangeGateValue.bind(this)}/>
             <button>
               <img src={playSvg} width="30" height="30" alt="submit" />
             </button>
-            <input type="range" min="1" max="100"/>
+            <input type="range" min="60" max="180" value={bpm} onChange={this.handleChangeBpmValue.bind(this)}/>
           </div>
         </div>
         {/* <div className={styles.foot}>

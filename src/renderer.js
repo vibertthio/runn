@@ -27,15 +27,25 @@ export default class Renderer {
     this.frameCount = 0;
     this.halt = true;
     
-    this.backgroundColor = 'rgba(50, 50, 50, 0.85)';
-    this.gridColor = 'rgba(255, 255, 255, 1.0)';
-    this.gridCurrentColor = 'rgba(255, 100, 100, 1.0)';
+    this.backgroundColor = 'rgba(37, 38, 35, 1.0)';
+    this.noteOnColor = 'rgba(255, 255, 255, 1.0)';
+    this.noteOnCurrentColor = 'rgba(255, 100, 100, 1.0)';
     this.boxColor = 'rgba(200, 200, 200, 1.0)';
     this.extendAlpha = 0;
     this.currentUpdateDir = 0;
     this.selectedLatent = 0;
     this.initMatrix();
 
+    this.gridWidth = 0;
+    this.gridHeight = 0;
+    this.gridXShift = 0;
+    this.gridYShift = 0;
+
+    this.dims = 32;
+    this.graphX = 0;
+    this.graphY = 0;
+    this.graphRadius = 0;
+    this.graphRadiusRatio = 2;
   }
 
   initMatrix() {
@@ -85,7 +95,6 @@ export default class Renderer {
     const height = scr.height;
     ctx.font = "15px monospace";
 
-      
     ctx.save();
     ctx.fillStyle = this.backgroundColor;
     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
@@ -93,34 +102,28 @@ export default class Renderer {
     const h = Math.min(width, height) * 0.18;
     const w = width * 0.5;
     const dist = h * 1.2;
+
+    this.gridWidth = w;
+    this.gridHeight = h;
     this.dist = dist;
-    const yshift = -h * 1.5 ;
+    this.graphY = dist * 0.65;
+    this.graphRadius = dist * 0.7;
+    
+    this.gridYShift = -h * 1.5 ;
     ctx.translate(width * 0.5, height * 0.5);
 
-    ctx.save();
-    ctx.translate(0, yshift)
-    ctx.translate(-w * 0.5, -h * 0.5);
     this.drawGrid(ctx, w, h, 4);
-    ctx.restore();
-    // for (let i = 0; i < 9; i += 1) {
-    //   const x = i % 3 - 1;
-    //   const y = Math.floor(i / 3) - 1;
-    //   ctx.save();
-
-    //   ctx.translate(x * dist, y * dist);
-    //   ctx.translate(-w * 0.5, -h * 0.5);
-
-    //   this.drawGrid(ctx, w, h, i);
-    //   ctx.restore();
-    // }
-
-
-    // this.drawExtend(ctx, w, h);
     this.drawLatentGraph(ctx);
     ctx.restore();
   }
 
   drawGrid(ctx, w, h, i) {
+    ctx.save();
+    ctx.translate(this.gridXShift, this.gridYShift)
+
+    this.drawFrame(ctx, this.gridWidth * 1.1, this.gridHeight * 1.1);
+
+    ctx.translate(-w * 0.5, -h * 0.5);
     const w_step  = w / 96;
     const h_step = h / 9;
     for (let t = 0; t < 96; t += 1) {
@@ -130,10 +133,10 @@ export default class Renderer {
         if (this.matrix[i][t][8 - d] > 0) {
           
           if (i === this.currentIndex && Math.abs(this.beat - t) < 3) {
-            ctx.fillStyle = this.gridCurrentColor;
+            ctx.fillStyle = this.noteOnCurrentColor;
             ctx.fillRect(0, 0, w_step * 1.2, h_step * 0.5);
           } else {
-            ctx.fillStyle = this.gridColor;
+            ctx.fillStyle = this.noteOnColor;
             ctx.fillRect(0, 0, w_step, h_step * 0.5);
           }
           
@@ -147,12 +150,183 @@ export default class Renderer {
         ctx.restore();
       }
     }
+    ctx.restore();
   }
 
-  triggerExtend() {
-    this.extendAlpha = 1;
+
+  handleClick(e) {
+    let cx = e.clientX;
+    let cy = e.clientY;
+    
+    cx -= this.width * 0.5;
+    cy -= this.height * 0.5;
+
+    const cxShift = cx + (this.dist * 0.5);
+    const cyShift = cy + (this.dist * 0.5);
+    
+    const ix = Math.floor(cxShift / this.dist) + 1;
+    const iy = Math.floor(cyShift / this.dist) + 1;
+
+    if (ix > -1 && ix < 3 && iy > -1 && iy < 3) {
+      const index = ix + iy * 3;
+      this.currentIndex = index;
+    }
+    return this.currentIndex;
   }
 
+  handleLatentGraphClick(x, y) {
+    const r = Math.pow(this.dist, 2);
+    const angle = 2 * Math.PI / 32;
+
+    if (Math.pow(x - this.graphX, 2) + Math.pow(y - this.graphY, 2) < r) {
+      const xpos = x - this.graphX;
+      const ypos = y - this.graphY;
+      let theta = Math.atan2(ypos, xpos) + 0.5 * angle;
+      if (theta < 0) {
+        theta += Math.PI * 2;
+      }
+      const id = Math.floor(theta / angle);
+      this.selectedLatent = id;
+      return true;
+
+    }
+    return false;
+  }
+
+  handleMouseDown(e) {
+    let cx = e.clientX - this.width * 0.5;;
+    let cy = e.clientY - this.height * 0.5;
+
+    return this.handleLatentGraphClick(cx, cy);
+  }
+
+  handleMouseMove(e) {
+    const r = Math.pow(this.dist, 2);
+    let x = e.clientX - this.width * 0.5;
+    let y = e.clientY - this.height * 0.5;
+    let d1 = Math.pow(x - this.graphX, 2) + Math.pow(y - this.graphY, 2);
+    if (d1 < r * 1.2 & d1 > r * 0.1) {
+      const d = Math.sqrt(d1);
+      const range = 0.1;
+      const radius = range * this.graphRadiusRatio * this.dist + this.graphRadius;
+      const v = lerp(d, this.graphRadius, radius, 0, range);
+      this.latent[this.currentIndex][this.selectedLatent] = v;
+    }
+  }
+  
+  // draw graph
+  drawLatentGraph(ctx) {
+    const dims = this.dims;
+    ctx.save();
+    
+    ctx.translate(this.graphX, this.graphY);
+    this.drawFrame(ctx, this.gridWidth * 1.1, this.graphRadius * 2.5);
+    this.drawDashCircle(ctx);
+
+    const angle = 2 * Math.PI / dims;
+
+    let xPrev;
+    let yPrev;
+    let xFirst;
+    let yFirst;
+    for (let i = 0; i < dims; i += 1) {
+      const ii = i;
+      const value = this.latent[this.currentIndex][ii];
+      ctx.save();
+      const radius = value * this.graphRadiusRatio * this.dist + this.graphRadius;
+      const x = radius * Math.cos(angle * i);
+      const y = radius * Math.sin(angle * i);
+
+      ctx.beginPath();
+      ctx.moveTo(
+        0.7 * this.dist * Math.cos(angle * i),
+        0.7 * this.dist * Math.sin(angle * i),
+      );
+      ctx.lineTo(x, y);
+      ctx.strokeStyle = '#F00';
+      ctx.stroke();
+
+      if (i > 0) {
+        ctx.beginPath();
+        ctx.moveTo(xPrev, yPrev);
+        ctx.lineTo(x, y);
+        ctx.strokeStyle = '#AAA';
+        ctx.stroke();
+      } else {
+        xFirst = x;
+        yFirst = y;
+      }
+      if (i === 31) {
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(xFirst, yFirst);
+        ctx.strokeStyle = '#AAA';
+        ctx.stroke();
+      }
+      xPrev = x;
+      yPrev = y;
+
+      ctx.translate(x, y);
+      ctx.beginPath();
+      ctx.arc(0, 0, this.dist * 0.02, 0, Math.PI * 2, true);
+      ctx.fillStyle = '#CCC';
+      if (ii === this.selectedLatent) {
+        ctx.fillStyle = '#C00';
+        ctx.fillText((Math.round(value * 100000) / 100000).toString(), 0, -10);
+      }
+      ctx.fill();
+      ctx.restore();
+    }
+    
+    ctx.restore();
+  }
+
+  drawDashCircle(ctx) {
+    const a = 2 * (Math.PI / 40.0);
+    for (let i = 0; i < 40; i += 1) {
+      ctx.beginPath();
+      ctx.arc(0, 0, this.graphRadius, i * a, i * a + 0.1);
+      ctx.strokeStyle = '#888';
+      ctx.stroke();
+    }
+  }
+
+  // draw frame
+  drawFrame(ctx, w, h) {
+    const unit = this.dist * 0.04;
+    
+    ctx.save();
+
+    ctx.strokeStyle = '#FFF';
+
+    ctx.beginPath()
+    ctx.moveTo(0.5 * w, 0.5 * h - unit);
+    ctx.lineTo(0.5 * w, 0.5 * h);
+    ctx.lineTo(0.5 * w - unit, 0.5 * h);
+    ctx.stroke();
+    
+    ctx.beginPath()
+    ctx.moveTo(-0.5 * w, 0.5 * h - unit);
+    ctx.lineTo(-0.5 * w, 0.5 * h);
+    ctx.lineTo(-0.5 * w + unit, 0.5 * h);
+    ctx.stroke();
+  
+    ctx.beginPath()
+    ctx.moveTo(0.5 * w, -0.5 * h + unit);
+    ctx.lineTo(0.5 * w, -0.5 * h);
+    ctx.lineTo(0.5 * w - unit, -0.5 * h);
+    ctx.stroke();
+
+    ctx.beginPath()
+    ctx.moveTo(-0.5 * w, -0.5 * h + unit);
+    ctx.lineTo(-0.5 * w, -0.5 * h);
+    ctx.lineTo(-0.5 * w + unit, -0.5 * h);
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  // not used
   updateExtend() {
     this.extendAlpha = this.extendAlpha * 0.8;
   }
@@ -235,133 +409,8 @@ export default class Renderer {
       }
     }
   }
-  
-  handleClick(e) {
-    let cx = e.clientX;
-    let cy = e.clientY;
-    
-    cx -= this.width * 0.5;
-    cy -= this.height * 0.5;
 
-    const cxShift = cx + (this.dist * 0.5);
-    const cyShift = cy + (this.dist * 0.5);
-    
-    const ix = Math.floor(cxShift / this.dist) + 1;
-    const iy = Math.floor(cyShift / this.dist) + 1;
-
-    if (ix > -1 && ix < 3 && iy > -1 && iy < 3) {
-      const index = ix + iy * 3;
-      this.currentIndex = index;
-    }
-    return this.currentIndex;
-  }
-
-  handleLatentGraphClick(x, y) {
-    const r = Math.pow(this.dist, 2);
-    const angle = 2 * Math.PI / 32;
-
-    if (Math.pow(x, 2) + Math.pow(y - this.dist * 0.5, 2) < r) {
-      const xpos = x;
-      const ypos = y - this.dist * 0.5;
-      let theta = Math.atan2(ypos, xpos) + 0.5 * angle;
-      if (theta < 0) {
-        theta += Math.PI * 2;
-      }
-      const id = Math.floor(theta / angle);
-      this.selectedLatent = id;
-      return true;
-
-    }
-    return false;
-  }
-
-  handleMouseDown(e) {
-    let cx = e.clientX - this.width * 0.5;;
-    let cy = e.clientY - this.height * 0.5;
-
-    return this.handleLatentGraphClick(cx, cy);
-  }
-
-  handleMouseMove(e) {
-    const r = Math.pow(this.dist, 2);
-    let x = e.clientX - this.width * 0.5;;
-    let y = e.clientY - this.height * 0.5;
-    let d1 = Math.pow(x, 2) + Math.pow(y - this.dist * 0.5, 2);
-    if (d1 < r * 1.2 & d1 > r * 0.1) {
-      const d = Math.sqrt(d1);
-      const v = lerp(d, 0.7 * this.dist, 0.9 * this.dist, 0, 0.1);
-      this.latent[this.currentIndex][this.selectedLatent] = v;
-    }
-  }
-  
-  // draw circle
-  drawLatentGraph(ctx) {
-    ctx.save();
-    
-    ctx.translate(0, this.dist * 0.5);
-
-    const a = 2 * (Math.PI / 40.0);
-    for (let i = 0; i < 40; i += 1) {
-      ctx.beginPath();
-      ctx.arc(0, 0, this.dist * 0.7, i * a, i * a + 0.1);
-      ctx.strokeStyle = '#888';
-      ctx.stroke();
-    }
-    const angle = 2 * Math.PI / 32;
-
-    let xPrev;
-    let yPrev;
-    let xFirst;
-    let yFirst;
-    for (let i = 0; i < 32; i += 1) {
-      const ii = i;
-      const value = this.latent[this.currentIndex][ii];
-      ctx.save();
-      const radius = (value * 2 + 0.7) * this.dist;
-      const x = radius * Math.cos(angle * i);
-      const y = radius * Math.sin(angle * i);
-
-      ctx.beginPath();
-      ctx.moveTo(
-        0.7 * this.dist * Math.cos(angle * i),
-        0.7 * this.dist * Math.sin(angle * i),
-      );
-      ctx.lineTo(x, y);
-      ctx.strokeStyle = '#F00';
-      ctx.stroke();
-
-      if (i > 0) {
-        ctx.beginPath();
-        ctx.moveTo(xPrev, yPrev);
-        ctx.lineTo(x, y);
-        ctx.strokeStyle = '#AAA';
-        ctx.stroke();
-      } else {
-        xFirst = x;
-        yFirst = y;
-      }
-      if (i === 31) {
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-        ctx.lineTo(xFirst, yFirst);
-        ctx.strokeStyle = '#AAA';
-        ctx.stroke();
-      }
-      xPrev = x;
-      yPrev = y;
-
-      ctx.translate(x, y);
-      ctx.beginPath();
-      ctx.arc(0, 0, this.dist * 0.02, 0, Math.PI * 2, true);
-      ctx.fillStyle = '#CCC';
-      if (ii === this.selectedLatent) {
-        ctx.fillStyle = '#C00';
-        ctx.fillText((Math.round(value * 100000) / 100000).toString(), 0, -10);
-      }
-      ctx.fill();
-      ctx.restore();
-    }
-    
-    ctx.restore();
+  triggerExtend() {
+    this.extendAlpha = 1;
   }
 }
