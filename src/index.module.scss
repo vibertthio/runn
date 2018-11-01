@@ -1,3 +1,5 @@
+$font-default: monospace, Arial, sans-serif;
+
 .no-btn-style {
   background-color: Transparent;
   background-repeat: no-repeat;
@@ -8,8 +10,8 @@
 .links {
   position: absolute;
   width: 100%;
-  font-family: monospace;
-  font-size: 0.5rem;
+  font-family: $font-default;
+  font-size: 0.7rem;
   text-align:center;
   color: #ffffff;
 
@@ -31,12 +33,88 @@
 .links p {
   color: #999;
   letter-spacing: 0.2rem;
-  font-size: 0.2rem;
 }
 
 .title {
   @extend .links;
-  top: 12px;
+  top: 1.5rem;
+  
+  a {
+    margin-right: 1rem;
+  }
+}
+
+
+// Base Colors
+$shade-10: #b33b3b !default;
+$shade-1: #d7dcdf !default;
+$shade-0: #fff !default;
+$teal: #1abc9c !default;
+
+$range-width: 100% !default;
+
+$range-handle-color: $shade-10 !default;
+$range-handle-color-hover: $teal !default;
+$range-handle-size: 10px !default;
+
+$range-track-color: $shade-1 !default;
+$range-track-height: 3px !default;
+
+$range-label-color: $shade-10 !default;
+$range-label-width: 60px !default;
+
+.control {
+  position: absolute;
+  display: block;
+
+  width: 100%;
+  height: 1rem;
+  bottom: 35px;
+
+  .slider {
+    // display: block;
+    display: flex;
+    justify-content: space-evenly;
+    width: 30rem;
+    margin: auto;
+
+    
+    button {
+      background: none;
+      color: inherit;
+      border: none;
+      padding: 0;
+      font: inherit;
+      cursor: pointer;
+      outline: inherit;
+    }
+
+    input[type='range'] {
+      -webkit-appearance: none;
+      width: 7rem;
+      height: $range-track-height;
+      border-radius: 5px;
+      outline: none;
+
+      display: inline;
+      margin: auto 0.5rem;
+
+      // Range Handle
+      &::-webkit-slider-thumb {
+        appearance: none;
+        width: $range-handle-size;
+        height: $range-handle-size;
+        border-radius: 40%;
+        background: $range-handle-color;
+        cursor: pointer;
+        transition: background .05s ease-in-out;
+
+        &:hover {
+          background: $range-handle-color-hover;
+        }
+      }
+    }
+  }
 }
 
 .foot {
@@ -58,10 +136,6 @@
 	transition: 0.5s; /* 0.5 second transition effect to slide in or slide down the overlay (height or width, depending on reveal) */
   -webkit-transition: 0.5s;
 
-
-
-
-
   .intro {
     max-width: 350px;
     margin: 0rem auto;
@@ -73,7 +147,7 @@
       z-index: 3;
       font-size: 1.0rem;
       letter-spacing: 0.1rem;
-      line-height: 1rem;
+      line-height: 1.5rem;
 
       @media screen and (max-width: 650px) {
         line-height: 1rem;
@@ -81,7 +155,7 @@
         margin: 0rem 2rem;
       }
       // text-align: center;
-      font-family: monospace;
+      font-family: $font-default;
       // margin: 10rem 7rem;
       // margin: 0rem 7rem;
       color: #ffffff;
@@ -204,7 +278,7 @@
 
   p {
     font-size: 1rem;
-    font-family: monospace;
+    font-family: $font-default;
     color: #ffffff;
   }
 }

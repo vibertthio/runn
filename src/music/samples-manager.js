@@ -51,7 +51,7 @@ export default class SamplesManager {
     this.matrix = new Array(96).fill(new Array(9).fill(0));
   }
 
-  changeTable(mat) {
+  changeMatrix(mat) {
     this.matrix = mat;
   }
 

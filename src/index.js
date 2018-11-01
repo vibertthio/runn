@@ -4,6 +4,7 @@ import styles from './index.module.scss';
 import info from './assets/info.png';
 import SamplesManager from './music/samples-manager';
 import Renderer from './renderer';
+import playSvg from './assets/play.png';
 
 class App extends Component {
   constructor(props) {
@@ -27,6 +28,8 @@ class App extends Component {
     };
 
     this.canvas = [];
+    this.matrix = [];
+    this.rawMatrix = [];
     this.beat = 0;
     this.onKeyDown = this.onKeyDown.bind(this);
     document.addEventListener('keydown', this.onKeyDown, false);
@@ -55,6 +58,17 @@ class App extends Component {
     window.removeEventListener('resize', this.handleResize.bind(this, false));
   }
 
+  changeMatrix(mat) {
+    console.log(mat);
+    this.rawMatrix = mat;
+    const m = mat.map(c => c.map(r => r.map((x) => {
+      return (x > 0.2 ? 1 : 0);
+    })));
+    this.matrix = m;
+    this.renderer.changeMatrix(m);
+    this.state.samplesManager.changeMatrix(m[this.renderer.currentIndex]);
+  }
+
   getDrumVae(url, restart = true) {
     fetch(url, {
       headers: {
@@ -64,10 +78,11 @@ class App extends Component {
     })
       .then(r => r.json())
       .then(d => {
-        this.matrix = d['result'];
-        this.renderer.changeMatrix(d['result']);
+        this.changeMatrix(d['result']);
+        // this.matrix = d['result'];
+        // this.renderer.changeMatrix(d['result']);
         this.renderer.latent = d['latent'];
-        this.state.samplesManager.changeTable(d['result'][this.renderer.currentIndex]);
+        // this.state.samplesManager.changeMatrix(d['result'][this.renderer.currentIndex]);
         if (restart) {
           this.state.samplesManager.start();
         }
@@ -286,11 +301,20 @@ class App extends Component {
             height={this.state.screen.height * this.state.screen.ratio}
           />
         </div>
-        <div className={styles.foot}>
+        <div className={styles.control}>
+          <div className={styles.slider}>
+            <input type="range" min="1" max="100"/>
+            <button>
+              <img src={playSvg} width="30" height="30" alt="submit" />
+            </button>
+            <input type="range" min="1" max="100"/>
+          </div>
+        </div>
+        {/* <div className={styles.foot}>
           <a href="https://vibertthio.com/portfolio/" target="_blank" rel="noreferrer noopener">
             Vibert Thio
           </a>
-        </div>
+        </div> */}
         <div id="menu" className={styles.overlay}>
           <button className={styles.overlayBtn} onClick={() => this.onClick()} />
           <div className={styles.intro}>
