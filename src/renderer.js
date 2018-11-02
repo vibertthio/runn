@@ -1,4 +1,5 @@
 import LatentGraph from './latent-graph';
+import { Noise } from 'noisejs';
 
 function lerpColor(a, b, amount) {
   var ah = +a.replace('#', '0x'),
@@ -35,7 +36,7 @@ export default class Renderer {
     this.boxColor = 'rgba(200, 200, 200, 1.0)';
     this.extendAlpha = 0;
     this.currentUpdateDir = 0;
-    this.selectedLatent = 0;
+    this.selectedLatent = 20;
 
     this.gridWidth = 0;
     this.gridHeight = 0;
@@ -47,12 +48,12 @@ export default class Renderer {
 
     // fake data
     this.showingLatents = false;
-    this.latents = [[], [], [], []];
+    this.latents = [[], [], []];
     this.latentGraphs = [];
+    this.noise = new Noise(Math.random());
 
     this.initMatrix();
     this.setDefaultDisplay();
-    // this.setMultipleDisplay();
   }
 
   triggerDisplay() {
@@ -65,6 +66,7 @@ export default class Renderer {
 
   setDefaultDisplay() {
     this.showingLatents = false;
+
     this.latentGraph.radiusRatio = 0.7;
     this.latentGraph.widthRatio = 1.0;
     this.latentGraph.heightRatio = 2.0;
@@ -92,7 +94,7 @@ export default class Renderer {
     for (let i = 0; i < 32; i += 1) {
       this.latent[i] = 0;
       this.latentDisplay[i] = 0;
-      for (let j = 0; j < 4; j += 1) {
+      for (let j = 0; j < 3; j += 1) {
         this.latents[j][i] = -0.01 + 0.02 * Math.random();
       }
     }
@@ -154,9 +156,7 @@ export default class Renderer {
     this.latentGraph.draw(ctx, this.latent, this.dist);
 
     if (this.showingLatents) {
-      for (let i = 0; i < 3; i += 1) {
-        this.latentGraphs[i].draw(ctx, this.latents[i], this.dist);
-      }
+      this.drawLatents(ctx);
     }
     ctx.restore();
   }
@@ -307,4 +307,17 @@ export default class Renderer {
 
     ctx.restore();
   }
+
+  drawLatents(ctx) {
+    for (let i = 0; i < 3; i += 1) {
+      for (let j = 0; j < 12; j += 1) {
+        const value = this.noise.perlin2(i * 2 + j * 0.1, this.frameCount * 0.005);
+        this.latents[i][j] = lerp(value, 0, 1, -0.01, 0.01);
+      }
+      this.latentGraphs[i].draw(ctx, this.latents[i], this.dist);
+
+    }
+  }
+
+
 }
