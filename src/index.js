@@ -13,10 +13,10 @@ class App extends Component {
 
     this.state = {
       open: false,
-      playing: false,
+      playing: true,
       dragging: false,
       loadingProgress: 0,
-      loadingSamples: true,
+      loadingSamples: false,
       currentTableIndex: 4,
       gate: 0.2,
       bpm: 120,
@@ -34,7 +34,7 @@ class App extends Component {
     this.matrix = [];
     this.rawMatrix = [];
     this.beat = 0;
-    this.serverUrl = 'http://140.109.21.193:5002/';
+    this.serverUrl = 'http://140.109.21.193:5003/';
   }
 
   componentDidMount() {
@@ -44,10 +44,10 @@ class App extends Component {
     }
     window.addEventListener('keydown', this.onKeyDown.bind(this), false);
     window.addEventListener('resize', this.handleResize.bind(this, false));
-    window.addEventListener('click', this.handleClick.bind(this));
-    window.addEventListener('mousedown', this.handleMouseDown.bind(this));
-    window.addEventListener('mousemove', this.handleMouseMove.bind(this));
-    window.addEventListener('mouseup', this.handleMouseUp.bind(this));
+    // window.addEventListener('click', this.handleClick.bind(this));
+    // window.addEventListener('mousedown', this.handleMouseDown.bind(this));
+    // window.addEventListener('mousemove', this.handleMouseMove.bind(this));
+    // window.addEventListener('mouseup', this.handleMouseUp.bind(this));
 
     requestAnimationFrame(() => { this.update() });
     this.getDrumVaeStatic();
@@ -55,10 +55,10 @@ class App extends Component {
 
   componentWillUnmount() {
     window.removeEventListener('keydown', this.onKeyDown.bind(this));
-    window.removeEventListener('click', this.handleClick.bind(this));
-    window.removeEventListener('mousedown', this.handleMouseDown.bind(this));
-    window.removeEventListener('mousemove', this.handleMouseMove.bind(this));
-    window.removeEventListener('mouseup', this.handleMouseUp.bind(this));
+    // window.removeEventListener('click', this.handleClick.bind(this));
+    // window.removeEventListener('mousedown', this.handleMouseDown.bind(this));
+    // window.removeEventListener('mousemove', this.handleMouseMove.bind(this));
+    // window.removeEventListener('mouseup', this.handleMouseUp.bind(this));
     window.removeEventListener('resize', this.handleResize.bind(this, false));
   }
 
@@ -69,9 +69,7 @@ class App extends Component {
 
   updateMatrix() {
     const { gate } = this.state;
-    const m = this.rawMatrix.map(
-      c => c.map(x => (x > gate ? 1 : 0)
-    ));
+    const m = this.rawMatrix;
     this.matrix = m;
     this.renderer.changeMatrix(m);
     this.samplesManager.changeMatrix(m);
@@ -85,9 +83,9 @@ class App extends Component {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
     })
       .then(r => r.json())
-      .then(d => {
-        this.changeMatrix(d['result']);
-        this.renderer.latent = d['latent'];
+      .then(r => {
+        this.changeMatrix(r['melody']);
+        // this.renderer.latent = r['chord'];
         if (restart) {
           this.samplesManager.start();
         }
@@ -133,9 +131,8 @@ class App extends Component {
 
   update() {
     const b = this.samplesManager.beat;
-    if (!this.state.loadingSamples) {
-      this.renderer.draw(this.state.screen, b);
-    }
+    const bar = this.samplesManager.barIndex;
+    this.renderer.draw(this.state.screen, bar, b);
     requestAnimationFrame(() => { this.update() });
   }
 
@@ -294,7 +291,7 @@ class App extends Component {
       <div>
         <div className={styles.title}>
           <a href="https://github.com/vibertthio/looop" target="_blank" rel="noreferrer noopener">
-            Drum VAE | MAC Lab
+            Melody VAE | MAC Lab
           </a>
           <button
             className={styles.btn}

@@ -3,84 +3,67 @@ import StartAudioContext from 'startaudiocontext';
 import drumUrls from './sound';
 
 export default class SamplesManager {
-  constructor(loadingSamplesCallback) {
+  constructor() {
     StartAudioContext(Tone.context);
     this.currentIndex = 0;
-    this.samples = [];
-    this.mixing = [
-      -5,   // kick
-      -7,   // snare
-      -15,  // ch
-      -12,  // oh
-      -11,    // low tom
-      -11,    // mid tom
-      -11,    // hi tom
-      -12,    // crash
-      -12,    // cymbal
-    ];
-    this.loadingStatus = 0;
-    this.loadingSamplesCallback = loadingSamplesCallback;
     this.drumUrls = drumUrls;
     this.beat = 0;
-    this.preset = [
-      [1, 0, 0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 1, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0, 0, 0],
-      [1, 1, 0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 1, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0, 0, 0],
-      [1, 0, 0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 1, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0, 0, 0],
-      [1, 1, 0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 1, 1, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0, 0, 0],
-    ];
+    this.matrix = [];
+    this.bar = [];
+    this.barIndex = 0;
+    this.noteOn = -1;
 
-    this.loadSamples();
+    this.synth = new Tone.PolySynth(6, Tone.Synth, {
+      "oscillator": {
+        "partials": [0, 2, 3, 4],
+      }
+    }).toMaster();
+
     this.initTable();
 
     Transport.bpm.value = 120;
 
     this.sequence = new Sequence((time, col) => {
-      this.beat = col;
-      const column = this.matrix[col];
-      for (let i = 0; i < 9; i += 1) {
-        if (column[i] === 1) {
-          this.samples[i].start(time);
+      this.beat += 1;
+      const column = this.bar[col];
+
+      const index = column.indexOf(1);
+      if (index === -1) {
+        const prevNote = Tone.Frequency(this.noteOn, 'midi');
+        this.synth.triggerRelease(prevNote, time);
+      } else if (index !== this.noteOn) {
+        if (this.noteOn !== 1) {
+          const prevNote = Tone.Frequency(this.noteOn, 'midi');
+          this.synth.triggerRelease(prevNote, time);
         }
+        const note = Tone.Frequency(index, 'midi');
+        this.synth.triggerAttack(note, time);
       }
-    }, Array.from(Array(96).keys()), '96n');
+      this.noteOn = index;
+
+
+      const barIndex = Math.floor(this.beat / 48) % this.matrix.length;
+      if (this.barIndex !== barIndex) {
+        console.log(barIndex);
+        this.barIndex = barIndex;
+        this.bar = this.matrix[barIndex];
+      }
+
+    }, Array.from(Array(48).keys()), '48n');
     Transport.start();
   }
 
   initTable() {
-    this.matrix = new Array(96).fill(new Array(9).fill(0));
+    this.bar = new Array(48).fill(new Array(128).fill(0));
   }
 
   changeMatrix(mat) {
     this.matrix = mat;
+    this.bar = this.matrix[this.barIndex];
   }
 
   changeBpm(b) {
     Transport.bpm.value = b;
-  }
-
-  loadSamples() {
-    console.log('start loading samples..');
-    this.samples = [];
-    for (let i = 0; i < 9; i += 1) {
-      this.samples[i] = new Player(this.drumUrls[i], () => {
-        this.loadingStatus += 1;
-        console.log(`finish...${this.loadingStatus}/9: ${this.drumUrls[i]}`);
-        this.loadingSamplesCallback(this.loadingStatus);
-      }).toMaster();
-      this.samples[i].volume.value = this.mixing[i];
-    }
   }
 
   triggerSamples(index) {
@@ -88,6 +71,10 @@ export default class SamplesManager {
   }
 
   start() {
+    this.synth.releaseAll();
+    this.barIndex = 0;
+    this.beat = 0;
+    this.bar = this.matrix[this.barIndex];
     this.sequence.stop();
     this.sequence.start();
   }
@@ -95,9 +82,10 @@ export default class SamplesManager {
   trigger() {
     if (this.sequence.state === 'started') {
       this.sequence.stop();
+      this.synth.releaseAll();
       return false;
     }
-    this.sequence.start();
+    this.start();
     return true;
   }
 }

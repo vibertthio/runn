@@ -1,4 +1,5 @@
 import LatentGraph from './latent-graph';
+import PianorollGrid from './pianoroll-grid';
 import { Noise } from 'noisejs';
 
 function lerpColor(a, b, amount) {
@@ -21,13 +22,12 @@ export default class Renderer {
   constructor(canvas) {
     this.canvas = canvas;
     this.matrix = [];
-    this.latent = [];
-    this.latentDisplay = [];
+    this.pianorollGrids = [];
     this.dist = 0;
     this.beat = 0;
 
     this.frameCount = 0;
-    this.halt = true;
+    this.halt = false;
 
     this.backgroundColor = 'rgba(37, 38, 35, 1.0)';
     this.noteOnColor = 'rgba(255, 255, 255, 1.0)';
@@ -44,70 +44,25 @@ export default class Renderer {
     this.gridYShift = 0;
     this.mouseOnIndex = [-1, -1];
 
-    this.latentGraph = new LatentGraph(this);
+    this.pianorollGrids[0] = new PianorollGrid(this,  -1.5, 0);
+    this.pianorollGrids[1] = new PianorollGrid(this,  0);
+    this.pianorollGrids[2] = new PianorollGrid(this,  1.5, 28);
 
-    // fake data
-    this.showingLatents = false;
-    this.latents = [[], [], []];
-    this.latentGraphs = [];
     this.noise = new Noise(Math.random());
 
     this.initMatrix();
-    this.setDefaultDisplay();
   }
 
-  triggerDisplay() {
-    if (this.showingLatents) {
-      this.setDefaultDisplay();
-    } else {
-      this.setMultipleDisplay();
-    }
-  }
 
-  setDefaultDisplay() {
-    this.showingLatents = false;
-
-    this.latentGraph.radiusRatio = 0.7;
-    this.latentGraph.widthRatio = 1.0;
-    this.latentGraph.heightRatio = 2.0;
-    this.latentGraph.xShiftRatio = 0;
-    this.latentGraph.yShiftRatio = 0.6;
-  }
-
-  setMultipleDisplay() {
-    this.showingLatents = true;
-    this.latentGraph.radiusRatio = 0.5;
-    this.latentGraph.widthRatio = 0.5;
-    this.latentGraph.heightRatio = 2.0;
-    this.latentGraph.xShiftRatio = -0.25;
-    this.latentGraph.yShiftRatio = 0.6;
-  }
 
   initMatrix() {
     for (let i = 0; i < 96; i += 1) {
       this.matrix[i] = [];
       for (let t = 0; t < 9; t += 1) {
-        this.matrix[i][t] = (Math.random() > 0.5 ? 1 : 0);
+        this.matrix[i][t] = -1;
       }
     }
 
-    for (let i = 0; i < 32; i += 1) {
-      this.latent[i] = 0;
-      this.latentDisplay[i] = 0;
-      for (let j = 0; j < 3; j += 1) {
-        this.latents[j][i] = -0.01 + 0.02 * Math.random();
-      }
-    }
-
-    this.latentGraphs[0] = new LatentGraph(
-      this, 0.2, 0.5, 0.5, 0.25, 0.6 + 0.75);
-    this.latentGraphs[1] = new LatentGraph(
-      this, 0.2, 0.5, 0.5, 0.25, 0.6);
-    this.latentGraphs[2] = new LatentGraph(
-      this, 0.2, 0.5, 0.5, 0.25, 0.6 - 0.75);
-    this.latentGraphs[0].setDisplay();
-    this.latentGraphs[1].setDisplay();
-    this.latentGraphs[2].setDisplay();
   }
 
   randomMatrix() {
@@ -120,10 +75,11 @@ export default class Renderer {
 
   changeMatrix(mat) {
     this.halt = false;
-    this.matrix = mat;
+    this.matrix = mat.map(s => s.map(b => b.indexOf(1)))
+    console.log(this.matrix);
   }
 
-  draw(scr, b) {
+  draw(scr, bar = 0, b = 0) {
 
     if (this.halt) {
       if (this.frameCount % 5 == 0) {
@@ -132,13 +88,13 @@ export default class Renderer {
     }
     this.frameCount += 1;
     this.beat = b;
+    this.bar = bar;
     const ctx = this.canvas.getContext('2d');
     ctx.font = '1rem monospace';
     this.width = scr.width;
     this.height = scr.height;
     const width = scr.width;
     const height = scr.height;
-
 
     ctx.save();
     ctx.fillStyle = this.backgroundColor;
@@ -147,17 +103,12 @@ export default class Renderer {
     const h = Math.min(width, height) * 0.18;
     const w = width * 0.5;
     this.dist = h * 1.2;
-    this.gridWidth = w;
-    this.gridHeight = h;
-    this.gridYShift = -h * 1.5 ;
 
     ctx.translate(width * 0.5, height * 0.5);
-    this.drawGrid(ctx, w, h);
-    this.latentGraph.draw(ctx, this.latent, this.dist);
 
-    if (this.showingLatents) {
-      this.drawLatents(ctx);
-    }
+    this.pianorollGrids[0].draw(ctx, w, h);
+    this.pianorollGrids[1].draw(ctx, w, h);
+    this.pianorollGrids[2].draw(ctx, w, h);
     ctx.restore();
   }
 
@@ -168,37 +119,40 @@ export default class Renderer {
     this.drawFrame(ctx, this.gridWidth * 1.1, this.gridHeight * 1.1);
 
     ctx.translate(-w * 0.5, -h * 0.5);
-    const w_step  = w / 96;
-    const h_step = h / 9;
-    for (let t = 0; t < 96; t += 1) {
-      for (let d = 0; d < 9; d += 1) {
-        ctx.save();
-        ctx.translate(t * w_step, d * h_step);
-        if (this.matrix[t][8 - d] > 0) {
 
-          if (Math.abs(this.beat - t) < 3) {
-            ctx.fillStyle = this.noteOnCurrentColor;
-            ctx.fillRect(0, 0, w_step * 1.2, h_step * 0.5);
-          } else {
-            ctx.fillStyle = this.noteOnColor;
-            ctx.fillRect(0, 0, w_step, h_step * 0.5);
-          }
-        } else if (
-          t === this.mouseOnIndex[0] &&
-          d === this.mouseOnIndex[1]
-        ) {
-          ctx.fillStyle = this.mouseOnColor;
-          ctx.fillRect(0, 0, w_step, h_step * 0.5);
-        } else {
+    // roll
+    const w_step  = w / (48 * 4);
+    // const h_step = h / 128;
+    const h_step = h / 48;
+    for (let i = 0; i < 4; i += 1) {
+      for (let t = 0; t < 48; t += 1) {
+        const shift = Math.floor(this.bar / 4) * 4;
+        const note = this.matrix[i + shift][t];
+        if (note !== -1) {
+          const y = 48 - (note - 48);
           ctx.save();
-          ctx.fillStyle = this.boxColor;
-          ctx.translate(0, h_step * 0.25);
-          ctx.fillRect(0, 0, w_step * 0.04, h_step * 0.1);
+          ctx.translate(((48 * i) + t) * w_step, y * h_step);
+          if ((48 * i) + t === (this.beat % 192)) {
+            ctx.fillStyle = '#FFF';
+            ctx.fillText(note, 0, 0);
+
+          }
+          ctx.fillStyle = this.noteOnColor;
+          ctx.strokeStyle = 'none';
+          ctx.fillRect(0, 0, w_step, h_step);
           ctx.restore();
         }
-        ctx.restore();
       }
     }
+
+    // progress
+    ctx.translate((this.beat % 192) * w_step, 0);
+    ctx.strokeStyle = '#F00';
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(0, h);
+    ctx.stroke();
+
     ctx.restore();
   }
 
@@ -306,17 +260,6 @@ export default class Renderer {
     ctx.stroke();
 
     ctx.restore();
-  }
-
-  drawLatents(ctx) {
-    for (let i = 0; i < 3; i += 1) {
-      for (let j = 0; j < 12; j += 1) {
-        const value = this.noise.perlin2(i * 2 + j * 0.1, this.frameCount * 0.005);
-        this.latents[i][j] = lerp(value, 0, 1, -0.01, 0.01);
-      }
-      this.latentGraphs[i].draw(ctx, this.latents[i], this.dist);
-
-    }
   }
 
 
