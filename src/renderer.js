@@ -22,6 +22,7 @@ export default class Renderer {
   constructor(canvas) {
     this.canvas = canvas;
     this.matrix = [];
+    this.chords = [];
     this.pianorollGrids = [];
     this.dist = 0;
     this.beat = 0;

@@ -40,6 +40,23 @@ export default class PianorollGrid {
     // const h_step = h / 128;
     const h_step = h / 48;
     for (let i = 0; i < 4; i += 1) {
+      ctx.save();
+      ctx.translate((48 * i) * w_step, 15);
+      if (this.renderer.chords.length > 0) {
+
+        const chords = this.renderer.chords[this.sectionIndex][i]
+        let prevC = '';
+        chords.forEach(c => {
+          if (c !== prevC) {
+            ctx.fillStyle = '#FFF';
+            ctx.fillText(c, 5, -8);
+            ctx.translate(12 * w_step, 0)
+          }
+          prevC = c;
+        })
+      }
+      ctx.restore();
+
       for (let t = 0; t < 48; t += 1) {
         const note = this.matrix[this.sectionIndex][i][t];
         if (note !== -1) {

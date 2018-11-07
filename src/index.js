@@ -88,16 +88,29 @@ class App extends Component {
       .then(r => {
         this.changeMatrix(r['melody']);
         this.sound.chords = r['chord'];
+        this.renderer.chords = r['chord'];
+        console.log(r['chord']);
         if (restart) {
           this.sound.start();
+          this.sound.sectionIndex = 0;
         }
       })
       .catch(e => console.log(e));
   }
 
   getDrumVaeRandom() {
-    // const url = this.serverUrl + 'rand';
-    // this.getDrumVae(url);
+    let s1 = Math.floor(Math.random() * 4);
+    let s2 = Math.floor(Math.random() * 4);
+    while (s2 === s1) {
+      s2 = Math.floor(Math.random() * 4);
+    }
+
+    console.log(`s1: ${s1}, s2: ${s2}`);
+    s1 = s1.toString();
+    s2 = s2.toString();
+
+    const url = this.serverUrl + `static/${s1}/${s2}`;
+    this.getDrumVae(url);
   }
 
   getDrumVaeStatic() {
