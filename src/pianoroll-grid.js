@@ -4,6 +4,7 @@ export default class PianorollGrid {
     this.renderer = renderer;
     this.fixed = fixed;
     this.sectionIndex = fixed;
+    this.frameRatio = 1.1;
 
     this.gridWidth = 0;
     this.gridHeight = 0;
@@ -31,13 +32,16 @@ export default class PianorollGrid {
     ctx.save();
     ctx.translate(this.gridXShift, this.gridYShift)
 
-    this.renderer.drawFrame(ctx, this.gridWidth * 1.1, this.gridHeight * 1.1);
+    if (this.fixed === -1) {
+      ctx.translate(this.frameRatio * (this.renderer.displayWidth - w) * 0.5, 0);
+    }
+    this.renderer.drawFrame(ctx, this.gridWidth * this.frameRatio, this.gridHeight * this.frameRatio);
 
     ctx.translate(-w * 0.5, -h * 0.5);
 
+
     // roll
     const w_step = w / (48 * 4);
-    // const h_step = h / 128;
     const h_step = h / 48;
     for (let i = 0; i < 4; i += 1) {
       ctx.save();
@@ -87,4 +91,6 @@ export default class PianorollGrid {
 
     ctx.restore();
   }
+
+
 }

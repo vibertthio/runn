@@ -38,12 +38,7 @@ export default class Renderer {
     this.extendAlpha = 0;
     this.currentUpdateDir = 0;
     this.selectedLatent = 20;
-
-    this.gridWidth = 0;
-    this.gridHeight = 0;
-    this.gridXShift = 0;
-    this.gridYShift = 0;
-    this.mouseOnIndex = [-1, -1];
+    this.displayWidth = 0;
 
     this.pianorollGrids[0] = new PianorollGrid(this,  -1.5, 0);
     this.pianorollGrids[1] = new PianorollGrid(this,  0);
@@ -100,13 +95,36 @@ export default class Renderer {
 
     const h = Math.min(width, height) * 0.18;
     const w = width * 0.5;
+    this.displayWidth = w;
     this.dist = h * 1.2;
 
     ctx.translate(width * 0.5, height * 0.5);
 
     this.pianorollGrids[0].draw(ctx, w, h);
-    this.pianorollGrids[1].draw(ctx, w * 0.8, h);
+    this.pianorollGrids[1].draw(ctx, w * 0.9, h * 1.2);
     this.pianorollGrids[2].draw(ctx, w, h);
+
+    this.drawInterpolation(ctx, w * 0.1, h);
+    ctx.restore();
+  }
+
+  drawInterpolation(ctx, w, h) {
+    ctx.save();
+    ctx.translate(-(this.displayWidth) * 0.5, 0);
+    this.drawFrame(ctx, w * 1.1, h * 1.2 * 1.1);
+    const h_step = (h / this.matrix.length) * 1.2;
+    ctx.translate(-w * 0.2, 0);
+    for (let i = 0; i < this.matrix.length; i += 1) {
+      ctx.save();
+      const j = i - (this.matrix.length / 2);
+      ctx.translate(0, h_step * (j + 0.25));
+      ctx.fillStyle = '#555';
+      if (i === this.sectionIndex) {
+        ctx.fillStyle = '#F00';
+      }
+      ctx.fillRect(0, 0, w * 0.4, h_step * 0.5);
+      ctx.restore();
+    }
     ctx.restore();
   }
 
@@ -156,21 +174,8 @@ export default class Renderer {
   }
 
   handleMouseMove(e) {
-    const x = e.clientX - (this.width * 0.5 + this.gridXShift - this.gridWidth * 0.5);
-    const y = e.clientY - (this.height * 0.5 + this.gridYShift - this.gridHeight * 0.5);
-    const w = this.gridWidth;
-    const h = this.gridHeight;
-    const w_step = w / 96;
-    const h_step = h / 9;
-
-    if (x > 0 && x < w && y > 0 && y < h) {
-      const xpos = Math.floor(x / w_step);
-      const ypos = Math.floor(y / h_step);
-      this.mouseOnIndex = [xpos, ypos];
-      // console.log(`${xpos}, ${ypos}`);
-    } else {
-      this.mouseOnIndex = [-1, -1];
-    }
+    const x = e.clientX - (this.width * 0.5);
+    const y = e.clientY - (this.height * 0.5);
   }
 
   handleMouseDownOnGrid() {
