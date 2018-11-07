@@ -1,8 +1,9 @@
 import React, { Component } from 'react';
 import { render } from 'react-dom';
+
 import styles from './index.module.scss';
 import info from './assets/info.png';
-import SamplesManager from './music/samples-manager';
+import Sound from './music/sound';
 import Renderer from './renderer';
 import playSvg from './assets/play.png';
 import pauseSvg from './assets/pause.png';
@@ -27,14 +28,15 @@ class App extends Component {
       },
     };
 
-    this.samplesManager = new SamplesManager((i) => {
+    this.sound = new Sound((i) => {
       this.handleLoadingSamples(i);
     }),
     this.canvas = [];
     this.matrix = [];
     this.rawMatrix = [];
     this.beat = 0;
-    this.serverUrl = 'http://140.109.21.193:5003/';
+    // this.serverUrl = 'http://140.109.21.193:5003/';
+    this.serverUrl = 'http://140.109.135.76:5003/';
   }
 
   componentDidMount() {
@@ -72,7 +74,7 @@ class App extends Component {
     const m = this.rawMatrix;
     this.matrix = m;
     this.renderer.changeMatrix(m);
-    this.samplesManager.changeMatrix(m);
+    this.sound.changeMatrix(m);
   }
 
   getDrumVae(url, restart = true) {
@@ -85,17 +87,17 @@ class App extends Component {
       .then(r => r.json())
       .then(r => {
         this.changeMatrix(r['melody']);
-        // this.renderer.latent = r['chord'];
+        this.sound.chords = r['chord'];
         if (restart) {
-          this.samplesManager.start();
+          this.sound.start();
         }
       })
       .catch(e => console.log(e));
   }
 
   getDrumVaeRandom() {
-    const url = this.serverUrl + 'rand';
-    this.getDrumVae(url);
+    // const url = this.serverUrl + 'rand';
+    // this.getDrumVae(url);
   }
 
   getDrumVaeStatic() {
@@ -130,9 +132,8 @@ class App extends Component {
   }
 
   update() {
-    const b = this.samplesManager.beat;
-    const bar = this.samplesManager.barIndex;
-    this.renderer.draw(this.state.screen, bar, b);
+    const { beat, barIndex, sectionIndex } = this.sound;
+    this.renderer.draw(this.state.screen, sectionIndex, barIndex, beat);
     requestAnimationFrame(() => { this.update() });
   }
 
@@ -207,7 +208,7 @@ class App extends Component {
     if (!loadingSamples) {
       if (event.keyCode === 32) {
         // space
-        const playing = this.samplesManager.trigger();
+        const playing = this.sound.trigger();
         this.setState({
           playing,
         });
@@ -224,7 +225,7 @@ class App extends Component {
   }
 
   changeTableIndex(currentTableIndex) {
-    this.samplesManager.changeTable(this.matrix[currentTableIndex]);
+    this.sound.changeTable(this.matrix[currentTableIndex]);
     this.setState({
       currentTableIndex,
     });
@@ -249,7 +250,7 @@ class App extends Component {
       loadingProgress: amt,
     });
     if (amt === 8) {
-      const playing = this.samplesManager.trigger();
+      const playing = this.sound.trigger();
       this.setState({
         playing,
         loadingSamples: false,
@@ -271,11 +272,11 @@ class App extends Component {
     const bpm = v;
     console.log(`bpm changed: ${bpm}`);
     this.setState({ bpm });
-    this.samplesManager.changeBpm(bpm);
+    this.sound.changeBpm(bpm);
   }
 
   handleClickPlayButton() {
-    const playing = this.samplesManager.trigger();
+    const playing = this.sound.trigger();
     this.setState({
       playing,
     });

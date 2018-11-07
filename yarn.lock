@@ -6873,6 +6873,52 @@ to-fast-properties@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/to-fast-properties/-/to-fast-properties-2.0.0.tgz#dc5e698cbd079265bc73e0377681a4e4e83f616e"
 
+tonal-array@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/tonal-array/-/tonal-array-2.1.0.tgz#9e335f877b33106311133ae85fc4989b67e96cc6"
+  dependencies:
+    tonal-note "^2.1.0"
+
+tonal-chord@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/tonal-chord/-/tonal-chord-2.1.0.tgz#5e2b03db854610c70b132d8813dd47bd9dc6d0b1"
+  dependencies:
+    tonal-dictionary "^2.1.0"
+    tonal-distance "^2.1.0"
+    tonal-note "^2.1.0"
+    tonal-pcset "^2.1.0"
+
+tonal-dictionary@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/tonal-dictionary/-/tonal-dictionary-2.1.0.tgz#b97d4b0371a779177fdcf090829cb4a784ec9d89"
+  dependencies:
+    tonal-array "^2.1.0"
+    tonal-note "^2.1.0"
+    tonal-pcset "^2.1.0"
+
+tonal-distance@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/tonal-distance/-/tonal-distance-2.1.0.tgz#c122478b7f52d8737b04edb8a909e282c1f13c74"
+  dependencies:
+    tonal-interval "^2.1.0"
+    tonal-note "^2.1.0"
+
+tonal-interval@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/tonal-interval/-/tonal-interval-2.1.0.tgz#cc760b7eb2f66083bd330d36e98c86ae37a4063f"
+
+tonal-note@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/tonal-note/-/tonal-note-2.1.0.tgz#d63dec77bd9bedfd783a22bd50b2d4f8210292fb"
+
+tonal-pcset@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/tonal-pcset/-/tonal-pcset-2.1.0.tgz#f54aa34630b3512dbefc0522fcca1ba1ee8b3220"
+  dependencies:
+    tonal-array "^2.1.0"
+    tonal-interval "^2.1.0"
+    tonal-note "^2.1.0"
+
 tone@^0.11.11:
   version "0.11.11"
   resolved "https://registry.yarnpkg.com/tone/-/tone-0.11.11.tgz#7af8521eba6df84a910d457485a13705f8c824e5"

@@ -46,14 +46,12 @@ export default class Renderer {
 
     this.pianorollGrids[0] = new PianorollGrid(this,  -1.5, 0);
     this.pianorollGrids[1] = new PianorollGrid(this,  0);
-    this.pianorollGrids[2] = new PianorollGrid(this,  1.5, 28);
+    this.pianorollGrids[2] = new PianorollGrid(this,  1.5, 7);
 
     this.noise = new Noise(Math.random());
 
     this.initMatrix();
   }
-
-
 
   initMatrix() {
     for (let i = 0; i < 96; i += 1) {
@@ -75,11 +73,10 @@ export default class Renderer {
 
   changeMatrix(mat) {
     this.halt = false;
-    this.matrix = mat.map(s => s.map(b => b.indexOf(1)))
-    console.log(this.matrix);
+    this.matrix = mat;
   }
 
-  draw(scr, bar = 0, b = 0) {
+  draw(scr, sectionIndex = 0, barIndex = 0, b = 0) {
 
     if (this.halt) {
       if (this.frameCount % 5 == 0) {
@@ -88,7 +85,7 @@ export default class Renderer {
     }
     this.frameCount += 1;
     this.beat = b;
-    this.bar = bar;
+    this.sectionIndex = sectionIndex;
     const ctx = this.canvas.getContext('2d');
     ctx.font = '1rem monospace';
     this.width = scr.width;
@@ -107,52 +104,8 @@ export default class Renderer {
     ctx.translate(width * 0.5, height * 0.5);
 
     this.pianorollGrids[0].draw(ctx, w, h);
-    this.pianorollGrids[1].draw(ctx, w, h);
+    this.pianorollGrids[1].draw(ctx, w * 0.8, h);
     this.pianorollGrids[2].draw(ctx, w, h);
-    ctx.restore();
-  }
-
-  drawGrid(ctx, w, h) {
-    ctx.save();
-    ctx.translate(this.gridXShift, this.gridYShift)
-
-    this.drawFrame(ctx, this.gridWidth * 1.1, this.gridHeight * 1.1);
-
-    ctx.translate(-w * 0.5, -h * 0.5);
-
-    // roll
-    const w_step  = w / (48 * 4);
-    // const h_step = h / 128;
-    const h_step = h / 48;
-    for (let i = 0; i < 4; i += 1) {
-      for (let t = 0; t < 48; t += 1) {
-        const shift = Math.floor(this.bar / 4) * 4;
-        const note = this.matrix[i + shift][t];
-        if (note !== -1) {
-          const y = 48 - (note - 48);
-          ctx.save();
-          ctx.translate(((48 * i) + t) * w_step, y * h_step);
-          if ((48 * i) + t === (this.beat % 192)) {
-            ctx.fillStyle = '#FFF';
-            ctx.fillText(note, 0, 0);
-
-          }
-          ctx.fillStyle = this.noteOnColor;
-          ctx.strokeStyle = 'none';
-          ctx.fillRect(0, 0, w_step, h_step);
-          ctx.restore();
-        }
-      }
-    }
-
-    // progress
-    ctx.translate((this.beat % 192) * w_step, 0);
-    ctx.strokeStyle = '#F00';
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(0, h);
-    ctx.stroke();
-
     ctx.restore();
   }
 
