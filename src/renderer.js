@@ -42,7 +42,7 @@ export default class Renderer {
 
     this.pianorollGrids[0] = new PianorollGrid(this,  -1.5, 0);
     this.pianorollGrids[1] = new PianorollGrid(this,  0);
-    this.pianorollGrids[2] = new PianorollGrid(this,  1.5, 7);
+    this.pianorollGrids[2] = new PianorollGrid(this,  1.5, 8);
 
     this.noise = new Noise(Math.random());
 
