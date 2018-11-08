@@ -47,7 +47,6 @@ export default class Sound {
     this.sequence = new Sequence((time, col) => {
       this.beat += 1;
 
-
       const index = this.section[this.barIndex][col];
 
       if (index === -1) {
@@ -105,8 +104,9 @@ export default class Sound {
     Transport.bpm.value = b;
   }
 
-  triggerSamples(index) {
-    this.currentIndex = index;
+  changeSection(index) {
+    this.sectionIndex = index;
+    this.section = this.matrix[this.sectionIndex];
   }
 
   start() {

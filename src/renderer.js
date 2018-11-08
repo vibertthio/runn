@@ -46,6 +46,9 @@ export default class Renderer {
 
     this.noise = new Noise(Math.random());
 
+    // interpolation display
+    this.h_step = 0;
+
     this.initMatrix();
   }
 
@@ -113,6 +116,9 @@ export default class Renderer {
     ctx.translate(-(this.displayWidth) * 0.5, 0);
     this.drawFrame(ctx, w * 1.1, h * 1.2 * 1.1);
     const h_step = (h / this.matrix.length) * 1.2;
+    this.h_step = h_step;
+
+    // start drawing
     ctx.translate(-w * 0.2, 0);
     for (let i = 0; i < this.matrix.length; i += 1) {
       ctx.save();
@@ -128,23 +134,24 @@ export default class Renderer {
     ctx.restore();
   }
 
-  handleLatentGraphClick(x, y) {
-    const { graphX, graphY } = this.latentGraph;
-    const r = Math.pow(this.dist, 2);
-    const angle = 2 * Math.PI / 32;
-
-    if (Math.pow(x - graphX, 2) + Math.pow(y - graphY, 2) < r * 1.2) {
-      const xpos = x - graphX;
-      const ypos = y - graphY;
-      let theta = Math.atan2(ypos, xpos) + 0.5 * angle;
-      if (theta < 0) {
-        theta += Math.PI * 2;
+  handleInterpolationClick(x, y) {
+    const xpos = x + (this.displayWidth * 0.5);
+    const ypos = y;
+    // console.log(`x: ${xpos}, y: ${ypos}`);
+    if (Math.abs(xpos) < this.displayWidth * 0.1) {
+      const index = Math.floor(ypos / this.h_step + 0.5) +
+        Math.floor(this.matrix.length / 2);
+      if (index >= 0 && index < this.matrix.length) {
+        console.log(`click index: [${index}]`);
+        this.sectionIndex = index;
+        return true;
       }
-      const id = Math.floor(theta / angle);
-      this.selectedLatent = id;
-      return true;
-
+      return false;
     }
+    return false;
+  }
+
+  handleMouseDownOnPianoroll(x, y) {
     return false;
   }
 
@@ -153,8 +160,8 @@ export default class Renderer {
     let cy = e.clientY - this.height * 0.5;
 
     return [
-      this.handleLatentGraphClick(cx, cy),
-      this.handleMouseDownOnGrid(),
+      this.handleInterpolationClick(cx, cy),
+      this.handleMouseDownOnPianoroll(cx, cy),
     ];
   }
 
@@ -178,13 +185,7 @@ export default class Renderer {
     const y = e.clientY - (this.height * 0.5);
   }
 
-  handleMouseDownOnGrid() {
-    const p = this.mouseOnIndex;
-    if (p[0] != -1 && p[1] != -1) {
-      return true;
-    }
-    return false;
-  }
+
 
   // draw frame
   drawFrame(ctx, w, h) {

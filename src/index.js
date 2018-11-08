@@ -46,19 +46,19 @@ class App extends Component {
     }
     window.addEventListener('keydown', this.onKeyDown.bind(this), false);
     window.addEventListener('resize', this.handleResize.bind(this, false));
+    window.addEventListener('mousedown', this.handleMouseDown.bind(this));
     // window.addEventListener('click', this.handleClick.bind(this));
-    // window.addEventListener('mousedown', this.handleMouseDown.bind(this));
     // window.addEventListener('mousemove', this.handleMouseMove.bind(this));
     // window.addEventListener('mouseup', this.handleMouseUp.bind(this));
 
     requestAnimationFrame(() => { this.update() });
-    this.getDrumVaeStatic();
+    this.getLeadsheetVaeStatic();
   }
 
   componentWillUnmount() {
     window.removeEventListener('keydown', this.onKeyDown.bind(this));
+    window.removeEventListener('mousedown', this.handleMouseDown.bind(this));
     // window.removeEventListener('click', this.handleClick.bind(this));
-    // window.removeEventListener('mousedown', this.handleMouseDown.bind(this));
     // window.removeEventListener('mousemove', this.handleMouseMove.bind(this));
     // window.removeEventListener('mouseup', this.handleMouseUp.bind(this));
     window.removeEventListener('resize', this.handleResize.bind(this, false));
@@ -77,7 +77,7 @@ class App extends Component {
     this.sound.changeMatrix(m);
   }
 
-  getDrumVae(url, restart = true) {
+  getLeadsheetVae(url, restart = true) {
     fetch(url, {
       headers: {
         'content-type': 'application/json'
@@ -98,7 +98,7 @@ class App extends Component {
       .catch(e => console.log(e));
   }
 
-  getDrumVaeRandom() {
+  getLeadsheetVaeRandom() {
     let s1 = Math.floor(Math.random() * 4);
     let s2 = Math.floor(Math.random() * 4);
     while (s2 === s1) {
@@ -110,38 +110,17 @@ class App extends Component {
     s2 = s2.toString();
 
     const url = this.serverUrl + `static/${s1}/${s2}`;
-    this.getDrumVae(url);
+    this.getLeadsheetVae(url);
   }
 
-  getDrumVaeStatic() {
+  getLeadsheetVaeStatic() {
     const url = this.serverUrl + 'static';
-    this.getDrumVae(url);
+    this.getLeadsheetVae(url);
   }
 
-  getDrumVaeStaticShift(dir = 0, step = 0.2) {
+  getLeadsheetVaeStaticShift(dir = 0, step = 0.2) {
     const url = this.serverUrl + 'static/' + dir.toString() + '/' + step.toString();
-    this.getDrumVae(url);
-  }
-
-  setDrumVaeDim(d1 = 3, d2 = 2) {
-    const url = this.serverUrl + 'dim/' + d1.toString() + '/' + d2.toString();
-    this.getDrumVae(url);
-  }
-
-  getDrumVaeAdjust(dim, value) {
-    const url = this.serverUrl + 'adjust-latent/' + dim.toString() + '/' + value.toString();
-    this.getDrumVae(url, false);
-  }
-
-  getDrumVaeAdjustData(i, j, value) {
-    const url = this.serverUrl
-      + 'adjust-data/'
-      + i.toString()
-      + '/'
-      + j.toString()
-      + '/'
-      + value.toString();
-    this.getDrumVae(url, false);
+    this.getLeadsheetVae(url);
   }
 
   update() {
@@ -162,39 +141,19 @@ class App extends Component {
 
   handleClick(e) {
     e.stopPropagation();
-    // const index = this.renderer.handleClick(e);
-    // this.changeTableIndex(index);
   }
 
   handleMouseDown(e) {
     e.stopPropagation();
-    const [dragging, onGrid] = this.renderer.handleMouseDown(e);
-    if (onGrid) {
-      // console.log('send pattern');
-      const [i, j_reverse] = this.renderer.mouseOnIndex;
-      const j = 8 - j_reverse;
-      this.rawMatrix[i][j] = (this.rawMatrix[i][j] < this.state.gate ? 1 : 0);
-      this.updateMatrix();
-      this.getDrumVaeAdjustData(i, j, this.rawMatrix[i][j])
-    }
-    if (dragging) {
-      this.setState({
-        dragging,
-      });
+    const [onInterpolation, onPianoroll] = this.renderer.handleMouseDown(e);
+    if (onInterpolation) {
+      this.sound.changeSection(this.renderer.sectionIndex);
     }
   }
 
   handleMouseUp(e) {
     e.stopPropagation();
     // const dragging = this.renderer.handleMouseDown(e);
-    const { selectedLatent, latent } = this.renderer;
-    if (this.state.dragging) {
-      this.getDrumVaeAdjust(selectedLatent, latent[selectedLatent]);
-    }
-
-    this.setState({
-      dragging: false,
-    });
   }
 
   handleMouseMove(e) {
@@ -232,7 +191,7 @@ class App extends Component {
       }
       if (event.keyCode === 82) {
         // r
-        this.getDrumVaeRandom();
+        this.getLeadsheetVaeRandom();
       }
     }
   }
