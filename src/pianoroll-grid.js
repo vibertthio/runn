@@ -35,7 +35,7 @@ export default class PianorollGrid {
       this.beat = beat;
       if (this.sectionIndex !== sectionIndex) {
         this.sectionIndex = sectionIndex;
-        this.newSectionYShift = 1;
+        this.triggerStartAnimation();
       }
     }
     this.gridWidth = w;
@@ -171,6 +171,10 @@ export default class PianorollGrid {
     this.currentNoteYShift *= 0.9;
     this.currentChordYShift *= 0.9;
     this.newSectionYShift *= 0.9;
+  }
+
+  triggerStartAnimation() {
+    this.newSectionYShift = 1;
   }
 
 

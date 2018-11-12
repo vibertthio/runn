@@ -168,7 +168,6 @@ export default class Renderer {
   }
 
 
-
   // draw frame
   drawFrame(ctx, w, h) {
     const unit = this.dist * 0.04;
@@ -209,5 +208,9 @@ export default class Renderer {
     ctx.font = this.fontSize.toString() + 'rem monospace';
   }
 
+  // animation
+  triggerStartAnimation() {
+    this.pianorollGrids.forEach(p => p.triggerStartAnimation());
+  }
 
 }

@@ -93,6 +93,7 @@ class App extends Component {
         if (restart) {
           this.sound.start();
           this.sound.changeSection(0);
+          this.renderer.triggerStartAnimation();
         }
       })
       .catch(e => console.log(e));
