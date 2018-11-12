@@ -26,6 +26,7 @@ export default class Renderer {
     this.pianorollGrids = [];
     this.dist = 0;
     this.beat = 0;
+    this.fontSize = 1.0;
 
     this.frameCount = 0;
     this.halt = false;
@@ -53,21 +54,7 @@ export default class Renderer {
   }
 
   initMatrix() {
-    for (let i = 0; i < 96; i += 1) {
-      this.matrix[i] = [];
-      for (let t = 0; t < 9; t += 1) {
-        this.matrix[i][t] = -1;
-      }
-    }
-
-  }
-
-  randomMatrix() {
-    for (let i = 0; i < 96; i += 1) {
-      for (let t = 0; t < 9; t += 1) {
-        this.matrix[i][t] = (Math.random() > 0.9 ? 1 : 0);
-      }
-    }
+    this.matrix = new Array(9).fill(new Array(4).fill(new Array(48).fill(-1)));
   }
 
   changeMatrix(mat) {
@@ -76,17 +63,11 @@ export default class Renderer {
   }
 
   draw(scr, sectionIndex = 0, barIndex = 0, b = 0) {
-
-    if (this.halt) {
-      if (this.frameCount % 5 == 0) {
-        this.randomMatrix();
-      }
-    }
     this.frameCount += 1;
     this.beat = b;
     this.sectionIndex = sectionIndex;
     const ctx = this.canvas.getContext('2d');
-    ctx.font = '1rem monospace';
+    // ctx.font = this.fontSize.toString() + 'rem monospace';
     this.width = scr.width;
     this.height = scr.height;
     const width = scr.width;
@@ -100,6 +81,7 @@ export default class Renderer {
     const w = width * 0.5;
     this.displayWidth = w;
     this.dist = h * 1.2;
+    this.setFontSize(ctx, Math.pow(w / 800, 0.3));
 
     ctx.translate(width * 0.5, height * 0.5);
 
@@ -220,6 +202,11 @@ export default class Renderer {
     ctx.stroke();
 
     ctx.restore();
+  }
+
+  setFontSize(ctx, amt) {
+    this.fontSize = amt;
+    ctx.font = this.fontSize.toString() + 'rem monospace';
   }
 
 

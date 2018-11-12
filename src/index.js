@@ -89,10 +89,10 @@ class App extends Component {
         this.changeMatrix(r['melody']);
         this.sound.chords = r['chord'];
         this.renderer.chords = r['chord'];
-        console.log(r['chord']);
+        // console.log(r['melody']);
         if (restart) {
           this.sound.start();
-          this.sound.sectionIndex = 0;
+          this.sound.changeSection(0);
         }
       })
       .catch(e => console.log(e));
@@ -263,7 +263,7 @@ class App extends Component {
     return (
       <div>
         <div className={styles.title}>
-          <a href="https://github.com/vibertthio/looop" target="_blank" rel="noreferrer noopener">
+          <a href="https://github.com/vibertthio" target="_blank" rel="noreferrer noopener">
             Melody VAE | MAC Lab
           </a>
           <button
@@ -311,7 +311,8 @@ class App extends Component {
           <button className={styles.overlayBtn} onClick={() => this.handleClickMenu()} />
           <div className={styles.intro}>
             <p>
-              <strong>$ Drum VAE $</strong> <br />Press space to play/stop the music. Click on any block to change samples. Made by{' '}
+              <strong>$ Drum VAE $</strong>
+              <br />Show the interpolation between two melodies. Made by{' '}
               <a href="https://vibertthio.com/portfolio/" target="_blank" rel="noreferrer noopener">
                 Vibert Thio
               </a>.{' Source code is on '}
@@ -325,9 +326,9 @@ class App extends Component {
             </p>
             <p>
               <strong>$ How to use $</strong>
-              <br /> [←, →, ↑, ↓]: move in latent space
-              <br /> [r]: random sample
-              <br /> [c]: random dimension
+              <br /> [space]: start/play the music
+              <br /> [clikc]: click on grids, to change interpolation
+              <br /> [r] : change the melody
             </p>
           </div>
           <button className={styles.overlayBtn} onClick={() => this.handleClickMenu()} />
