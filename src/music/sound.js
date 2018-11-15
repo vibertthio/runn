@@ -5,7 +5,8 @@ import * as Chord from "tonal-chord";
 import drumUrls from './sound';
 
 export default class Sound {
-  constructor() {
+  constructor(app) {
+    this.app = app;
     StartAudioContext(Tone.context);
     this.currentIndex = 0;
     this.drumUrls = drumUrls;
@@ -16,6 +17,7 @@ export default class Sound {
     this.barIndex = 0;
     this.sectionIndex = 0;
     this.noteOn = -1;
+    this.loop = false;
 
     this.comp = new Tone.PolySynth(6, Tone.Synth, {
       "oscillator": {
@@ -80,11 +82,15 @@ export default class Sound {
       if (this.barIndex !== barIndex) {
         this.barIndex = barIndex;
         if (this.barIndex === 0) {
-          this.sectionIndex = (this.sectionIndex + 1) % this.matrix.length;
-          this.section = this.matrix[this.sectionIndex];
-          console.log(`section: [${this.sectionIndex + 1} / ${this.matrix.length}]`)
+          if (this.loop) {
+            this.sectionIndex = (this.sectionIndex + 1) % this.matrix.length;
+            this.section = this.matrix[this.sectionIndex];
+          } else {
+            this.app.trigger();
+          }
+          // console.log(`section: [${this.sectionIndex + 1} / ${this.matrix.length}]`)
         }
-        console.log(`bar: [${barIndex + 1} / ${this.section.length}]`);
+        // console.log(`bar: [${barIndex + 1} / ${this.section.length}]`);
       }
 
     }, Array.from(Array(48).keys()), '48n');
@@ -109,21 +115,26 @@ export default class Sound {
     this.section = this.matrix[this.sectionIndex];
   }
 
-  start() {
-    this.comp.releaseAll();
+  stop() {
+    this.sequence.stop();
     this.synth.releaseAll();
+    this.comp.releaseAll();
+  }
+
+  start() {
+    this.noteOn = -1;
+    // this.comp.releaseAll();
+    // this.synth.releaseAll();
     this.barIndex = 0;
     this.beat = 0;
     this.bar = this.matrix[this.barIndex];
-    this.sequence.stop();
+    this.stop();
     this.sequence.start();
   }
 
   trigger() {
     if (this.sequence.state === 'started') {
-      this.sequence.stop();
-      this.synth.releaseAll();
-      this.comp.releaseAll();
+      this.stop();
       return false;
     }
     this.start();

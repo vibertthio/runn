@@ -2,6 +2,16 @@ import LatentGraph from './latent-graph';
 import PianorollGrid from './pianoroll-grid';
 import { Noise } from 'noisejs';
 
+/**
+ * A linear interpolator for hexadecimal colors
+ * @param {String} a
+ * @param {String} b
+ * @param {Number} amount
+ * @example
+ * // returns #7F7F7F
+ * lerpColor('#000000', '#ffffff', 0.5)
+ * @returns {String}
+ */
 function lerpColor(a, b, amount) {
   var ah = +a.replace('#', '0x'),
     bh = +b.replace('#', '0x'),
@@ -24,9 +34,11 @@ export default class Renderer {
     this.matrix = [];
     this.chords = [];
     this.pianorollGrids = [];
+    this.h = 0;
     this.dist = 0;
     this.beat = 0;
     this.fontSize = 1.0;
+    this.playing = true;
 
     this.frameCount = 0;
     this.halt = false;
@@ -79,6 +91,7 @@ export default class Renderer {
 
     const h = Math.min(width, height) * 0.18;
     const w = width * 0.5;
+    this.h = h;
     this.displayWidth = w;
     this.dist = h * 1.2;
     this.setFontSize(ctx, Math.pow(w / 800, 0.3));
@@ -108,7 +121,7 @@ export default class Renderer {
       ctx.translate(0, h_step * (j + 0.25));
       ctx.fillStyle = '#555';
       if (i === this.sectionIndex) {
-        ctx.fillStyle = '#F00';
+        ctx.fillStyle = lerpColor('#555555', '#FF0000', Math.pow(Math.sin(this.frameCount * 0.05), 2));
       }
       ctx.fillRect(0, 0, w * 0.4, h_step * 0.5);
       ctx.restore();
@@ -134,7 +147,13 @@ export default class Renderer {
   }
 
   handleMouseDownOnPianoroll(x, y) {
-    return false;
+    if (Math.abs(this.pianorollGrids[0].gridYShift - y) < this.h * 0.5) {
+      return 0;
+    } else if (Math.abs(this.pianorollGrids[2].gridYShift - y) < this.h * 0.5) {
+      return 1;
+    } else {
+      return -1;
+    }
   }
 
   handleMouseDown(e) {
@@ -145,21 +164,6 @@ export default class Renderer {
       this.handleInterpolationClick(cx, cy),
       this.handleMouseDownOnPianoroll(cx, cy),
     ];
-  }
-
-  handleMouseMoveOnGraph(e) {
-    const { graphX, graphY, graphRadius, graphRadiusRatio } = this.latentGraph;
-    const r = Math.pow(this.dist, 2);
-    let x = e.clientX - this.width * 0.5;
-    let y = e.clientY - this.height * 0.5;
-    let d1 = Math.pow(x - graphX, 2) + Math.pow(y - graphY, 2);
-    if (d1 < r * 1.2 & d1 > r * 0.1) {
-      const d = Math.sqrt(d1);
-      const range = 0.1;
-      const radius = range * graphRadiusRatio * this.dist + graphRadius;
-      const v = lerp(d, graphRadius, radius, 0, range);
-      this.latent[this.selectedLatent] = v;
-    }
   }
 
   handleMouseMove(e) {

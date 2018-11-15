@@ -37,7 +37,10 @@ export default class PianorollGrid {
         this.sectionIndex = sectionIndex;
         this.triggerStartAnimation();
       }
+    } else {
+      this.beat = beat;
     }
+
     this.gridWidth = w;
     this.gridHeight = h;
     this.gridYShift = h * this.yShiftRatio;
@@ -50,13 +53,14 @@ export default class PianorollGrid {
       let currentNote = -1;
       let currentStart = 0;
       let currentEnd = 0;
+      // flatten
       let section = [].concat.apply([], mat[i].slice()).forEach((note, j) => {
         if (note !== currentNote) {
 
           // current note end
           if (noteOn && currentNote !== -1) {
             currentEnd = j - 1;
-            list = list.concat([[ currentNote, currentStart, currentEnd]]);
+            list = list.concat([[currentNote, currentStart, currentEnd]]);
           }
 
           currentNote = note;
@@ -66,11 +70,19 @@ export default class PianorollGrid {
             noteOn = true;
             currentStart = j;
           }
+        } else if ((j === (mat[0][0].length * mat[0].length - 1)) && note !== -1) {
+          // last one
+          currentEnd = j;
+          list = list.concat([[currentNote, currentStart, currentEnd]])
         }
       });
       return list;
     });
     this.noteList = noteList;
+    // console.log('original matrix');
+    // console.log(mat);
+    // console.log('decoded');
+    // console.log(noteList);
   }
 
   draw(ctx, w, h) {
@@ -96,13 +108,12 @@ export default class PianorollGrid {
       ctx.save();
       ctx.translate((48 * i) * wStep, 15);
       if (this.renderer.chords.length > 0) {
-
         const chords = this.renderer.chords[this.sectionIndex][i]
         let prevC = '';
         chords.forEach((c, j) => {
           const pos = 48 * i + 12 * j;
           ctx.save();
-          if (b > pos && b < (pos + 12)) {
+          if (b > pos && b < (pos + 12) && this.checkCurrent()) {
             if (this.currentChordIndex !== pos) {
               this.currentChordIndex = pos;
               this.currentChordYShift = 1;
@@ -134,7 +145,11 @@ export default class PianorollGrid {
       ctx.save();
       ctx.strokeStyle = 'none';
       ctx.translate(start * wStep, y * hStep);
-      if ((b % 192) >= start && (b % 192) <= end) {
+
+      if ((b % 192) >= start
+        && (b % 192) <= end
+        && this.checkCurrent()
+        && this.isPlaying()) {
         if (this.currentNoteIndex !== index) {
           // change note
           this.currentNoteYShift = 1;
@@ -155,7 +170,7 @@ export default class PianorollGrid {
     });
 
     // progress
-    if (this.fixed === -1) {
+    if (this.fixed === -1 || this.checkCurrent()) {
       ctx.translate((b % 192) * wStep, 0);
       ctx.strokeStyle = '#F00';
       ctx.beginPath();
@@ -165,6 +180,14 @@ export default class PianorollGrid {
     }
 
     ctx.restore();
+  }
+
+  isPlaying() {
+    return this.renderer.playing;
+  }
+
+  checkCurrent() {
+    return (this.renderer.sectionIndex === this.fixed) || (this.fixed === -1);
   }
 
   updateYShift() {

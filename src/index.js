@@ -28,11 +28,11 @@ class App extends Component {
       },
     };
 
-    this.sound = new Sound((i) => {
-      this.handleLoadingSamples(i);
-    }),
+    this.sound = new Sound(this),
     this.canvas = [];
     this.matrix = [];
+    this.bpms = [];
+    this.chords = [];
     this.rawMatrix = [];
     this.beat = 0;
     // this.serverUrl = 'http://140.109.21.193:5003/';
@@ -69,12 +69,53 @@ class App extends Component {
     this.updateMatrix()
   }
 
+  changeChords(c) {
+    this.chords = c;
+    this.sound.chords = c;
+    this.renderer.chords = c;
+  }
+
   updateMatrix() {
-    const { gate } = this.state;
+    // const { gate } = this.state;
     const m = this.rawMatrix;
     this.matrix = m;
     this.renderer.changeMatrix(m);
     this.sound.changeMatrix(m);
+  }
+
+  postChangeThreshold(amt = 0.3) {
+    const url = this.serverUrl + 'api/content';
+    fetch(url, {
+      method: 'POST', // *GET, POST, PUT, DELETE, etc.
+      headers: {
+        'accept': 'application/json',
+        'content-type': 'application/json'
+      },
+      body: JSON.stringify({
+        m_seq_1: this.matrix[0],
+        c_seq_1: this.chords[0],
+        m_seq_2: this.matrix[this.matrix.length - 1],
+        c_seq_2: this.chords[this.chords.length - 1],
+        tempo_1: this.bpms[0],
+        tempo_2: this.bpms[1],
+        theta: 0.3,
+      }),
+    })
+      .then(r => r.json())
+      .then(r => {
+        this.changeMatrix(r['melody']);
+        this.changeChords(r['chord']);
+        // this.sound.chords = r['chord'];
+        // this.renderer.chords = r['chord'];
+        this.bpms = r['tempo'];
+        console.log(r);
+        if (restart) {
+          this.sound.start();
+          this.sound.changeSection(0);
+          this.renderer.triggerStartAnimation();
+        }
+      })
+      .catch(e => console.log(e));
   }
 
   getLeadsheetVae(url, restart = true) {
@@ -87,9 +128,11 @@ class App extends Component {
       .then(r => r.json())
       .then(r => {
         this.changeMatrix(r['melody']);
-        this.sound.chords = r['chord'];
-        this.renderer.chords = r['chord'];
-        // console.log(r['melody']);
+        this.changeChords(r['chord']);
+        // this.sound.chords = r['chord'];
+        // this.renderer.chords = r['chord'];
+        this.bpms = r['tempo'];
+        console.log(r);
         if (restart) {
           this.sound.start();
           this.sound.changeSection(0);
@@ -148,7 +191,22 @@ class App extends Component {
     e.stopPropagation();
     const [onInterpolation, onPianoroll] = this.renderer.handleMouseDown(e);
     if (onInterpolation) {
+      const { playing } = this.state;
       this.sound.changeSection(this.renderer.sectionIndex);
+      this.sound.loop = true;
+      if (!playing) {
+        this.start();
+      }
+    }
+
+    if (onPianoroll === 0) {
+      this.sound.loop = false;
+      this.sound.changeSection(0);
+      this.start();
+    } else if (onPianoroll === 1) {
+      this.sound.loop = false;
+      this.sound.changeSection(this.matrix.length - 1);
+      this.start();
     }
   }
 
@@ -181,14 +239,11 @@ class App extends Component {
     if (!loadingSamples) {
       if (event.keyCode === 32) {
         // space
-        const playing = this.sound.trigger();
-        this.setState({
-          playing,
-        });
+        this.trigger();
       }
       if (event.keyCode === 65) {
         // a
-        this.renderer.triggerDisplay();
+        this.postChangeThreshold();
       }
       if (event.keyCode === 82) {
         // r
@@ -218,19 +273,6 @@ class App extends Component {
     });
   }
 
-  handleLoadingSamples(amt) {
-    this.setState({
-      loadingProgress: amt,
-    });
-    if (amt === 8) {
-      const playing = this.sound.trigger();
-      this.setState({
-        playing,
-        loadingSamples: false,
-      });
-    }
-  }
-
   handleChangeGateValue(e) {
     const v = e.target.value;
     const gate = v / 100;
@@ -249,9 +291,29 @@ class App extends Component {
   }
 
   handleClickPlayButton() {
+    this.trigger();
+  }
+
+  trigger() {
     const playing = this.sound.trigger();
+    this.renderer.playing = playing;
     this.setState({
       playing,
+    });
+  }
+
+  start() {
+    this.sound.start();
+    this.renderer.playing = true;
+    this.setState({
+      playing: true,
+    });
+  }
+  stop() {
+    this.sound.stop();
+    this.renderer.playing = false;
+    this.setState({
+      playing: false,
     });
   }
 
