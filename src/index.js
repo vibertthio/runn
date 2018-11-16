@@ -4,7 +4,7 @@ import { render } from 'react-dom';
 import styles from './index.module.scss';
 import info from './assets/info.png';
 import Sound from './music/sound';
-import Renderer from './renderer';
+import Renderer from './renderer/renderer';
 import playSvg from './assets/play.png';
 import pauseSvg from './assets/pause.png';
 
@@ -14,12 +14,12 @@ class App extends Component {
 
     this.state = {
       open: false,
-      playing: true,
+      playing: false,
       dragging: false,
       loadingProgress: 0,
       loadingSamples: false,
       currentTableIndex: 4,
-      gate: 0.2,
+      rhythmThreshold: 0.6,
       bpm: 120,
       screen: {
         width: window.innerWidth,
@@ -52,7 +52,7 @@ class App extends Component {
     // window.addEventListener('mouseup', this.handleMouseUp.bind(this));
 
     requestAnimationFrame(() => { this.update() });
-    this.getLeadsheetVaeStatic();
+    this.getLeadsheetVaeStatic(false);
   }
 
   componentWillUnmount() {
@@ -76,14 +76,13 @@ class App extends Component {
   }
 
   updateMatrix() {
-    // const { gate } = this.state;
     const m = this.rawMatrix;
     this.matrix = m;
     this.renderer.changeMatrix(m);
     this.sound.changeMatrix(m);
   }
 
-  postChangeThreshold(amt = 0.3) {
+  postChangeThreshold(amt = 0.3, restart = false) {
     const url = this.serverUrl + 'api/content';
     fetch(url, {
       method: 'POST', // *GET, POST, PUT, DELETE, etc.
@@ -98,19 +97,16 @@ class App extends Component {
         c_seq_2: this.chords[this.chords.length - 1],
         tempo_1: this.bpms[0],
         tempo_2: this.bpms[1],
-        theta: 0.3,
+        theta: amt,
       }),
     })
       .then(r => r.json())
       .then(r => {
         this.changeMatrix(r['melody']);
         this.changeChords(r['chord']);
-        // this.sound.chords = r['chord'];
-        // this.renderer.chords = r['chord'];
         this.bpms = r['tempo'];
-        console.log(r);
         if (restart) {
-          this.sound.start();
+          this.start();
           this.sound.changeSection(0);
           this.renderer.triggerStartAnimation();
         }
@@ -129,14 +125,15 @@ class App extends Component {
       .then(r => {
         this.changeMatrix(r['melody']);
         this.changeChords(r['chord']);
-        // this.sound.chords = r['chord'];
-        // this.renderer.chords = r['chord'];
         this.bpms = r['tempo'];
-        console.log(r);
         if (restart) {
-          this.sound.start();
+          this.start();
           this.sound.changeSection(0);
           this.renderer.triggerStartAnimation();
+        }
+
+        if (this.renderer.instructionState === 0) {
+          this.renderer.pianorollGrids[0].showingInstruction = true;
         }
       })
       .catch(e => console.log(e));
@@ -157,9 +154,9 @@ class App extends Component {
     this.getLeadsheetVae(url);
   }
 
-  getLeadsheetVaeStatic() {
+  getLeadsheetVaeStatic(restart = true) {
     const url = this.serverUrl + 'static';
-    this.getLeadsheetVae(url);
+    this.getLeadsheetVae(url, restart);
   }
 
   getLeadsheetVaeStaticShift(dir = 0, step = 0.2) {
@@ -197,16 +194,30 @@ class App extends Component {
       if (!playing) {
         this.start();
       }
+    } else if (onPianoroll === 3) {
+      const { playing } = this.state;
+      this.sound.changeSection(Math.floor(this.matrix.length / 2));
+      this.sound.loop = true;
+      if (!playing) {
+        this.start();
+      }
     }
 
     if (onPianoroll === 0) {
       this.sound.loop = false;
       this.sound.changeSection(0);
       this.start();
-    } else if (onPianoroll === 1) {
+    } else if (onPianoroll === 2) {
       this.sound.loop = false;
       this.sound.changeSection(this.matrix.length - 1);
       this.start();
+    } else if (onPianoroll === 1) {
+      const { playing } = this.state;
+      this.sound.changeSection(this.renderer.sectionIndex);
+      this.sound.loop = true;
+      if (!playing) {
+        this.start();
+      }
     }
   }
 
@@ -273,12 +284,15 @@ class App extends Component {
     });
   }
 
-  handleChangeGateValue(e) {
-    const v = e.target.value;
-    const gate = v / 100;
-    console.log(`gate changed: ${gate}`);
-    this.setState({ gate });
-    this.updateMatrix();
+  handleChangeRhythmThresholdValue(e) {
+    const rhythmThreshold = e.target.value / 100;
+    // console.log(`rhythmThreshold changed: ${rhythmThreshold}`);
+    this.setState({ rhythmThreshold });
+  }
+
+  handleSendPostRhythmThresholdValue(amt) {
+    this.postChangeThreshold(amt);
+    console.log(`threshold: ${amt}`);
   }
 
   handleChangeBpmValue(e) {
@@ -322,7 +336,7 @@ class App extends Component {
     const { playing, currentTableIndex } = this.state;
     const arr = Array.from(Array(9).keys());
     const mat = Array.from(Array(9 * 16).keys());
-    const { gate, bpm } = this.state;
+    const { rhythmThreshold, bpm } = this.state;
     return (
       <div>
         <div className={styles.title}>
@@ -354,7 +368,14 @@ class App extends Component {
         </div>
         <div className={styles.control}>
           <div className={styles.slider}>
-            <input type="range" min="1" max="100" value={gate * 100} onChange={this.handleChangeGateValue.bind(this)}/>
+            <input
+              type="range"
+              min="1"
+              max="99"
+              value={rhythmThreshold * 100}
+              onMouseUp={() => this.handleSendPostRhythmThresholdValue(rhythmThreshold)}
+              onChange={this.handleChangeRhythmThresholdValue.bind(this)}
+            />
             <button onClick={this.handleClickPlayButton.bind(this)} onKeyDown={e => e.preventDefault()}>
               {
                 !this.state.playing ?

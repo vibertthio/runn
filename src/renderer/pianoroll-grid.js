@@ -1,3 +1,5 @@
+import { lerpColor, roundedRect } from '../utils/utils';
+
 export default class PianorollGrid {
 
   constructor(renderer, ysr = -1.5, fixed = -1) {
@@ -21,8 +23,10 @@ export default class PianorollGrid {
     this.currentNoteYShift = 0;
     this.currentChordIndex = -1;
     this.currentChordYShift = 0;
-
     this.newSectionYShift = 1;
+
+    // instruction
+    this.showingInstruction = false;
   }
 
   update(w, h) {
@@ -93,10 +97,22 @@ export default class PianorollGrid {
     ctx.translate(this.gridXShift, this.gridYShift)
 
     if (this.fixed === -1) {
-      ctx.translate(this.frameRatio * (this.renderer.displayWidth - w) * 0.5, 0);
+      ctx.translate(
+        this.frameRatio * (this.renderer.displayWidth - w) * 0.5,
+        0);
     }
-    this.renderer.drawFrame(ctx, this.gridWidth * this.frameRatio, this.gridHeight * this.frameRatio);
 
+    this.drawFrame(
+      ctx,
+      this.gridWidth * this.frameRatio,
+      this.gridHeight * this.frameRatio,
+    );
+    this.drawBling(
+      ctx,
+      this.gridWidth * this.frameRatio - 15,
+      this.gridHeight * this.frameRatio - 12,
+    );
+    ctx.save();
     ctx.translate(-w * 0.5, -h * 0.5);
 
 
@@ -106,7 +122,7 @@ export default class PianorollGrid {
 
     for (let i = 0; i < 4; i += 1) {
       ctx.save();
-      ctx.translate((48 * i) * wStep, 15);
+      ctx.translate((48 * i) * wStep, 25);
       if (this.renderer.chords.length > 0) {
         const chords = this.renderer.chords[this.sectionIndex][i]
         let prevC = '';
@@ -166,11 +182,13 @@ export default class PianorollGrid {
       }
 
       ctx.fillRect(0, 0, wStepDisplay * (end - start + 1), hStep);
+
       ctx.restore();
     });
 
     // progress
-    if (this.fixed === -1 || this.checkCurrent()) {
+    if ((this.fixed === -1 || this.checkCurrent())
+      && (this.isPlaying() || b > 0)) {
       ctx.translate((b % 192) * wStep, 0);
       ctx.strokeStyle = '#F00';
       ctx.beginPath();
@@ -178,6 +196,12 @@ export default class PianorollGrid {
       ctx.lineTo(0, h);
       ctx.stroke();
     }
+
+    if (this.fixed === 0) {
+
+    }
+    ctx.restore();
+    this.drawInstructionText(ctx, h, w);
 
     ctx.restore();
   }
@@ -198,6 +222,83 @@ export default class PianorollGrid {
 
   triggerStartAnimation() {
     this.newSectionYShift = 1;
+  }
+
+  drawFrame(ctx, w, h) {
+    const unit = this.renderer.dist * 0.04;
+
+    ctx.save();
+
+    ctx.strokeStyle = '#FFF';
+
+    ctx.beginPath()
+    ctx.moveTo(0.5 * w, 0.5 * h - unit);
+    ctx.lineTo(0.5 * w, 0.5 * h);
+    ctx.lineTo(0.5 * w - unit, 0.5 * h);
+    ctx.stroke();
+
+    ctx.beginPath()
+    ctx.moveTo(-0.5 * w, 0.5 * h - unit);
+    ctx.lineTo(-0.5 * w, 0.5 * h);
+    ctx.lineTo(-0.5 * w + unit, 0.5 * h);
+    ctx.stroke();
+
+    ctx.beginPath()
+    ctx.moveTo(0.5 * w, -0.5 * h + unit);
+    ctx.lineTo(0.5 * w, -0.5 * h);
+    ctx.lineTo(0.5 * w - unit, -0.5 * h);
+    ctx.stroke();
+
+    ctx.beginPath()
+    ctx.moveTo(-0.5 * w, -0.5 * h + unit);
+    ctx.lineTo(-0.5 * w, -0.5 * h);
+    ctx.lineTo(-0.5 * w + unit, -0.5 * h);
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  drawBling(ctx, w, h) {
+    if (this.showingInstruction) {
+      ctx.save();
+      ctx.translate(-0.5 * w, -0.5 * h);
+      ctx.fillStyle = '#555';
+      // ctx.fillStyle =
+      //   lerpColor(
+      //     '#555555',
+      //     '#AA0000',
+      //     Math.pow(
+      //       Math.sin(this.renderer.frameCount * 0.03),
+      //       2,
+      //     ),
+      //   );
+      roundedRect(ctx, 0, 0, w, h, 5);
+      ctx.restore();
+    }
+  }
+
+  drawInstructionText(ctx, w, h) {
+    if (this.showingInstruction) {
+      ctx.save();
+      ctx.fillStyle = '#FFF';
+      ctx.textAlign = 'center';
+      const ratio = 0.014;
+      const ratioMiddle = ratio * 1.6;
+
+      if (this.fixed === 0) {
+        ctx.fillText('Press here, listen', 0, -h * ratio);
+        ctx.fillText('to the first song', 0, h * ratio);
+      } else if (this.fixed === this.matrix.length - 1) {
+        ctx.fillText('Press here, listen', 0, -h * ratio);
+        ctx.fillText('to the second song', 0, h * ratio);
+      } else if (this.fixed === -1) {
+        ctx.fillText('Press the squares on', 0, -h * ratioMiddle);
+        ctx.fillText('the left, listen to the', 0, 0);
+        ctx.fillText('mixing of two melodies', 0, h * ratioMiddle);
+      }
+
+      ctx.restore();
+    }
   }
 
 
