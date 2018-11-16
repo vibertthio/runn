@@ -40,6 +40,7 @@ export default class Renderer {
     this.endOfSection = false;
     this.instructionState = 0;
 
+
     this.initMatrix();
   }
 
@@ -123,7 +124,7 @@ export default class Renderer {
       ctx.fillText('in mixing of', 0, h * ratio);
       ctx.fillText('the two songs', 0, 2 * h * ratio);
       ctx.restore();
-    } else if (this.instructionState < 3) {
+    } else if (this.instructionState < 2) {
       ctx.save();
       ctx.translate(-w * 0.5, 0);
       ctx.fillStyle = '#FFF';
@@ -225,8 +226,12 @@ export default class Renderer {
   changeInstructionState(s) {
     this.instructionState = s;
     if (s === 1) {
+      this.pianorollGrids[0].showingInstruction = false;
+      this.pianorollGrids[1].showingInstruction = false;
       this.pianorollGrids[2].showingInstruction = true;
     } else if (s === 2) {
+      this.pianorollGrids[0].showingInstruction = false;
+      this.pianorollGrids[2].showingInstruction = false;
       this.pianorollGrids[1].showingInstruction = true;
     }
   }

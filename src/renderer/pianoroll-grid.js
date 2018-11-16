@@ -263,15 +263,14 @@ export default class PianorollGrid {
       ctx.save();
       ctx.translate(-0.5 * w, -0.5 * h);
       ctx.fillStyle = '#555';
-      // ctx.fillStyle =
-      //   lerpColor(
-      //     '#555555',
-      //     '#AA0000',
-      //     Math.pow(
-      //       Math.sin(this.renderer.frameCount * 0.03),
-      //       2,
-      //     ),
-      //   );
+      // ctx.fillStyle = lerpColor(
+      //   '#555555',
+      //   '#AA0000',
+      //   Math.pow(
+      //     Math.sin(this.renderer.frameCount * 0.03),
+      //     2,
+      //   ),
+      // );
       roundedRect(ctx, 0, 0, w, h, 5);
       ctx.restore();
     }
@@ -280,21 +279,39 @@ export default class PianorollGrid {
   drawInstructionText(ctx, w, h) {
     if (this.showingInstruction) {
       ctx.save();
-      ctx.fillStyle = '#FFF';
       ctx.textAlign = 'center';
       const ratio = 0.014;
-      const ratioMiddle = ratio * 1.6;
+      const ratioMiddle = ratio * 2.5;
 
       if (this.fixed === 0) {
-        ctx.fillText('Press here, listen', 0, -h * ratio);
-        ctx.fillText('to the first song', 0, h * ratio);
+        ctx.fillStyle = lerpColor(
+          '#FFFFFF',
+          '#FF0000',
+          Math.pow(
+            Math.sin(this.renderer.frameCount * 0.03),
+            2,
+          ),
+        );
+        ctx.fillText('Press here!', 0, -h * ratio);
+        ctx.fillStyle = '#FFF';
+        ctx.fillText('Listen to the first song', 0, h * ratio);
       } else if (this.fixed === this.matrix.length - 1) {
-        ctx.fillText('Press here, listen', 0, -h * ratio);
-        ctx.fillText('to the second song', 0, h * ratio);
+        ctx.fillStyle = lerpColor(
+          '#FFFFFF',
+          '#FF0000',
+          Math.pow(
+            Math.sin(this.renderer.frameCount * 0.05),
+            2,
+          ),
+        );
+        ctx.fillText('Press here!', 0, -h * ratio);
+        ctx.fillStyle = '#FFF';
+        ctx.fillText('Listen to the second song', 0, h * ratio);
       } else if (this.fixed === -1) {
-        ctx.fillText('Press the squares on', 0, -h * ratioMiddle);
-        ctx.fillText('the left, listen to the', 0, 0);
-        ctx.fillText('mixing of two melodies', 0, h * ratioMiddle);
+        ctx.fillStyle = '#FFF';
+        ctx.fillText('Press here!', 0, -h * ratioMiddle);
+        ctx.fillText('Listen to the mixing', 0, 0);
+        ctx.fillText('of two melodies', 0, h * ratioMiddle);
       }
 
       ctx.restore();
