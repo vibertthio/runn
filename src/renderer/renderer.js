@@ -60,9 +60,13 @@ export default class Renderer {
         this.endOfSection = true;
         console.log('end of section');
         if (this.instructionState === 0) {
-          this.changeInstructionState(1);
+          if (this.sectionIndex === 0) {
+            this.changeInstructionState(1);
+          }
         } else if (this.instructionState === 1) {
-          this.changeInstructionState(2);
+          if (this.sectionIndex === this.matrix.length - 1) {
+            this.changeInstructionState(2);
+          }
         }
       }
     } else if (this.endOfSection) {
