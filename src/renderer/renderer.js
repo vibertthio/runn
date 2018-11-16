@@ -51,6 +51,7 @@ export default class Renderer {
   changeMatrix(mat) {
     this.halt = false;
     this.matrix = mat;
+    this.pianorollGrids[2].changeFixed(this.matrix.length - 1);
   }
 
   draw(scr, sectionIndex = 0, barIndex = 0, b = 0) {
@@ -164,8 +165,8 @@ export default class Renderer {
     const ypos = y;
     // console.log(`x: ${xpos}, y: ${ypos}`);
     if (Math.abs(xpos) < this.displayWidth * 0.1) {
-      const index = Math.floor(ypos / this.h_step + 0.5) +
-        Math.floor(this.matrix.length / 2);
+      const even = ((this.matrix.length % 2) === 0) ? 0 : 0.5;
+      const index = Math.floor((ypos / this.h_step) + even) + Math.floor(this.matrix.length / 2);
       if (index >= 0 && index < this.matrix.length) {
         console.log(`click index: [${index}]`);
         this.sectionIndex = index;

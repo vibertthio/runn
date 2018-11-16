@@ -119,6 +119,8 @@ export default class PianorollGrid {
     // roll
     const wStep = w / (48 * 4);
     const b = this.beat % 192;
+    // console.log(this.fixed);
+    // console.log(this.renderer.chords);
 
     for (let i = 0; i < 4; i += 1) {
       ctx.save();
@@ -316,6 +318,11 @@ export default class PianorollGrid {
 
       ctx.restore();
     }
+  }
+
+  changeFixed(i) {
+    this.fixed = i;
+    this.sectionIndex = i;
   }
 
 
