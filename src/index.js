@@ -37,7 +37,8 @@ class App extends Component {
     this.beat = 0;
     // this.serverUrl = 'http://140.109.21.193:5003/';
     // this.serverUrl = 'http://140.109.135.76:5003/';
-    this.serverUrl = 'http://140.109.16.227:5003/';
+    // this.serverUrl = 'http://140.109.16.227:5003/';
+    this.serverUrl = 'http://musicai.citi.sinica.edu.tw/songmashup/';
   }
 
   componentDidMount() {
@@ -159,11 +160,6 @@ class App extends Component {
   getLeadsheetVaeStatic(restart = true) {
     const url = this.serverUrl + 'static';
     this.getLeadsheetVae(url, restart);
-  }
-
-  getLeadsheetVaeStaticShift(dir = 0, step = 0.2) {
-    const url = this.serverUrl + 'static/' + dir.toString() + '/' + step.toString();
-    this.getLeadsheetVae(url);
   }
 
   update() {
