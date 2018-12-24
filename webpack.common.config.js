@@ -159,7 +159,8 @@ module.exports = {
 			filename: 'index.html',
 		}),
 		new CopyWebpackPlugin([
-			{ from: 'src/assets/looop.ico' },
+      { from: 'src/assets/looop.ico' },
+      { from: 'src/checkpoints', to: 'checkpoints', toType: 'dir'	 },
 		]),
 	],
 };

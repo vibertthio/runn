@@ -3,33 +3,46 @@ import { Noise } from 'noisejs';
 import { lerpColor } from './../utils/utils';
 
 export default class Renderer {
-  constructor(canvas) {
+  constructor(app, canvas) {
+    this.app = app;
     this.canvas = canvas;
-    this.matrix = [];
-    this.chords = [];
-    this.pianorollGrids = [];
-    this.dist = 0;
-    this.beat = 0;
+    this.melodies = [];
+    this.melodiesIndex = 0;
+    this.pianorollGridsAnswer = [];
+    this.pianorollGridsOptions = [];
+    this.nOfAns = app.answers.length;
+    this.nOfOptions = app.options.length;
     this.fontSize = 1.0;
     this.playing = false;
+
+    this.draggingState = {
+      ans: true, // true: ans, false: options
+      index: -1,
+      hoverAns: true,
+      hoverIndex: -1,
+    };
 
     this.frameCount = 0;
     this.halt = false;
 
-    this.backgroundColor = 'rgba(37, 38, 35, 1.0)';
+    // this.backgroundColor = 'rgba(37, 38, 35, 1.0)';
+    this.backgroundColor = 'rgba(15, 15, 15, 1.0)';
     this.noteOnColor = 'rgba(255, 255, 255, 1.0)';
     this.mouseOnColor = 'rgba(150, 150, 150, 1.0)';
     this.noteOnCurrentColor = 'rgba(255, 100, 100, 1.0)';
     this.boxColor = 'rgba(200, 200, 200, 1.0)';
-    this.extendAlpha = 0;
-    this.currentUpdateDir = 0;
-    this.selectedLatent = 20;
     this.displayWidth = 0;
     this.h = 0;
 
-    this.pianorollGrids[0] = new PianorollGrid(this,  -1.5, 0);
-    this.pianorollGrids[1] = new PianorollGrid(this,  0);
-    this.pianorollGrids[2] = new PianorollGrid(this,  1.5, 8);
+    for (let i = 0; i < this.nOfAns; i += 1) {
+      let pos = -1 * (this.nOfAns - 1) + 2 * i;
+      this.pianorollGridsAnswer[i] = new PianorollGrid(this, -1.2, pos, i, true)
+    }
+
+    for (let i = 0; i < this.nOfOptions; i += 1) {
+      let pos = -1 * (this.nOfOptions - 1) + 2 * i;
+      this.pianorollGridsOptions[i] = new PianorollGrid(this, 0.8, pos, i, false)
+    }
 
     this.noise = new Noise(Math.random());
 
@@ -46,162 +59,90 @@ export default class Renderer {
 
   initMatrix() {
     this.matrix = new Array(9).fill(new Array(4).fill(new Array(48).fill(-1)));
+    this.matrix = this.matrix.map(section => section.map(bar => bar.map(x => (Math.floor(Math.random() * 20 + 60)))));
   }
 
-  changeMatrix(mat) {
-    this.halt = false;
-    this.matrix = mat;
-    this.pianorollGrids[2].changeFixed(this.matrix.length - 1);
-  }
+  updateMelodies(ms) {
+    this.melodies = ms;
+    this.nOfAns = this.app.answers.length;
+    this.nOfOptions = this.app.options.length;
 
-  draw(scr, sectionIndex = 0, barIndex = 0, b = 0) {
-
-    if (!this.endOfSection) {
-      if ((b % 192) > 188) {
-        this.endOfSection = true;
-        console.log('end of section');
-        if (this.instructionState === 0) {
-          if (this.sectionIndex === 0) {
-            this.changeInstructionState(1);
-          }
-        } else if (this.instructionState === 1) {
-          if (this.sectionIndex === this.matrix.length - 1) {
-            this.changeInstructionState(2);
-          }
-        }
-      }
-    } else if (this.endOfSection) {
-      if ((b % 192) < 4) {
-        this.endOfSection = false;
-      }
+    for (let i = 0; i < this.nOfAns; i += 1) {
+      let pos = -1 * (this.nOfAns - 1) + 2 * i;
+      this.pianorollGridsAnswer[i] = new PianorollGrid(this, -1.2, pos, i)
     }
 
-    this.frameCount += 1;
-    this.beat = b;
+    for (let i = 0; i < this.nOfOptions; i += 1) {
+      let pos = -1 * (this.nOfOptions - 1) + 2 * i;
+      this.pianorollGridsOptions[i] = new PianorollGrid(this, 0.8, pos, i, false)
+    }
+  }
 
-    this.sectionIndex = sectionIndex;
+  draw(src, progress = 0) {
+
+    this.frameCount += 1;
+    this.progress = progress;
+
     const ctx = this.canvas.getContext('2d');
     // ctx.font = this.fontSize.toString() + 'rem monospace';
-    this.width = scr.width;
-    this.height = scr.height;
-    const width = scr.width;
-    const height = scr.height;
+    this.width = src.width;
+    this.height = src.height;
+    const width = src.width;
+    const height = src.height;
 
     ctx.save();
     ctx.fillStyle = this.backgroundColor;
     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-    const h = Math.min(width, height) * 0.18;
-    const w = width * 0.5;
+    // const h = Math.min(width, height) * 0.18;
+    const h = width * 0.1;
+    // const w = width * 0.2;
+    const w = h;
     this.h = h;
     this.displayWidth = w;
-    this.dist = h * 1.2;
     this.setFontSize(ctx, Math.pow(w / 800, 0.3));
 
     ctx.translate(width * 0.5, height * 0.5);
 
-    this.pianorollGrids[0].draw(ctx, w, h);
-    this.pianorollGrids[1].draw(ctx, w * 0.9, h * 1.2);
-    this.pianorollGrids[2].draw(ctx, w, h);
-
-    this.drawInterpolation(ctx, w * 0.1, h);
-    ctx.restore();
-  }
-
-  drawInterpolation(ctx, w, h) {
-    ctx.save();
-    ctx.translate(-(this.displayWidth) * 0.5, 0);
-    this.drawFrame(ctx, w * 1.1, h * 1.2 * 1.1);
-    const h_step = (h / this.matrix.length) * 1.2;
-    this.h_step = h_step;
-
-
-    // text
-    const ratio = 0.13;
-    if (this.instructionState === 3) {
-      ctx.save();
-      ctx.translate(-w * 0.5, 0);
-      ctx.fillStyle = '#FFF';
-      ctx.textAlign = 'end';
-      ctx.fillText('Press the squares', 0, -2 * h * ratio);
-      ctx.fillText('listen to the', 0, -h * ratio);
-      ctx.fillText('different ratio', 0, 0);
-      ctx.fillText('in mixing of', 0, h * ratio);
-      ctx.fillText('the two songs', 0, 2 * h * ratio);
-      ctx.restore();
-    } else if (this.instructionState < 2) {
-      ctx.save();
-      ctx.translate(-w * 0.5, 0);
-      ctx.fillStyle = '#FFF';
-      ctx.textAlign = 'end';
-      ctx.fillText('The blinking square\'s', 0, -2 * h * ratio);
-      ctx.fillText('position indicate the', 0, -h * ratio);
-      ctx.fillText('different ratio', 0, 0);
-      ctx.fillText('in mixing of', 0, h * ratio);
-      ctx.fillText('the two songs', 0, 2 * h * ratio);
-      ctx.restore();
-    }
-
-    // start drawing
-    ctx.translate(-w * 0.2, 0);
-    for (let i = 0; i < this.matrix.length; i += 1) {
-      ctx.save();
-      const j = i - (this.matrix.length / 2);
-      ctx.translate(0, h_step * (j + 0.25));
-      ctx.fillStyle = '#555';
-      if (i === this.sectionIndex) {
-        ctx.fillStyle = lerpColor('#555555', '#FF0000', Math.pow(Math.sin(this.frameCount * 0.05), 2));
-      }
-      ctx.fillRect(0, 0, w * 0.4, h_step * 0.5);
-      ctx.restore();
-    }
-
+    this.pianorollGridsAnswer.forEach((p, i) => {
+      const frameOnly = this.app.answers[i].index === -1;
+      p.draw(ctx, w, h, frameOnly);
+    });
+    this.pianorollGridsOptions.forEach((p, i) => {
+      const frameOnly = this.app.options[i].index === -1;
+      p.draw(ctx, w, h, frameOnly);
+    });
 
     ctx.restore();
   }
+
+  drawInterpolation(ctx, w, h) {}
 
   handleInterpolationClick(x, y) {
     const xpos = x + (this.displayWidth * 0.5);
     const ypos = y;
-    // console.log(`x: ${xpos}, y: ${ypos}`);
-    if (Math.abs(xpos) < this.displayWidth * 0.1) {
-      const even = ((this.matrix.length % 2) === 0) ? 0 : 0.5;
-      const index = Math.floor((ypos / this.h_step) + even) + Math.floor(this.matrix.length / 2);
-      if (index >= 0 && index < this.matrix.length) {
-        console.log(`click index: [${index}]`);
-        this.sectionIndex = index;
-        return true;
-      }
-      return false;
-    }
     return false;
   }
 
-  handleMouseDownOnPianoroll(x, y) {
-    if (Math.abs(this.pianorollGrids[0].gridYShift - y) < this.h * 0.5) {
-      if (this.instructionState === 0) {
-        this.pianorollGrids[0].showingInstruction = false;
-      }
-      return 0;
-    } else if (Math.abs(this.pianorollGrids[2].gridYShift - y) < this.h * 0.5) {
-      if (this.instructionState === 0) {
-        return -1;
-      } else if (this.instructionState === 1) {
-        this.pianorollGrids[2].showingInstruction = false;
-      }
-      return 2;
-    } else if (Math.abs(y) < this.h * 0.5) {
-      if (this.instructionState === 2) {
-        this.instructionState = 3;
-        this.pianorollGrids[1].showingInstruction = false;
-        this.sectionIndex = 0;
-        return 1;
-      } else if (this.instructionState === 3) {
-        return 3;
-      }
-      return -1;
-    }
+  handleMouseDownOnAnswers(x, y) {
+    if (Math.abs(this.pianorollGridsAnswer[0].gridYShift - y) < this.h * 0.5) {
+      // console.log(`x:${x}, y:${y}`);
 
+      const id = Math.floor((x / (2 * this.displayWidth * 0.7)) + this.nOfAns * 0.5);
+      // console.log(`id: ${id}`);
+      return id;
+    }
+    return -1;
+  }
+
+  handleMouseDownOnOptions(x, y) {
+    if (Math.abs(this.pianorollGridsOptions[0].gridYShift - y) < this.h * 0.5) {
+      // console.log(`x:${x}, y:${y}`);
+
+      const id = Math.floor((x / (2 * this.displayWidth * 0.7)) + this.nOfOptions * 0.5);
+      // console.log(`id: ${id}`);
+      return id;
+    }
     return -1;
   }
 
@@ -209,41 +150,151 @@ export default class Renderer {
     let cx = e.clientX - this.width * 0.5;;
     let cy = e.clientY - this.height * 0.5;
 
-    const onInterpolation = this.handleInterpolationClick(cx, cy);
-    const onPianoroll = this.handleMouseDownOnPianoroll(cx, cy)
+    let mouseIn = false;
 
-    if (onInterpolation && (this.instructionState === 3)) {
-      this.instructionState = 4;
+
+    const onAnsId = this.handleMouseDownOnAnswers(cx, cy);
+    let onAns = -1;
+    if (onAnsId > -1 && onAnsId < this.app.answers.length) {
+      onAns = this.app.answers[onAnsId].index;
+      this.melodiesIndex = onAns;
+
+      if (this.app.answers[onAnsId].ans) {
+        this.draggingState = {
+          ans: true,
+          index: onAnsId,
+          hoverAns: true,
+          hoverIndex: -1,
+        };
+      }
+      mouseIn = true;
     }
 
+    const onOptionsId = this.handleMouseDownOnOptions(cx, cy);
+    let onOptions = -1;
+    if (onOptionsId > -1 && onOptionsId < this.app.options.length) {
+      onOptions = this.app.options[onOptionsId].index;
+      this.melodiesIndex = onOptions;
+
+      this.draggingState = {
+        ans: false,
+        index: onOptionsId,
+        hoverAns: false,
+        hoverIndex: -1,
+      };
+
+      mouseIn = true;
+    }
+
+    if (!mouseIn) {
+      this.draggingState.index = -1;
+    }
+
+    this.mouseDownX = cx;
+    this.mouseDownY = cy;
+
     return [
-      onInterpolation,
-      onPianoroll,
+      onAns,
+      onOptions,
     ];
   }
 
   handleMouseMove(e) {
     const x = e.clientX - (this.width * 0.5);
     const y = e.clientY - (this.height * 0.5);
+
+    const { ans, index } = this.draggingState;
+
+    if (index !== -1) {
+      if (!ans) {
+        this.pianorollGridsOptions[index].dragX = (x - this.mouseDownX);
+        this.pianorollGridsOptions[index].dragY = (y - this.mouseDownY);
+      } else {
+        this.pianorollGridsAnswer[index].dragX = (x - this.mouseDownX);
+        this.pianorollGridsAnswer[index].dragY = (y - this.mouseDownY);
+      }
+
+      const onAnsId = this.handleMouseDownOnAnswers(x, y);
+      let hoverOnSomething = false;
+      if (onAnsId > -1 && onAnsId < this.app.answers.length) {
+        // console.log('into hovering ans');
+        this.draggingState.hoverAns = true;
+        this.draggingState.hoverIndex = onAnsId;
+        hoverOnSomething = true;
+      }
+
+      const onOptionsId = this.handleMouseDownOnOptions(x, y);
+      if (onOptionsId > -1 && onOptionsId < this.app.options.length) {
+        // console.log('into hovering options');
+        this.draggingState.hoverAns = false;
+        this.draggingState.hoverIndex = onOptionsId;
+        hoverOnSomething = true;
+      }
+
+      if (!hoverOnSomething) {
+        // console.log('hover out');
+        this.draggingState.hoverIndex = -1;
+      }
+    }
+  }
+
+  handleMouseUp(e) {
+    const { ans, index, hoverAns, hoverIndex } = this.draggingState;
+    // console.log(this.draggingState);
+    if (index !== -1) {
+      if (!ans) {
+        this.pianorollGridsOptions[index].dragX = 0;
+        this.pianorollGridsOptions[index].dragY = 0;
+      } else {
+        this.pianorollGridsAnswer[index].dragX = 0;
+        this.pianorollGridsAnswer[index].dragY = 0;
+      }
+
+      if (!ans) {
+        if (hoverIndex !== -1) {
+          if (hoverAns) {
+            const originalId = this.app.answers[hoverIndex].index;
+            if (originalId === -1) {
+              this.app.answers[hoverIndex].index = this.app.options[index].index;
+              this.app.options[index].index = -1;
+            }
+          } else {
+            const originalId = this.app.options[hoverIndex].index;
+            this.app.options[hoverIndex].index = this.app.options[index].index;
+            this.app.options[index].index = originalId;
+          }
+        }
+      } else {
+        if (hoverIndex !== -1) {
+          if (!hoverAns) {
+            const originalId = this.app.options[hoverIndex].index;
+            if (originalId === -1) {
+              this.app.options[hoverIndex].index = this.app.answers[index].index;
+              this.app.answers[index].index = -1;
+            }
+          } else {
+            const originalId = this.app.answers[hoverIndex].index;
+            this.app.answers[hoverIndex].index = this.app.answers[index].index;
+            this.app.answers[index].index = originalId;
+          }
+        }
+      }
+    }
+
+    this.draggingState.index = -1;
+    this.draggingState.hoverIndex = -1;
+
+    // console.log(...this.app.answers);
   }
 
   // instruction
   changeInstructionState(s) {
     this.instructionState = s;
-    if (s === 1) {
-      this.pianorollGrids[0].showingInstruction = false;
-      this.pianorollGrids[1].showingInstruction = false;
-      this.pianorollGrids[2].showingInstruction = true;
-    } else if (s === 2) {
-      this.pianorollGrids[0].showingInstruction = false;
-      this.pianorollGrids[2].showingInstruction = false;
-      this.pianorollGrids[1].showingInstruction = true;
-    }
   }
 
   // draw frame
   drawFrame(ctx, w, h) {
-    const unit = this.dist * 0.04;
+    const unit = this.h * 0.04;
 
     ctx.save();
 
@@ -283,7 +334,7 @@ export default class Renderer {
 
   // animation
   triggerStartAnimation() {
-    this.pianorollGrids.forEach(p => p.triggerStartAnimation());
+    this.pianorollGridsAnswer.forEach(p => p.triggerStartAnimation());
   }
 
 }

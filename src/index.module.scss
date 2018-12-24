@@ -1,4 +1,10 @@
 $font-default: monospace, Arial, sans-serif;
+// $font-default: Poppins, Arial, sans-serif;
+
+$link-color: #f39c12;
+// $link-color: #29f1c3;
+// $link-color: #94EDEE;
+
 
 .no-btn-style {
   background-color: Transparent;
@@ -19,7 +25,7 @@ $font-default: monospace, Arial, sans-serif;
 }
 
 .links a {
-  color: #aaa;
+  color: #fff;
   text-align:center;
   letter-spacing: 0.5rem;
   text-decoration: none;
@@ -27,20 +33,35 @@ $font-default: monospace, Arial, sans-serif;
   user-select: none;
 }
 .links a:hover {
-  color: #ccc;
+  color: #fff;
 }
 
 .links p {
-  color: #999;
+  color: #fff;
   letter-spacing: 0.2rem;
 }
 
 .title {
   @extend .links;
   top: 1.5rem;
+  font-size: 1.2rem;
+  // border: 2px solid $link-color;
+  // margin-left: auto;
+  // margin-right: auto;
+
   
   a {
     margin-right: 1rem;
+  }
+
+  button {
+    img {
+      width: 1.3rem;
+      opacity: 0.7;
+      &:hover{
+        opacity: 1.0;
+      }
+    }
   }
 }
 
@@ -68,8 +89,15 @@ $range-label-width: 60px !default;
   display: block;
 
   width: 100%;
-  height: 1rem;
-  bottom: 35px;
+  bottom: 4rem;
+  text-align: center;
+  
+  .result {
+    display: none;
+    font-size: 1.2rem;
+    font-family: $font-default;
+    color: white;
+  }
 
   .slider {
     // display: block;
@@ -78,16 +106,46 @@ $range-label-width: 60px !default;
     width: 30rem;
     margin: auto;
 
-    
-    button {
-      background: none;
-      color: inherit;
-      border: none;
-      padding: 0;
-      font: inherit;
+    .sendButton {
       cursor: pointer;
-      outline: inherit;
+      // z-index: 3;
+      margin-left: auto;
+      margin-right: auto;
+      margin-bottom: 40px;
+      font-size: 1.2rem;
+      display: block;
+      box-sizing: border-box;
+      width: 205px;
+      height: 50px;
+      border: 2px solid $link-color;
+      background-color: transparent;
+      text-transform: uppercase;
+      // color: $link-color;
+      color: white;
+      text-align: center;
+      // transition: background-color 300ms ease-in-out;
+      font-family: $font-default;
     }
+    .sendButton:hover {
+      color: white;
+      background-color: $link-color;
+      -webkit-user-select: none;  /* Chrome all / Safari all */
+      -moz-user-select: none;     /* Firefox all */
+      -ms-user-select: none;
+    }
+    .sendButton:focus {
+      outline: none;
+    }
+    
+    // button {
+    //   background: none;
+    //   color: inherit;
+    //   border: none;
+    //   padding: 0;
+    //   font: inherit;
+    //   cursor: pointer;
+    //   outline: inherit;
+    // }
 
     input[type='range'] {
       -webkit-appearance: none;
@@ -286,3 +344,116 @@ $range-label-width: 60px !default;
 .canvas {
   margin: auto;
 }
+
+
+// splash
+
+.splash {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  z-index: 3;
+  background-color: rgba(15, 15, 15, 1.0);
+  color: rgba(255,255,255, 0.8);
+  transition: opacity 500ms ease;
+  font-family: $font-default;
+  font-weight: medium;
+  text-align: center;
+
+  .wrapper {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    margin-left: auto;
+    margin-right: auto;
+    width: 500px;
+    vertical-align: middle;
+
+
+    a {
+      color: $link-color;
+      text-decoration: none;
+    }
+
+    .about:hover {
+      border-bottom: 1px solid $link-color;
+      transition: border 300ms ease-in-out;
+    }
+
+    h1 {
+      font-size: 2rem;
+      letter-spacing: 0.5rem;
+    }
+    
+    p {
+      font-size: 1rem;
+      line-height: 1.5rem;
+    }
+  }
+
+
+  .playButton {
+    cursor: pointer;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 40px;
+    font-size: 22px;
+    display: block;
+    // box-sizing: border-box;
+    width: 205px;
+    height: 65px;
+    border: 0;
+    // border: 2px solid $link-color;
+    border-bottom: 2px solid $link-color;
+    border-top: 2px solid $link-color;
+    background-color: transparent;
+    // text-transform: uppercase;
+    color: $link-color;
+    text-align: center;
+    transition: background-color 300ms ease-in-out;
+    font-family: $font-default;
+  }
+  .playButton:hover {
+    color: white;
+    background-color: $link-color;
+    -webkit-user-select: none;  /* Chrome all / Safari all */
+    -moz-user-select: none;     /* Firefox all */
+    -ms-user-select: none;
+  }
+  .playButton:focus {
+    outline: none;
+  }
+
+  .description, .builtWith {
+    font-size: 14px;
+    margin-bottom: 40px;
+  }
+
+
+
+  .badgeWrapper {
+    left: 0;
+    bottom: 0;
+    margin: 20px;
+    position: absolute;
+    width: 80%;
+    max-width:200px;
+  }
+
+  .magentaLink {
+    margin-left: 0;
+    margin-right: 0;
+    color: #aaa;
+  }
+
+  .privacy {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    a {
+      color: #aaa;
+    }
+  }
+}
+

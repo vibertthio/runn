@@ -1,12 +1,15 @@
 import React, { Component } from 'react';
 import { render } from 'react-dom';
+import { MusicVAE } from '@magenta/music';
+
 
 import styles from './index.module.scss';
+import sig from './assets/sig.png';
 import info from './assets/info.png';
 import Sound from './music/sound';
 import Renderer from './renderer/renderer';
-import playSvg from './assets/play.png';
-import pauseSvg from './assets/pause.png';
+import { presetMelodies } from './music/clips';
+import { getQuestions, checkEnd } from './utils/questions';
 
 class App extends Component {
   constructor(props) {
@@ -16,10 +19,11 @@ class App extends Component {
       open: false,
       playing: false,
       dragging: false,
-      loadingProgress: 0,
-      loadingSamples: false,
-      currentTableIndex: 4,
+      loadingModel: true,
       rhythmThreshold: 0.6,
+      finishedAnswer: false,
+      answerCorrect: false,
+      waitingNext: false,
       bpm: 120,
       screen: {
         width: window.innerWidth,
@@ -30,141 +34,92 @@ class App extends Component {
 
     this.sound = new Sound(this),
     this.canvas = [];
-    this.matrix = [];
+    this.melodies = [];
     this.bpms = [];
-    this.chords = [];
-    this.rawMatrix = [];
-    this.beat = 0;
-    // this.serverUrl = 'http://140.109.21.193:5003/';
-    // this.serverUrl = 'http://140.109.135.76:5003/';
-    // this.serverUrl = 'http://140.109.16.227:5003/';
-    this.serverUrl = 'http://musicai.citi.sinica.edu.tw/songmashup/';
+    this.questionIndex = 0;
+    this.initAns();
   }
 
   componentDidMount() {
-    this.renderer = new Renderer(this.canvas);
-    if (!this.state.loadingSamples) {
-      this.renderer.draw(this.state.screen);
-    }
-    window.addEventListener('keydown', this.onKeyDown.bind(this), false);
+    this.renderer = new Renderer(this, this.canvas);
+    this.initVAE();
+    requestAnimationFrame(() => { this.update() });
+  }
+
+  addEventListeners() {
+    window.addEventListener('keydown', this.handleKeyDown.bind(this), false);
     window.addEventListener('resize', this.handleResize.bind(this, false));
     window.addEventListener('mousedown', this.handleMouseDown.bind(this));
-    // window.addEventListener('click', this.handleClick.bind(this));
-    // window.addEventListener('mousemove', this.handleMouseMove.bind(this));
-    // window.addEventListener('mouseup', this.handleMouseUp.bind(this));
-
-    requestAnimationFrame(() => { this.update() });
-    this.getLeadsheetVaeStatic(false);
+    window.addEventListener('click', this.handleClick.bind(this));
+    window.addEventListener('mousemove', this.handleMouseMove.bind(this));
+    window.addEventListener('mouseup', this.handleMouseUp.bind(this));
   }
 
   componentWillUnmount() {
-    window.removeEventListener('keydown', this.onKeyDown.bind(this));
+    window.removeEventListener('keydown', this.handleKeyDown.bind(this));
     window.removeEventListener('mousedown', this.handleMouseDown.bind(this));
-    // window.removeEventListener('click', this.handleClick.bind(this));
-    // window.removeEventListener('mousemove', this.handleMouseMove.bind(this));
-    // window.removeEventListener('mouseup', this.handleMouseUp.bind(this));
+    window.removeEventListener('click', this.handleClick.bind(this));
+    window.removeEventListener('mousemove', this.handleMouseMove.bind(this));
+    window.removeEventListener('mouseup', this.handleMouseUp.bind(this));
     window.removeEventListener('resize', this.handleResize.bind(this, false));
   }
 
-  changeMatrix(mat) {
-    this.rawMatrix = mat;
-    this.updateMatrix()
-  }
+  initVAE() {
+    // const modelCheckPoint = 'https://storage.googleapis.com/magentadata/js/checkpoints/music_vae/mel_2bar_small';
+    const modelCheckPoint = './checkpoints/mel_2bar_small';
+    const n = this.numInterpolations;
+    const vae = new MusicVAE(modelCheckPoint);
 
-  changeChords(c) {
-    this.chords = c;
-    this.sound.chords = c;
-    this.renderer.chords = c;
-  }
-
-  updateMatrix() {
-    const m = this.rawMatrix;
-    this.matrix = m;
-    this.renderer.changeMatrix(m);
-    this.sound.changeMatrix(m);
-  }
-
-  postChangeThreshold(amt = 0.3, restart = false) {
-    const url = this.serverUrl + 'api/content';
-    fetch(url, {
-      method: 'POST', // *GET, POST, PUT, DELETE, etc.
-      headers: {
-        'accept': 'application/json',
-        'content-type': 'application/json'
-      },
-      body: JSON.stringify({
-        m_seq_1: this.matrix[0],
-        c_seq_1: this.chords[0],
-        m_seq_2: this.matrix[this.matrix.length - 1],
-        c_seq_2: this.chords[this.chords.length - 1],
-        tempo_1: this.bpms[0],
-        tempo_2: this.bpms[1],
-        theta: amt,
-      }),
-    })
-      .then(r => r.json())
-      .then(r => {
-        this.changeMatrix(r['melody']);
-        this.changeChords(r['chord']);
-        this.bpms = r['tempo'];
-        if (restart) {
-          this.start();
-          this.sound.changeSection(0);
-          this.renderer.triggerStartAnimation();
-        }
+    this.setMelodies(new Array(n).fill(presetMelodies['Twinkle']));
+    vae.initialize()
+      .then(() => {
+        console.log('initialized!');
+        return vae.interpolate([
+          presetMelodies[this.melodiesName[0]],
+          presetMelodies[this.melodiesName[1]],
+        ], n);
       })
-      .catch(e => console.log(e));
+      .then((i) => {
+        this.setMelodies(i);
+        this.vae = vae;
+        this.setState({
+          loadingModel: false,
+        })
+      });
   }
 
-  getLeadsheetVae(url, restart = true) {
-    fetch(url, {
-      headers: {
-        'content-type': 'application/json'
-      },
-      method: 'GET', // *GET, POST, PUT, DELETE, etc.
-    })
-      .then(r => r.json())
-      .then(r => {
-        this.changeMatrix(r['melody']);
-        this.changeChords(r['chord']);
-        this.bpms = r['tempo'];
-        console.log(r);
-        if (restart) {
-          this.start();
-          this.sound.changeSection(0);
-          this.renderer.triggerStartAnimation();
-        }
-
-        if (this.renderer.instructionState === 0) {
-          this.renderer.pianorollGrids[0].showingInstruction = true;
-        }
-      })
-      .catch(e => console.log(e));
+  initAns() {
+    const q = JSON.parse(JSON.stringify(getQuestions(this.questionIndex)));
+    console.log(q);
+    this.answers = q.answers.slice(0);
+    this.options = q.options.slice(0);
+    this.numInterpolations = q.numInterpolations;
+    this.melodiesName = q.melodies.slice(0);
   }
 
-  getLeadsheetVaeRandom() {
-    let s1 = Math.floor(Math.random() * 4);
-    let s2 = Math.floor(Math.random() * 4);
-    while (s2 === s1) {
-      s2 = Math.floor(Math.random() * 4);
-    }
+  resetAns() {
+    this.questionIndex += 1;
+    const q = JSON.parse(JSON.stringify(getQuestions(this.questionIndex)));
 
-    console.log(`s1: ${s1}, s2: ${s2}`);
-    s1 = s1.toString();
-    s2 = s2.toString();
-
-    const url = this.serverUrl + `static/${s1}/${s2}`;
-    this.getLeadsheetVae(url);
+    this.vae.interpolate([
+      presetMelodies[q.melodies[0]],
+      presetMelodies[q.melodies[1]],
+    ], q.numInterpolations)
+    .then((i) => {
+      this.initAns();
+      this.setMelodies(i);
+    });
   }
 
-  getLeadsheetVaeStatic(restart = true) {
-    const url = this.serverUrl + 'static';
-    this.getLeadsheetVae(url, restart);
+  setMelodies(ms) {
+    this.renderer.updateMelodies(ms);
+    this.sound.updateMelodies(ms);
+    this.interpolatedMelodies = ms;
   }
 
   update() {
-    const { beat, barIndex, sectionIndex } = this.sound;
-    this.renderer.draw(this.state.screen, sectionIndex, barIndex, beat);
+    const { progress } = this.sound.part;
+    this.renderer.draw(this.state.screen, progress);
     requestAnimationFrame(() => { this.update() });
   }
 
@@ -184,51 +139,38 @@ class App extends Component {
 
   handleMouseDown(e) {
     e.stopPropagation();
-    const [onInterpolation, onPianoroll] = this.renderer.handleMouseDown(e);
-    if (onInterpolation) {
-      const { playing } = this.state;
-      this.sound.changeSection(this.renderer.sectionIndex);
-      this.sound.loop = true;
-      if (!playing) {
-        this.start();
-      }
-    } else if (onPianoroll === 3) {
-      const { playing } = this.state;
-      this.sound.changeSection(Math.floor(this.matrix.length / 2));
-      this.sound.loop = true;
-      if (!playing) {
-        this.start();
-      }
+    const [ onAns, onOptions] = this.renderer.handleMouseDown(e);
+    if (onAns > -1) {
+      this.sound.changeMelody(onAns);
+      this.start();
+      this.setState({
+        dragging: true,
+      });
+    } else if (onOptions > -1) {
+      this.sound.changeMelody(onOptions);
+      this.start();
+      this.setState({
+        dragging: true,
+      });
     }
 
-    if (onPianoroll === 0) {
-      this.sound.loop = false;
-      this.sound.changeSection(0);
-      this.start();
-    } else if (onPianoroll === 2) {
-      this.sound.loop = false;
-      this.sound.changeSection(this.matrix.length - 1);
-      this.start();
-    } else if (onPianoroll === 1) {
-      const { playing } = this.state;
-      this.sound.changeSection(this.renderer.sectionIndex);
-      this.sound.loop = true;
-      if (!playing) {
-        this.start();
-      }
-    }
   }
 
   handleMouseUp(e) {
     e.stopPropagation();
-    // const dragging = this.renderer.handleMouseDown(e);
+    this.renderer.handleMouseUp(e)
+    const finished = this.checkFinished();
+    // console.log(`f: ${finished}`);
+
+    this.setState({
+      dragging: false,
+      finishedAnswer: finished,
+    });
   }
 
   handleMouseMove(e) {
     e.stopPropagation();
     if (this.state.dragging) {
-      this.renderer.handleMouseMoveOnGraph(e);
-    } else {
       this.renderer.handleMouseMove(e);
     }
   }
@@ -242,30 +184,21 @@ class App extends Component {
     }
   }
 
-  onKeyDown(event) {
+  handleKeyDown(event) {
     event.stopPropagation();
-    const { loadingSamples } = this.state;
-    if (!loadingSamples) {
+    const { loadingModel } = this.state;
+    if (!loadingModel) {
       if (event.keyCode === 32) {
         // space
         this.trigger();
       }
       if (event.keyCode === 65) {
         // a
-        this.postChangeThreshold();
       }
       if (event.keyCode === 82) {
         // r
-        this.getLeadsheetVaeRandom();
       }
     }
-  }
-
-  changeTableIndex(currentTableIndex) {
-    this.sound.changeTable(this.matrix[currentTableIndex]);
-    this.setState({
-      currentTableIndex,
-    });
   }
 
   openMenu() {
@@ -280,30 +213,6 @@ class App extends Component {
     this.setState({
       open: false,
     });
-  }
-
-  handleChangeRhythmThresholdValue(e) {
-    const rhythmThreshold = e.target.value / 100;
-    // console.log(`rhythmThreshold changed: ${rhythmThreshold}`);
-    this.setState({ rhythmThreshold });
-  }
-
-  handleSendPostRhythmThresholdValue(amt) {
-    this.postChangeThreshold(amt);
-    console.log(`threshold: ${amt}`);
-  }
-
-  handleChangeBpmValue(e) {
-    const v = e.target.value;
-    // 0~100 -> 60~120
-    const bpm = v;
-    console.log(`bpm changed: ${bpm}`);
-    this.setState({ bpm });
-    this.sound.changeBpm(bpm);
-  }
-
-  handleClickPlayButton() {
-    this.trigger();
   }
 
   trigger() {
@@ -321,6 +230,7 @@ class App extends Component {
       playing: true,
     });
   }
+
   stop() {
     this.sound.stop();
     this.renderer.playing = false;
@@ -329,17 +239,129 @@ class App extends Component {
     });
   }
 
+  onPlay() {
+    console.log('press play!');
+    this.addEventListeners();
+
+    const splash = document.getElementById('splash');
+    splash.style.opacity = 0.0;
+    setTimeout(() => {
+      splash.style.display = 'none';
+    }, 500);
+  }
+
+  checkFinished() {
+    let ret = true;
+    this.answers.forEach(a => {
+      if (a.ans && (a.index === -1)) {
+        ret = false;
+      }
+    });
+    return ret;
+  }
+
+  checkCorrect() {
+    let ret = true;
+    this.answers.forEach((a, i) => {
+      if (a.index !== i) {
+        ret = false;
+      }
+    });
+    return ret;
+  }
+
+  onClickTheButton() {
+
+
+    if (this.state.waitingNext) {
+      if (checkEnd(this.questionIndex)) {
+        return;
+      }
+
+      const result = document.getElementById('resultText');
+      result.style.display = 'none';
+
+      this.resetAns();
+
+      this.setState({
+        waitingNext: false,
+        finishedAnswer: false,
+      });
+      return;
+    }
+
+    if (this.state.finishedAnswer) {
+      const result = document.getElementById('resultText');
+      result.style.display = 'block';
+
+      const correct = this.checkCorrect();
+      this.setState({
+        waitingNext: true,
+        answerCorrect: correct,
+      });
+
+      return;
+    }
+  }
+
   render() {
-    const loadingText = `loading..${this.state.loadingProgress}/9`;
-    const { playing, currentTableIndex } = this.state;
+    const { waitingNext, loadingModel, finishedAnswer, answerCorrect } = this.state;
+    const loadingText = loadingModel ? 'loading...' : 'play';
+    let buttonText = finishedAnswer ? 'Send' : 'Sorting...';
+    if (waitingNext) {
+      if (!checkEnd(this.questionIndex)) {
+        buttonText = 'Next';
+      } else {
+        buttonText = 'End';
+      }
+    }
+    const resultText = answerCorrect ? 'Correct!' : 'Wrong!';
     const arr = Array.from(Array(9).keys());
     const mat = Array.from(Array(9 * 16).keys());
     const { rhythmThreshold, bpm } = this.state;
     return (
       <div>
+        <section className={styles.splash} id="splash">
+          <div className={styles.wrapper}>
+            <h1>Sornting</h1>
+            <div className="device-supported">
+              <p className={styles.description}>
+                A fun way to explore music using machine learning.
+                Just pull the blocks apart to see what melodies you discover.
+              </p>
+
+              <button
+                className={styles.playButton}
+                id="splash-play-button"
+                onClick={() => this.onPlay()}
+              >
+                {loadingText}
+              </button>
+
+              <p className={styles.builtWith}>
+                Built with tone.js + musicvae.js.
+                <br />
+                Learn more about <a className={styles.about} target="_blank" href="https://github.com/vibertthio">how it works.</a>
+              </p>
+
+              <p>Made by</p>
+              <img className="splash-icon" src={sig} width="100" height="auto" alt="Vibert Thio Icon" />
+            </div>
+          </div>
+          <div className={styles.badgeWrapper}>
+            <a className={styles.magentaLink} href="http://musicai.citi.sinica.edu.tw/" target="_blank" >
+              <div>Music and AI Lab</div>
+            </a>
+          </div>
+          <div className={styles.privacy}>
+            <a href="https://github.com/vibertthio" target="_blank">Privacy &amp; </a>
+            <a href="https://github.com/vibertthio" target="_blank">Terms</a>
+          </div>
+        </section>
+
         <div className={styles.title}>
           <a href="https://github.com/vibertthio" target="_blank" rel="noreferrer noopener">
-            Melody VAE | MAC Lab
+            Sornting | Vibert Thio
           </a>
           <button
             className={styles.btn}
@@ -350,13 +372,6 @@ class App extends Component {
           </button>
         </div>
         <div>
-          {this.state.loadingSamples && (
-            <div className={styles.loadingText}>
-              <p>{loadingText}</p>
-            </div>
-          )}
-        </div>
-        <div>
           <canvas
             ref={ c => this.canvas = c }
             className={styles.canvas}
@@ -365,30 +380,17 @@ class App extends Component {
           />
         </div>
         <div className={styles.control}>
+          <p className={styles.result} id="resultText">{resultText}</p>
           <div className={styles.slider}>
-            <input
-              type="range"
-              min="1"
-              max="99"
-              value={rhythmThreshold * 100}
-              onMouseUp={() => this.handleSendPostRhythmThresholdValue(rhythmThreshold)}
-              onChange={this.handleChangeRhythmThresholdValue.bind(this)}
-            />
-            <button onClick={this.handleClickPlayButton.bind(this)} onKeyDown={e => e.preventDefault()}>
-              {
-                !this.state.playing ?
-                  (<img src={playSvg} width="30" height="30" alt="submit" />) :
-                  (<img src={pauseSvg} width="30" height="30" alt="submit" />)
-              }
+            <button
+              className={styles.sendButton}
+              onClick={() => this.onClickTheButton()}
+              onKeyDown={e => e.preventDefault()}
+            >
+              {buttonText}
             </button>
-            <input type="range" min="60" max="180" value={bpm} onChange={this.handleChangeBpmValue.bind(this)}/>
           </div>
         </div>
-        {/* <div className={styles.foot}>
-          <a href="https://vibertthio.com/portfolio/" target="_blank" rel="noreferrer noopener">
-            Vibert Thio
-          </a>
-        </div> */}
         <div id="menu" className={styles.overlay}>
           <button className={styles.overlayBtn} onClick={() => this.handleClickMenu()} />
           <div className={styles.intro}>

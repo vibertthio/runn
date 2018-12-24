@@ -18,6 +18,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@magenta/music": "^1.4.0",
     "glsl-noise": "^0.0.0",
     "glslify-import-loader": "^0.1.1",
     "gsap": "^1.19.1",

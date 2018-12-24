@@ -16,3 +16,5 @@ logs
 pids
 *.pid
 *.seed
+
+**/checkpoints
