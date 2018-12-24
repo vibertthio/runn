@@ -1,8 +1,8 @@
 const questions = [
   {
     melodies: [
-      'Twinkle',
       'Arpeggiated',
+      'Twinkle',
     ],
     numInterpolations: 5,
     answers: [
@@ -73,12 +73,12 @@ const questions = [
       },
       {
         index: 4,
-        ans: true,
+        ans: false,
         show: true,
       },
       {
         index: -1,
-        ans: false,
+        ans: true,
         show: true,
       },
       {
@@ -109,7 +109,7 @@ const questions = [
 
   {
     melodies: [
-      'Arpeggiated',
+      'Sparse',
       'Bounce',
     ],
     numInterpolations: 7,
@@ -141,7 +141,7 @@ const questions = [
       },
       {
         index: -1,
-        ans: false,
+        ans: true,
         show: true,
       },
       {
@@ -185,6 +185,7 @@ function checkEnd(index) {
 }
 
 export {
+  questions,
   getQuestions,
   checkEnd,
 };

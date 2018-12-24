@@ -9,27 +9,33 @@ import info from './assets/info.png';
 import Sound from './music/sound';
 import Renderer from './renderer/renderer';
 import { presetMelodies } from './music/clips';
-import { getQuestions, checkEnd } from './utils/questions';
+import { questions, getQuestions, checkEnd } from './utils/questions';
 
 class App extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      open: false,
+      open: false, // menu
+      slash: true,
       playing: false,
+      mouseDown: false,
       dragging: false,
       loadingModel: true,
+      loadingNextInterpolation: false,
       rhythmThreshold: 0.6,
       finishedAnswer: false,
       answerCorrect: false,
       waitingNext: false,
+      restart: false,
       bpm: 120,
       screen: {
         width: window.innerWidth,
         height: window.innerHeight,
         ratio: window.devicePixelRatio || 1,
       },
+
+      score: 0,
     };
 
     this.sound = new Sound(this),
@@ -43,19 +49,20 @@ class App extends Component {
   componentDidMount() {
     this.renderer = new Renderer(this, this.canvas);
     this.initVAE();
+    this.addEventListeners();
     requestAnimationFrame(() => { this.update() });
   }
 
   addEventListeners() {
     window.addEventListener('keydown', this.handleKeyDown.bind(this), false);
     window.addEventListener('resize', this.handleResize.bind(this, false));
-    window.addEventListener('mousedown', this.handleMouseDown.bind(this));
     window.addEventListener('click', this.handleClick.bind(this));
+    window.addEventListener('mousedown', this.handleMouseDown.bind(this));
     window.addEventListener('mousemove', this.handleMouseMove.bind(this));
     window.addEventListener('mouseup', this.handleMouseUp.bind(this));
   }
 
-  componentWillUnmount() {
+  removeEventListener() {
     window.removeEventListener('keydown', this.handleKeyDown.bind(this));
     window.removeEventListener('mousedown', this.handleMouseDown.bind(this));
     window.removeEventListener('click', this.handleClick.bind(this));
@@ -64,9 +71,13 @@ class App extends Component {
     window.removeEventListener('resize', this.handleResize.bind(this, false));
   }
 
+  componentWillUnmount() {
+    removeEventListener();
+  }
+
   initVAE() {
-    // const modelCheckPoint = 'https://storage.googleapis.com/magentadata/js/checkpoints/music_vae/mel_2bar_small';
-    const modelCheckPoint = './checkpoints/mel_2bar_small';
+    const modelCheckPoint = 'https://storage.googleapis.com/magentadata/js/checkpoints/music_vae/mel_2bar_small';
+    // const modelCheckPoint = './checkpoints/mel_2bar_small';
     const n = this.numInterpolations;
     const vae = new MusicVAE(modelCheckPoint);
 
@@ -97,8 +108,12 @@ class App extends Component {
     this.melodiesName = q.melodies.slice(0);
   }
 
-  resetAns() {
-    this.questionIndex += 1;
+  resetAns(reset = false) {
+    if (!reset) {
+      this.questionIndex += 1;
+    } else {
+      this.questionIndex = 0;
+    }
     const q = JSON.parse(JSON.stringify(getQuestions(this.questionIndex)));
 
     this.vae.interpolate([
@@ -106,8 +121,16 @@ class App extends Component {
       presetMelodies[q.melodies[1]],
     ], q.numInterpolations)
     .then((i) => {
+      console.log('finish interpolate, set melody');
       this.initAns();
       this.setMelodies(i);
+      this.setState({
+        loadingNextInterpolation: false,
+      });
+    });
+
+    this.setState({
+      loadingNextInterpolation: true,
     });
   }
 
@@ -135,43 +158,74 @@ class App extends Component {
 
   handleClick(e) {
     e.stopPropagation();
+    const { slash, dragging } = this.state;
+
+    if (!slash) {
+      const [onAns, onOptions] = this.renderer.handleMouseClick(e);
+      if (!dragging) {
+        if (onAns > -1) {
+          this.sound.changeMelody(onAns);
+          this.start();
+        } else if (onOptions > -1) {
+          this.sound.changeMelody(onOptions);
+          this.start();
+        }
+      }
+
+      this.setState({
+        dragging: false,
+      });
+    }
   }
 
   handleMouseDown(e) {
     e.stopPropagation();
-    const [ onAns, onOptions] = this.renderer.handleMouseDown(e);
-    if (onAns > -1) {
-      this.sound.changeMelody(onAns);
-      this.start();
-      this.setState({
-        dragging: true,
-      });
-    } else if (onOptions > -1) {
-      this.sound.changeMelody(onOptions);
-      this.start();
-      this.setState({
-        dragging: true,
-      });
+    const { slash, waitingNext } = this.state;
+
+    if (!slash && !waitingNext) {
+      const [ onAns, onOptions] = this.renderer.handleMouseDown(e);
+      if (onAns > -1) {
+        // this.sound.changeMelody(onAns);
+        // this.start();
+        this.setState({
+          mouseDown: true,
+        });
+      } else if (onOptions > -1) {
+        // this.sound.changeMelody(onOptions);
+        // this.start();
+        this.setState({
+          mouseDown: true,
+        });
+      }
     }
 
   }
 
   handleMouseUp(e) {
     e.stopPropagation();
-    this.renderer.handleMouseUp(e)
-    const finished = this.checkFinished();
-    // console.log(`f: ${finished}`);
+    const { slash, waitingNext } = this.state;
+    if (!slash && !waitingNext) {
+      console.log('m up');
+      this.renderer.handleMouseUp(e)
+      const finished = this.checkFinished();
 
-    this.setState({
-      dragging: false,
-      finishedAnswer: finished,
-    });
+      this.setState({
+        mouseDown: false,
+        finishedAnswer: finished,
+      });
+    }
   }
 
   handleMouseMove(e) {
     e.stopPropagation();
-    if (this.state.dragging) {
+    const { slash } = this.state;
+    if (!slash) {
       this.renderer.handleMouseMove(e);
+      if (this.state.mouseDown) {
+        this.setState({
+          dragging: true,
+        });
+      }
     }
   }
 
@@ -241,12 +295,17 @@ class App extends Component {
 
   onPlay() {
     console.log('press play!');
-    this.addEventListeners();
+    const { restart } = this.state;
 
-    const splash = document.getElementById('splash');
+    const id = restart ? 'splash-score' : 'splash';
+    const splash = document.getElementById(id);
     splash.style.opacity = 0.0;
     setTimeout(() => {
       splash.style.display = 'none';
+      this.setState({
+        score: 0,
+        slash: false,
+      });
     }, 500);
   }
 
@@ -271,15 +330,27 @@ class App extends Component {
   }
 
   onClickTheButton() {
-
-
     if (this.state.waitingNext) {
-      if (checkEnd(this.questionIndex)) {
-        return;
-      }
-
       const result = document.getElementById('resultText');
       result.style.display = 'none';
+
+      if (checkEnd(this.questionIndex)) {
+        // reset game
+        this.sound.triggerSoundEffect(3);
+
+        const splash = document.getElementById('splash-score');
+        splash.style.display = 'block';
+        splash.style.opacity = 1.0;
+
+        this.resetAns(true);
+        this.setState({
+          restart: true,
+          waitingNext: false,
+          finishedAnswer: false,
+          slash: true,
+        });
+        return;
+      }
 
       this.resetAns();
 
@@ -291,31 +362,55 @@ class App extends Component {
     }
 
     if (this.state.finishedAnswer) {
+      const tips = document.getElementById('tips');
+      tips.style.display = 'none';
+
       const result = document.getElementById('resultText');
       result.style.display = 'block';
 
       const correct = this.checkCorrect();
+      const score = this.state.score + (correct ? 1 : 0);
+
+      if (correct) {
+        this.sound.triggerSoundEffect(2);
+      } else {
+        this.sound.triggerSoundEffect(1);
+      }
+
       this.setState({
         waitingNext: true,
         answerCorrect: correct,
+        score,
       });
 
       return;
     }
   }
 
+  triggerSoundEffect() {
+    this.sound.triggerSoundEffect();
+  }
+
   render() {
-    const { waitingNext, loadingModel, finishedAnswer, answerCorrect } = this.state;
+    const { waitingNext, loadingModel, finishedAnswer, answerCorrect, score, loadingNextInterpolation } = this.state;
     const loadingText = loadingModel ? 'loading...' : 'play';
-    let buttonText = finishedAnswer ? 'Send' : 'Sorting...';
+    let buttonText = finishedAnswer ? 'send' : 'sorting...';
+
     if (waitingNext) {
       if (!checkEnd(this.questionIndex)) {
-        buttonText = 'Next';
+        buttonText = 'next';
       } else {
-        buttonText = 'End';
+        buttonText = 'end';
       }
     }
-    const resultText = answerCorrect ? 'Correct!' : 'Wrong!';
+    if (loadingNextInterpolation) {
+      buttonText = 'loading ...';
+    }
+
+    const resultText = answerCorrect ? 'correct!' : 'wrong!';
+    const scoreText = `${score.toString()}/${(questions.length).toString()}`;
+
+
     const arr = Array.from(Array(9).keys());
     const mat = Array.from(Array(9 * 16).keys());
     const { rhythmThreshold, bpm } = this.state;
@@ -323,11 +418,14 @@ class App extends Component {
       <div>
         <section className={styles.splash} id="splash">
           <div className={styles.wrapper}>
-            <h1>Sornting</h1>
+            <h1>🎸Sornting</h1>
+            <h2>
+              = Sort + Song
+            </h2>
             <div className="device-supported">
               <p className={styles.description}>
-                A fun way to explore music using machine learning.
-                Just pull the blocks apart to see what melodies you discover.
+                A game based on a musical machine learning algorithm which can interpolate different melodies. <br/>
+                The player has to listen to the music to find out the right order, or "sort" the song.
               </p>
 
               <button
@@ -336,6 +434,40 @@ class App extends Component {
                 onClick={() => this.onPlay()}
               >
                 {loadingText}
+              </button>
+
+              <p className={styles.builtWith}>
+                Built with tone.js + musicvae.js.
+                <br />
+                Learn more about <a className={styles.about} target="_blank" href="https://github.com/vibertthio">how it works.</a>
+              </p>
+
+              <p>Made by</p>
+              <img className="splash-icon" src={sig} width="100" height="auto" alt="Vibert Thio Icon" />
+            </div>
+          </div>
+          <div className={styles.badgeWrapper}>
+            <a className={styles.magentaLink} href="http://musicai.citi.sinica.edu.tw/" target="_blank" >
+              <div>Music and AI Lab</div>
+            </a>
+          </div>
+          <div className={styles.privacy}>
+            <a href="https://github.com/vibertthio" target="_blank">Privacy &amp; </a>
+            <a href="https://github.com/vibertthio" target="_blank">Terms</a>
+          </div>
+        </section>
+        <section className={styles.splash} id="splash-score" style={{display: "none"}}>
+          <div className={styles.wrapper}>
+            <h3>Score</h3>
+            <h1>{scoreText}</h1>
+            <div className="device-supported">
+
+              <button
+                className={styles.playButton}
+                id="splash-play-button"
+                onClick={() => this.onPlay()}
+              >
+                play again
               </button>
 
               <p className={styles.builtWith}>
@@ -370,6 +502,17 @@ class App extends Component {
           >
             <img alt="info" src={info} />
           </button>
+
+          <div className={styles.tips} id="tips">
+            <h3>🙋‍♀️Tips</h3>
+            <p>⚡Drag the <font color="#2ecc71">melodies below</font> <br/>
+              into the <font color="#f39c12">golden box</font> above <br />
+              to complete the interpolation.</p>
+
+            <p>👇Click on the boxes to listen to the melodies.</p>
+          </div>
+          <h1 className={styles.result} id="resultText">{resultText}</h1>
+
         </div>
         <div>
           <canvas
@@ -380,7 +523,6 @@ class App extends Component {
           />
         </div>
         <div className={styles.control}>
-          <p className={styles.result} id="resultText">{resultText}</p>
           <div className={styles.slider}>
             <button
               className={styles.sendButton}

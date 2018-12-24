@@ -36,12 +36,13 @@ export default class Renderer {
 
     for (let i = 0; i < this.nOfAns; i += 1) {
       let pos = -1 * (this.nOfAns - 1) + 2 * i;
-      this.pianorollGridsAnswer[i] = new PianorollGrid(this, -1.2, pos, i, true)
+      const dynamic = this.app.answers[i].ans;
+      this.pianorollGridsAnswer[i] = new PianorollGrid(this, -1.2, pos, i, true, dynamic)
     }
 
     for (let i = 0; i < this.nOfOptions; i += 1) {
       let pos = -1 * (this.nOfOptions - 1) + 2 * i;
-      this.pianorollGridsOptions[i] = new PianorollGrid(this, 0.8, pos, i, false)
+      this.pianorollGridsOptions[i] = new PianorollGrid(this, 1.2, pos, i, false)
     }
 
     this.noise = new Noise(Math.random());
@@ -52,29 +53,24 @@ export default class Renderer {
     // instruction
     this.endOfSection = false;
     this.instructionState = 0;
-
-
-    this.initMatrix();
-  }
-
-  initMatrix() {
-    this.matrix = new Array(9).fill(new Array(4).fill(new Array(48).fill(-1)));
-    this.matrix = this.matrix.map(section => section.map(bar => bar.map(x => (Math.floor(Math.random() * 20 + 60)))));
   }
 
   updateMelodies(ms) {
     this.melodies = ms;
     this.nOfAns = this.app.answers.length;
     this.nOfOptions = this.app.options.length;
+    this.pianorollGridsAnswer = [];
+    this.pianorollGridsOptions = [];
 
     for (let i = 0; i < this.nOfAns; i += 1) {
       let pos = -1 * (this.nOfAns - 1) + 2 * i;
-      this.pianorollGridsAnswer[i] = new PianorollGrid(this, -1.2, pos, i)
+      const dynamic = this.app.answers[i].ans;
+      this.pianorollGridsAnswer[i] = new PianorollGrid(this, -1.2, pos, i, true, dynamic)
     }
 
     for (let i = 0; i < this.nOfOptions; i += 1) {
       let pos = -1 * (this.nOfOptions - 1) + 2 * i;
-      this.pianorollGridsOptions[i] = new PianorollGrid(this, 0.8, pos, i, false)
+      this.pianorollGridsOptions[i] = new PianorollGrid(this, 1.2, pos, i, false)
     }
   }
 
@@ -146,26 +142,46 @@ export default class Renderer {
     return -1;
   }
 
-  handleMouseDown(e) {
+  handleMouseClick(e) {
     let cx = e.clientX - this.width * 0.5;;
     let cy = e.clientY - this.height * 0.5;
-
-    let mouseIn = false;
-
 
     const onAnsId = this.handleMouseDownOnAnswers(cx, cy);
     let onAns = -1;
     if (onAnsId > -1 && onAnsId < this.app.answers.length) {
       onAns = this.app.answers[onAnsId].index;
       this.melodiesIndex = onAns;
+    }
+
+    const onOptionsId = this.handleMouseDownOnOptions(cx, cy);
+    let onOptions = -1;
+    if (onOptionsId > -1 && onOptionsId < this.app.options.length) {
+      onOptions = this.app.options[onOptionsId].index;
+      this.melodiesIndex = onOptions;
+    }
+
+    return [
+      onAns,
+      onOptions,
+    ];
+  }
+
+  handleMouseDown(e) {
+    let cx = e.clientX - this.width * 0.5;;
+    let cy = e.clientY - this.height * 0.5;
+
+    let mouseIn = false;
+
+    const onAnsId = this.handleMouseDownOnAnswers(cx, cy);
+    let onAns = -1;
+    if (onAnsId > -1 && onAnsId < this.app.answers.length) {
+      onAns = this.app.answers[onAnsId].index;
+      // this.melodiesIndex = onAns;
 
       if (this.app.answers[onAnsId].ans) {
-        this.draggingState = {
-          ans: true,
-          index: onAnsId,
-          hoverAns: true,
-          hoverIndex: -1,
-        };
+        this.draggingState.ans = true;
+        this.draggingState.index = onAnsId;
+        this.draggingState.hoverAns = true;
       }
       mouseIn = true;
     }
@@ -174,20 +190,19 @@ export default class Renderer {
     let onOptions = -1;
     if (onOptionsId > -1 && onOptionsId < this.app.options.length) {
       onOptions = this.app.options[onOptionsId].index;
-      this.melodiesIndex = onOptions;
+      // this.melodiesIndex = onOptions;
 
-      this.draggingState = {
-        ans: false,
-        index: onOptionsId,
-        hoverAns: false,
-        hoverIndex: -1,
-      };
+      this.draggingState.ans = false;
+      this.draggingState.index = onOptionsId;
+      this.draggingState.hoverAns = false;
 
       mouseIn = true;
     }
 
     if (!mouseIn) {
       this.draggingState.index = -1;
+    } else {
+      // click on something
     }
 
     this.mouseDownX = cx;
@@ -204,6 +219,8 @@ export default class Renderer {
     const y = e.clientY - (this.height * 0.5);
 
     const { ans, index } = this.draggingState;
+    const onAnsId = this.handleMouseDownOnAnswers(x, y);
+    const onOptionsId = this.handleMouseDownOnOptions(x, y);
 
     if (index !== -1) {
       if (!ans) {
@@ -213,29 +230,29 @@ export default class Renderer {
         this.pianorollGridsAnswer[index].dragX = (x - this.mouseDownX);
         this.pianorollGridsAnswer[index].dragY = (y - this.mouseDownY);
       }
-
-      const onAnsId = this.handleMouseDownOnAnswers(x, y);
-      let hoverOnSomething = false;
-      if (onAnsId > -1 && onAnsId < this.app.answers.length) {
-        // console.log('into hovering ans');
-        this.draggingState.hoverAns = true;
-        this.draggingState.hoverIndex = onAnsId;
-        hoverOnSomething = true;
-      }
-
-      const onOptionsId = this.handleMouseDownOnOptions(x, y);
-      if (onOptionsId > -1 && onOptionsId < this.app.options.length) {
-        // console.log('into hovering options');
-        this.draggingState.hoverAns = false;
-        this.draggingState.hoverIndex = onOptionsId;
-        hoverOnSomething = true;
-      }
-
-      if (!hoverOnSomething) {
-        // console.log('hover out');
-        this.draggingState.hoverIndex = -1;
-      }
     }
+
+    let hoverOnSomething = false;
+    if (onAnsId > -1 && onAnsId < this.app.answers.length) {
+      // console.log('into hovering ans');
+      this.draggingState.hoverAns = true;
+      this.draggingState.hoverIndex = onAnsId;
+      hoverOnSomething = true;
+    }
+
+    if (onOptionsId > -1 && onOptionsId < this.app.options.length) {
+      // console.log('into hovering options');
+      this.draggingState.hoverAns = false;
+      this.draggingState.hoverIndex = onOptionsId;
+      hoverOnSomething = true;
+    }
+
+    if (!hoverOnSomething) {
+      // console.log('hover out');
+      this.draggingState.hoverIndex = -1;
+    }
+    // if (index !== -1) {
+    // }
   }
 
   handleMouseUp(e) {
@@ -253,29 +270,45 @@ export default class Renderer {
       if (!ans) {
         if (hoverIndex !== -1) {
           if (hoverAns) {
+
             const originalId = this.app.answers[hoverIndex].index;
             if (originalId === -1) {
+              this.app.triggerSoundEffect();
+
               this.app.answers[hoverIndex].index = this.app.options[index].index;
               this.app.options[index].index = -1;
             }
           } else {
-            const originalId = this.app.options[hoverIndex].index;
-            this.app.options[hoverIndex].index = this.app.options[index].index;
-            this.app.options[index].index = originalId;
+            const downId = this.app.options[index].index;
+            if (downId !== -1 && index != hoverIndex) {
+              this.app.triggerSoundEffect();
+              const originalId = this.app.options[hoverIndex].index;
+              this.app.options[hoverIndex].index = this.app.options[index].index;
+              this.app.options[index].index = originalId;
+            }
           }
         }
       } else {
         if (hoverIndex !== -1) {
           if (!hoverAns) {
+
             const originalId = this.app.options[hoverIndex].index;
             if (originalId === -1) {
+              this.app.triggerSoundEffect();
+
               this.app.options[hoverIndex].index = this.app.answers[index].index;
               this.app.answers[index].index = -1;
             }
           } else {
-            const originalId = this.app.answers[hoverIndex].index;
-            this.app.answers[hoverIndex].index = this.app.answers[index].index;
-            this.app.answers[index].index = originalId;
+            if (this.app.answers[hoverIndex].ans) {
+              const downId = this.app.answers[index].index;
+              if (downId !== -1 && index != hoverIndex) {
+                this.app.triggerSoundEffect();
+                const originalId = this.app.answers[hoverIndex].index;
+                this.app.answers[hoverIndex].index = this.app.answers[index].index;
+                this.app.answers[index].index = originalId;
+              }
+            }
           }
         }
       }

@@ -2,14 +2,16 @@ import Tone, { Transport, Sequence, Part, Event } from 'tone';
 import StartAudioContext from 'startaudiocontext';
 import * as Chord from "tonal-chord";
 
-import drumUrls from './sound';
+import beepSound from './effect/beep.wav';
+import wrongSound from './effect/wrong.wav';
+import correctSound from './effect/correct.wav';
+import endSound from './effect/end.wav';
 
 export default class Sound {
   constructor(app) {
     this.app = app;
     StartAudioContext(Tone.context);
     this.currentIndex = 0;
-    this.drumUrls = drumUrls;
     this.beat = 0;
     this.matrix = [];
     this.melodies = [];
@@ -43,6 +45,12 @@ export default class Sound {
         "attackCurve": "exponential"
       },
     }).toMaster();
+
+    this.effects = [];
+    this.effects[0] = new Tone.Player(beepSound).toMaster();
+    this.effects[1] = new Tone.Player(wrongSound).toMaster();
+    this.effects[2] = new Tone.Player(correctSound).toMaster();
+    this.effects[3] = new Tone.Player(endSound).toMaster();
 
     this.initTable();
 
@@ -127,5 +135,11 @@ export default class Sound {
     }
     this.start();
     return true;
+  }
+
+  triggerSoundEffect(index = 0) {
+    if (index > -1 && index < this.effects.length) {
+      this.effects[index].start();
+    }
   }
 }

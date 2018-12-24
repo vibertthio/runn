@@ -5,6 +5,25 @@ $link-color: #f39c12;
 // $link-color: #29f1c3;
 // $link-color: #94EDEE;
 
+$background-color: rgba(15, 15, 15, 1.0);
+
+body {
+  background-color: $background-color;
+  margin: 0;
+  overflow: hidden;
+}
+
+.dimming {
+  animation-name: dim;
+  animation-duration: 2s;
+  animation-iteration-count: infinite;
+
+  @keyframes dim {
+    0%   { opacity: 0.3; }
+    50%  { opacity: 1.0; }
+    100% { opacity: 0.3; }
+  }
+}
 
 .no-btn-style {
   background-color: Transparent;
@@ -18,7 +37,7 @@ $link-color: #f39c12;
   width: 100%;
   font-family: $font-default;
   font-size: 0.7rem;
-  text-align:center;
+  text-align: center;
   color: #ffffff;
 
   // transform: scale(1, 1.2);
@@ -63,6 +82,30 @@ $link-color: #f39c12;
       }
     }
   }
+
+  .tips {
+    @extend .dimming;
+    width: 40%;
+    margin: 2.0rem auto;
+
+    p {
+      margin: 0.5rem;
+      font-size: 1rem;
+    }
+
+    @media screen and (max-width: 1000px) {
+      margin: 3.5rem auto;
+    }
+  }
+
+  .result {
+    @extend .dimming;
+    display: none;
+    margin-top: 6rem;
+    font-size: 2.2rem;
+    font-family: $font-default;
+    color: white;
+  }
 }
 
 
@@ -92,12 +135,7 @@ $range-label-width: 60px !default;
   bottom: 4rem;
   text-align: center;
   
-  .result {
-    display: none;
-    font-size: 1.2rem;
-    font-family: $font-default;
-    color: white;
-  }
+
 
   .slider {
     // display: block;
@@ -117,9 +155,12 @@ $range-label-width: 60px !default;
       box-sizing: border-box;
       width: 205px;
       height: 50px;
-      border: 2px solid $link-color;
+      border: 0;
+      // border: 2px solid $link-color;
+      border-bottom: 2px solid $link-color;
+      border-top: 2px solid $link-color;
       background-color: transparent;
-      text-transform: uppercase;
+      // text-transform: uppercase;
       // color: $link-color;
       color: white;
       text-align: center;
