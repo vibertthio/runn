@@ -71,43 +71,45 @@ const presetMelodies = {
     tempos: [{ time: 0, qpm: 120 }],
     totalQuantizedSteps: 32,
   },
-  // 'Dense' : {
-  //     notes:[
-  //         {pitch: 72, quantizedStartStep: 0, quantizedEndStep: 1},
-  //         {pitch: 75, quantizedStartStep: 1, quantizedEndStep: 2},
-  //         {pitch: 80, quantizedStartStep: 2, quantizedEndStep: 3},
-  //         {pitch: 75, quantizedStartStep: 3, quantizedEndStep: 4},
-  //         {pitch: 84, quantizedStartStep: 4, quantizedEndStep: 5},
-  //         {pitch: 80, quantizedStartStep: 5, quantizedEndStep: 6},
-  //         {pitch: 75, quantizedStartStep: 6, quantizedEndStep: 7},
-  //         {pitch: 72, quantizedStartStep: 7, quantizedEndStep: 8},
-  //         {pitch: 74, quantizedStartStep: 8, quantizedEndStep: 9},
-  //         {pitch: 77, quantizedStartStep: 9, quantizedEndStep: 10},
-  //         {pitch: 82, quantizedStartStep: 10, quantizedEndStep: 11},
-  //         {pitch: 77, quantizedStartStep: 11, quantizedEndStep: 12},
-  //         {pitch: 86, quantizedStartStep: 12, quantizedEndStep: 13},
-  //         {pitch: 82, quantizedStartStep: 13, quantizedEndStep: 14},
-  //         {pitch: 77, quantizedStartStep: 14, quantizedEndStep: 15},
-  //         {pitch: 74, quantizedStartStep: 15, quantizedEndStep: 16},
-  //         {pitch: 75, quantizedStartStep: 16, quantizedEndStep: 17},
-  //         {pitch: 79, quantizedStartStep: 17, quantizedEndStep: 18},
-  //         {pitch: 84, quantizedStartStep: 18, quantizedEndStep: 19},
-  //         {pitch: 79, quantizedStartStep: 19, quantizedEndStep: 20},
-  //         {pitch: 87, quantizedStartStep: 20, quantizedEndStep: 21},
-  //         {pitch: 84, quantizedStartStep: 21, quantizedEndStep: 22},
-  //         {pitch: 79, quantizedStartStep: 22, quantizedEndStep: 23},
-  //         {pitch: 75, quantizedStartStep: 23, quantizedEndStep: 24},
-  //         {pitch: 75, quantizedStartStep: 24, quantizedEndStep: 25},
-  //         {pitch: 79, quantizedStartStep: 25, quantizedEndStep: 26},
-  //         {pitch: 84, quantizedStartStep: 26, quantizedEndStep: 27},
-  //         {pitch: 84, quantizedStartStep: 27, quantizedEndStep: 28},
-  //         {pitch: 87, quantizedStartStep: 28, quantizedEndStep: 29},
-  //         {pitch: 91, quantizedStartStep: 29, quantizedEndStep: 30},
-  //         {pitch: 84, quantizedStartStep: 30, quantizedEndStep: 31},
-  //         {pitch: 91, quantizedStartStep: 31, quantizedEndStep: 32}
-  //     ],
-  //     color : [242, 61, 91]
-  // },
+  'Dense' : {
+      notes:[
+          {pitch: 72, quantizedStartStep: 0, quantizedEndStep: 1},
+          {pitch: 75, quantizedStartStep: 1, quantizedEndStep: 2},
+          {pitch: 80, quantizedStartStep: 2, quantizedEndStep: 3},
+          {pitch: 75, quantizedStartStep: 3, quantizedEndStep: 4},
+          {pitch: 84, quantizedStartStep: 4, quantizedEndStep: 5},
+          {pitch: 80, quantizedStartStep: 5, quantizedEndStep: 6},
+          {pitch: 75, quantizedStartStep: 6, quantizedEndStep: 7},
+          {pitch: 72, quantizedStartStep: 7, quantizedEndStep: 8},
+          {pitch: 74, quantizedStartStep: 8, quantizedEndStep: 9},
+          {pitch: 77, quantizedStartStep: 9, quantizedEndStep: 10},
+          {pitch: 82, quantizedStartStep: 10, quantizedEndStep: 11},
+          {pitch: 77, quantizedStartStep: 11, quantizedEndStep: 12},
+          {pitch: 86, quantizedStartStep: 12, quantizedEndStep: 13},
+          {pitch: 82, quantizedStartStep: 13, quantizedEndStep: 14},
+          {pitch: 77, quantizedStartStep: 14, quantizedEndStep: 15},
+          {pitch: 74, quantizedStartStep: 15, quantizedEndStep: 16},
+          {pitch: 75, quantizedStartStep: 16, quantizedEndStep: 17},
+          {pitch: 79, quantizedStartStep: 17, quantizedEndStep: 18},
+          {pitch: 84, quantizedStartStep: 18, quantizedEndStep: 19},
+          {pitch: 79, quantizedStartStep: 19, quantizedEndStep: 20},
+          {pitch: 87, quantizedStartStep: 20, quantizedEndStep: 21},
+          {pitch: 84, quantizedStartStep: 21, quantizedEndStep: 22},
+          {pitch: 79, quantizedStartStep: 22, quantizedEndStep: 23},
+          {pitch: 75, quantizedStartStep: 23, quantizedEndStep: 24},
+          {pitch: 75, quantizedStartStep: 24, quantizedEndStep: 25},
+          {pitch: 79, quantizedStartStep: 25, quantizedEndStep: 26},
+          {pitch: 84, quantizedStartStep: 26, quantizedEndStep: 27},
+          {pitch: 84, quantizedStartStep: 27, quantizedEndStep: 28},
+          {pitch: 87, quantizedStartStep: 28, quantizedEndStep: 29},
+          {pitch: 91, quantizedStartStep: 29, quantizedEndStep: 30},
+          {pitch: 84, quantizedStartStep: 30, quantizedEndStep: 31},
+          {pitch: 91, quantizedStartStep: 31, quantizedEndStep: 32}
+      ],
+      quantizationInfo: { stepsPerQuarter: 4 },
+      tempos: [{ time: 0, qpm: 120 }],
+      totalQuantizedSteps: 32,
+  },
   'Bounce': {
     notes: [
       { pitch: 64, quantizedStartStep: 0, quantizedEndStep: 2 },
@@ -131,7 +133,6 @@ const presetMelodies = {
     tempos: [{ time: 0, qpm: 120 }],
     totalQuantizedSteps: 32,
   },
-  /*
   'Melody 1' : {
       notes: [
           {pitch: toMidi('A3'), quantizedStartStep: 0, quantizedEndStep: 4},
@@ -145,7 +146,9 @@ const presetMelodies = {
           {pitch: toMidi('A3'), quantizedStartStep: 26, quantizedEndStep: 28},
           {pitch: toMidi('A3'), quantizedStartStep: 28, quantizedEndStep: 32}
       ],
-      color : [242, 61, 91]
+    quantizationInfo: { stepsPerQuarter: 4 },
+    tempos: [{ time: 0, qpm: 120 }],
+    totalQuantizedSteps: 32,
   },
   'Melody 2' : {
       notes: [
@@ -182,9 +185,10 @@ const presetMelodies = {
           {pitch: 69, quantizedStartStep: 30, quantizedEndStep: 31},
           {pitch: 69, quantizedStartStep: 31, quantizedEndStep: 32}
       ],
-      color : [108, 57, 234]
+    quantizationInfo: { stepsPerQuarter: 4 },
+    tempos: [{ time: 0, qpm: 120 }],
+    totalQuantizedSteps: 32,
   },
-  */
 };
 
 export {

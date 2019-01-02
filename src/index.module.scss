@@ -69,13 +69,24 @@ body {
   // margin-right: auto;
 
   
-  a {
+
+  .link {
+    position: relative;
+
+    letter-spacing: 0.3rem;
     margin-right: 1rem;
+    margin-left: 1rem;
+    padding-bottom: 5px;
   }
 
+
   button {
+    position: relative;
+    top: -25px;
+    left: 6.5rem;
+
     img {
-      width: 1.3rem;
+      width: 1.1rem;
       opacity: 0.7;
       &:hover{
         opacity: 1.0;
@@ -86,22 +97,28 @@ body {
   .tips {
     @extend .dimming;
     width: 40%;
-    margin: 2.0rem auto;
+    margin: 0.5rem auto 0.2rem auto;
+    position: relative;
+    top: -10px;
+
+    h3 {
+      margin: 0.1rem;
+    }
 
     p {
-      margin: 0.5rem;
+      margin: 0.2rem;
       font-size: 1rem;
     }
 
     @media screen and (max-width: 1000px) {
-      margin: 3.5rem auto;
+      margin: 0.8rem auto;
     }
   }
 
   .result {
     @extend .dimming;
     display: none;
-    margin-top: 6rem;
+    margin-top: 3rem;
     font-size: 2.2rem;
     font-family: $font-default;
     color: white;
@@ -135,6 +152,12 @@ $range-label-width: 60px !default;
   bottom: 4rem;
   text-align: center;
   
+  .score {
+    font-family: $font-default;
+    font-size: 1.2rem;
+    margin: 10px;
+    color: white;
+  }
 
 
   .slider {
@@ -149,7 +172,7 @@ $range-label-width: 60px !default;
       // z-index: 3;
       margin-left: auto;
       margin-right: auto;
-      margin-bottom: 40px;
+      margin-bottom: 10px;
       font-size: 1.2rem;
       display: block;
       box-sizing: border-box;
@@ -236,7 +259,7 @@ $range-label-width: 60px !default;
   -webkit-transition: 0.5s;
 
   .intro {
-    max-width: 350px;
+    max-width: 450px;
     margin: 0rem auto;
 
     p {
@@ -250,8 +273,8 @@ $range-label-width: 60px !default;
 
       @media screen and (max-width: 650px) {
         line-height: 1rem;
-        font-size: 0.5rem;
-        margin: 0rem 2rem;
+        font-size: 0.8rem;
+        // margin: 0rem 2rem;
       }
       // text-align: center;
       font-family: $font-default;

@@ -76,8 +76,8 @@ class App extends Component {
   }
 
   initVAE() {
-    const modelCheckPoint = 'https://storage.googleapis.com/magentadata/js/checkpoints/music_vae/mel_2bar_small';
-    // const modelCheckPoint = './checkpoints/mel_2bar_small';
+    // const modelCheckPoint = 'https://storage.googleapis.com/magentadata/js/checkpoints/music_vae/mel_2bar_small';
+    const modelCheckPoint = './checkpoints/mel_2bar_small';
     const n = this.numInterpolations;
     const vae = new MusicVAE(modelCheckPoint);
 
@@ -95,7 +95,8 @@ class App extends Component {
         this.vae = vae;
         this.setState({
           loadingModel: false,
-        })
+        });
+        this.sound.triggerSoundEffect(4);
       });
   }
 
@@ -121,17 +122,22 @@ class App extends Component {
       presetMelodies[q.melodies[1]],
     ], q.numInterpolations)
     .then((i) => {
-      console.log('finish interpolate, set melody');
+      // console.log('finish interpolate, set melody');
       this.initAns();
       this.setMelodies(i);
+
       this.setState({
         loadingNextInterpolation: false,
       });
+
+      if (this.questionIndex !== 0) {
+        this.sound.triggerSoundEffect(4);
+      }
     });
 
-    this.setState({
-      loadingNextInterpolation: true,
-    });
+    // this.setState({
+    //   loadingNextInterpolation: true,
+    // });
   }
 
   setMelodies(ms) {
@@ -355,6 +361,7 @@ class App extends Component {
       this.resetAns();
 
       this.setState({
+        loadingNextInterpolation: true,
         waitingNext: false,
         finishedAnswer: false,
       });
@@ -396,19 +403,20 @@ class App extends Component {
     const loadingText = loadingModel ? 'loading...' : 'play';
     let buttonText = finishedAnswer ? 'send' : 'sorting...';
 
-    if (waitingNext) {
+    if (loadingNextInterpolation) {
+      buttonText = 'loading ...';
+    } else if (waitingNext) {
       if (!checkEnd(this.questionIndex)) {
         buttonText = 'next';
       } else {
         buttonText = 'end';
       }
     }
-    if (loadingNextInterpolation) {
-      buttonText = 'loading ...';
-    }
+
 
     const resultText = answerCorrect ? 'correct!' : 'wrong!';
     const scoreText = `${score.toString()}/${(questions.length).toString()}`;
+    const bottomScoreText = `[ score: ${score.toString()}/${(questions.length).toString()} ]`;
 
 
     const arr = Array.from(Array(9).keys());
@@ -486,15 +494,17 @@ class App extends Component {
             </a>
           </div>
           <div className={styles.privacy}>
-            <a href="https://github.com/vibertthio" target="_blank">Privacy &amp; </a>
-            <a href="https://github.com/vibertthio" target="_blank">Terms</a>
+            <a href="https://github.com/vibertthio/sornting" target="_blank">Privacy &amp; </a>
+            <a href="https://github.com/vibertthio/sornting" target="_blank">Terms</a>
           </div>
         </section>
 
         <div className={styles.title}>
-          <a href="https://github.com/vibertthio" target="_blank" rel="noreferrer noopener">
-            Sornting | Vibert Thio
-          </a>
+          <div className={styles.link}>
+            <a href="https://github.com/vibertthio/sornting" target="_blank" rel="noreferrer noopener">
+              Sornting
+            </a>
+          </div>
           <button
             className={styles.btn}
             onClick={() => this.handleClickMenu()}
@@ -532,13 +542,17 @@ class App extends Component {
               {buttonText}
             </button>
           </div>
+          <div className={styles.score}>
+            <p>{bottomScoreText}</p>
+          </div>
         </div>
         <div id="menu" className={styles.overlay}>
           <button className={styles.overlayBtn} onClick={() => this.handleClickMenu()} />
           <div className={styles.intro}>
             <p>
-              <strong>$ Drum VAE $</strong>
-              <br />Show the interpolation between two melodies. Made by{' '}
+              <strong>$ 🎸Sornting $</strong>
+              <br />= Sort + Song
+              <br />A game based on a musical machine learning algorithm which can interpolate different melodies. Made by{' '}
               <a href="https://vibertthio.com/portfolio/" target="_blank" rel="noreferrer noopener">
                 Vibert Thio
               </a>.{' Source code is on '}
@@ -551,10 +565,10 @@ class App extends Component {
               </a>
             </p>
             <p>
-              <strong>$ How to use $</strong>
-              <br /> [space]: start/play the music
-              <br /> [clikc]: click on grids, to change interpolation
-              <br /> [r] : change the melody
+              <strong>$ How to use $</strong> <br />
+              ⚡Drag the <font color="#2ecc71">melodies below</font> <br />
+              into the <font color="#f39c12">golden box</font> above <br />
+              to complete the interpolation.
             </p>
           </div>
           <button className={styles.overlayBtn} onClick={() => this.handleClickMenu()} />

@@ -91,9 +91,10 @@ export default class Renderer {
     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
     // const h = Math.min(width, height) * 0.18;
-    const h = width * 0.1;
-    // const w = width * 0.2;
-    const w = h;
+    // const h = width * 0.1;
+    const w = Math.min(((width - 100) / (this.nOfAns * 1.5)), 150);
+    // const w = h;
+    const h = w;
     this.h = h;
     this.displayWidth = w;
     this.setFontSize(ctx, Math.pow(w / 800, 0.3));

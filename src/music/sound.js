@@ -1,11 +1,11 @@
 import Tone, { Transport, Sequence, Part, Event } from 'tone';
 import StartAudioContext from 'startaudiocontext';
-import * as Chord from "tonal-chord";
 
 import beepSound from './effect/beep.wav';
 import wrongSound from './effect/wrong.wav';
 import correctSound from './effect/correct.wav';
 import endSound from './effect/end.wav';
+import transitionSound from './effect/transition.wav';
 
 export default class Sound {
   constructor(app) {
@@ -51,6 +51,7 @@ export default class Sound {
     this.effects[1] = new Tone.Player(wrongSound).toMaster();
     this.effects[2] = new Tone.Player(correctSound).toMaster();
     this.effects[3] = new Tone.Player(endSound).toMaster();
+    this.effects[4] = new Tone.Player(transitionSound).toMaster();
 
     this.initTable();
 
