@@ -97,17 +97,19 @@ body {
   .tips {
     @extend .dimming;
     width: 40%;
-    margin: 0.5rem auto 0.2rem auto;
+    margin: 0.1rem auto 0.2rem auto;
     position: relative;
-    top: -10px;
+    top: -20px;
 
     h3 {
       margin: 0.1rem;
+      font-size: 1.0rem;
     }
 
     p {
       margin: 0.2rem;
-      font-size: 1rem;
+      // font-size: 1.0rem;
+      font-size: 0.7rem;
     }
 
     @media screen and (max-width: 1000px) {

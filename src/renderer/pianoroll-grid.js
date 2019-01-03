@@ -103,6 +103,11 @@ export default class PianorollGrid {
     let id = this.getId();
 
     if (!frameOnly && id !== -1) {
+      // if (((this.ans) && (!this.renderer.app.answers[this.fixed].show)) ||
+      //     ((!this.ans) && (!this.renderer.app.options[this.fixed].show))) {
+      //   this.drawCross(ctx, w, h);
+      // }
+
       ctx.save();
       ctx.translate(-w * 0.5, -h * 0.5);
 
@@ -116,40 +121,49 @@ export default class PianorollGrid {
 
       const hStep = h / 64;
 
+      if (((this.ans) && (this.renderer.app.answers[this.fixed].show)) ||
+        ((!this.ans) && (this.renderer.app.options[this.fixed].show))) {
 
+        const melody = this.renderer.melodies[id];
+        melody.notes.forEach((item, index) => {
+          const { pitch, quantizedStartStep, quantizedEndStep } = item;
+          const y = 56 - (pitch - 40);
+          let wStepDisplay = wStep * (1 - this.newSectionYShift);
+          ctx.save();
+          ctx.strokeStyle = 'none';
+          ctx.translate(quantizedStartStep * wStep, y * hStep);
 
-      const melody = this.renderer.melodies[id];
-      melody.notes.forEach((item, index) => {
-        const { pitch, quantizedStartStep, quantizedEndStep } = item;
-        const y = 56 - (pitch - 40);
-        let wStepDisplay = wStep * (1 - this.newSectionYShift);
-        ctx.save();
-        ctx.strokeStyle = 'none';
-        ctx.translate(quantizedStartStep * wStep, y * hStep);
-
-        if ((p *  (nOfBars * nOfBeats)) >= quantizedStartStep
-          && (p * (nOfBars * nOfBeats)) <= quantizedEndStep
-          && this.checkCurrent()
-          && this.isPlaying()) {
-          if (this.currentNoteIndex !== index) {
-            // change pitch
-            this.currentNoteYShift = 1;
-            this.currentNoteIndex = index;
+          if ((p *  (nOfBars * nOfBeats)) >= quantizedStartStep
+            && (p * (nOfBars * nOfBeats)) <= quantizedEndStep
+            && this.checkCurrent()
+            && this.isPlaying()) {
+            if (this.currentNoteIndex !== index) {
+              // change pitch
+              this.currentNoteYShift = 1;
+              this.currentNoteIndex = index;
+            }
+            ctx.fillStyle = '#FFF';
+            ctx.fillText(pitch, 5, -8);
+            ctx.fillStyle = '#F00';
+            ctx.translate(0, this.currentNoteYShift * -2);
+            // stretch
+            // wStepDisplay *= (1 + this.currentNoteYShift * 0.1)
+          } else {
+            ctx.fillStyle = this.noteOnColor;
           }
-          ctx.fillStyle = '#FFF';
-          ctx.fillText(pitch, 5, -8);
-          ctx.fillStyle = '#F00';
-          ctx.translate(0, this.currentNoteYShift * -2);
-          // stretch
-          // wStepDisplay *= (1 + this.currentNoteYShift * 0.1)
-        } else {
-          ctx.fillStyle = this.noteOnColor;
-        }
 
-        ctx.fillRect(0, 0, wStepDisplay * (quantizedEndStep - quantizedStartStep - 0.2), hStep);
+          ctx.fillRect(0, 0, wStepDisplay * (quantizedEndStep - quantizedStartStep - 0.2), hStep);
 
+          ctx.restore();
+        });
+
+      } else {
+        ctx.save();
+        ctx.translate(w * 0.5, h * 0.5);
+        this.drawCross(ctx, w, h);
         ctx.restore();
-      });
+
+      }
 
       // progress
       if (this.checkCurrent()
@@ -262,6 +276,25 @@ export default class PianorollGrid {
     ctx.moveTo(-size * w, -size * h + unit);
     ctx.lineTo(-size * w, -size * h);
     ctx.lineTo(-size * w + unit, -size * h);
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  drawCross(ctx, w, h) {
+    let size = 0.5;
+
+    ctx.save();
+
+    ctx.strokeStyle = '#FFF';
+    ctx.beginPath()
+    ctx.moveTo(0.1 * w, 0.1 * h);
+    ctx.lineTo(-0.1 * w, -0.1 * h);
+    ctx.stroke();
+
+    ctx.beginPath()
+    ctx.moveTo(-0.1 * w, 0.1 * h);
+    ctx.lineTo(0.1 * w, -0.1 * h);
     ctx.stroke();
 
     ctx.restore();

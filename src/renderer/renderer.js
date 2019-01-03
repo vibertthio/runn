@@ -92,7 +92,8 @@ export default class Renderer {
 
     // const h = Math.min(width, height) * 0.18;
     // const h = width * 0.1;
-    const w = Math.min(((width - 100) / (this.nOfAns * 1.5)), 150);
+    // const w = Math.max(Math.min(((width - 100) / (this.nOfAns * 1.5)), 70), 30);
+    const w = Math.max(Math.min(((width - 100) / (this.nOfAns * 1.5)), 150), 20);
     // const w = h;
     const h = w;
     this.h = h;
@@ -278,6 +279,9 @@ export default class Renderer {
 
               this.app.answers[hoverIndex].index = this.app.options[index].index;
               this.app.options[index].index = -1;
+
+              // show
+              this.app.answers[hoverIndex].show = this.app.options[index].show;
             }
           } else {
             const downId = this.app.options[index].index;
@@ -308,6 +312,12 @@ export default class Renderer {
                 const originalId = this.app.answers[hoverIndex].index;
                 this.app.answers[hoverIndex].index = this.app.answers[index].index;
                 this.app.answers[index].index = originalId;
+
+                // show
+                const originalShow = this.app.answers[hoverIndex].show;
+                this.app.answers[hoverIndex].show = this.app.answers[index].show;
+                this.app.answers[index].show = originalShow;
+
               }
             }
           }

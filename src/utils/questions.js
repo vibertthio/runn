@@ -322,27 +322,33 @@ const questions = [
     options: [
       {
         index: 4,
-        show: true,
+        // show: true,
+        show: false,
       },
       {
         index: 7,
-        show: true,
+        // show: true,
+        show: false,
       },
       {
         index: 3,
-        show: true,
+        // show: true,
+        show: false,
       },
       {
         index: 6,
-        show: true,
+        // show: true,
+        show: false,
       },
       {
         index: 5,
-        show: true,
+        // show: true,
+        show: false,
       },
       {
         index: 2,
-        show: true,
+        // show: true,
+        show: false,
       },
     ],
   },
