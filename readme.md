@@ -2,7 +2,7 @@
 
 >  ### [play it](https://vibertthio.com/sornting/)
 
-![](./assets/flow.gif)
+![](./assets/full.gif)
 
 
 
