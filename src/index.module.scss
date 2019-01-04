@@ -97,19 +97,20 @@ body {
   .tips {
     @extend .dimming;
     width: 40%;
+    min-width: 300px;
     margin: 0.1rem auto 0.2rem auto;
     position: relative;
     top: -20px;
 
     h3 {
       margin: 0.1rem;
-      font-size: 1.0rem;
+      font-size: 1.2rem;
     }
 
     p {
       margin: 0.2rem;
-      // font-size: 1.0rem;
-      font-size: 0.7rem;
+      font-size: 1.0rem;
+      // font-size: 0.7rem;
     }
 
     @media screen and (max-width: 1000px) {
@@ -157,8 +158,54 @@ $range-label-width: 60px !default;
   .score {
     font-family: $font-default;
     font-size: 1.2rem;
-    margin: 10px;
+    margin: 10px auto;
     color: white;
+
+    width: 11rem;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+
+    .item {
+      align-items: center;
+      width: 0.6rem;
+      height: 0.6rem;
+
+      .breathing {
+        animation-name: breath;
+        animation-duration: 2s;
+        animation-iteration-count: infinite;
+  
+        @keyframes breath {
+          0%   { width: 0.4rem; height: 0.4rem; }
+          50%  { width: 0.6rem; height: 0.6rem; }
+          100% { width: 0.4rem; height: 0.4rem; }
+        }
+      }
+      .circle {
+        width: 0.5rem;
+        height: 0.5rem;
+        border-radius: 50%;      
+        border: 1.5px solid $link-color;
+      }
+      .current {
+        @extend .dimming;
+        @extend .circle;
+      }
+      .unfinished {
+        @extend .circle;
+      }
+      .correct {
+        @extend .circle;
+        border: 1.5px solid $link-color;
+        background-color: $link-color;
+      }
+      .wrong {
+        @extend .circle;
+        border: 1.5px solid #c0392b;
+        background-color: #c0392b;
+      }
+    }
   }
 
 
@@ -442,9 +489,16 @@ $range-label-width: 60px !default;
       text-decoration: none;
     }
 
+    .name {
+      color: #fff;
+      &:hover {
+        border-bottom: 1px solid #fff;
+      }
+    }
+
     .about:hover {
       border-bottom: 1px solid $link-color;
-      transition: border 300ms ease-in-out;
+      // transition: border 300ms ease-in-out;
     }
 
     h1 {

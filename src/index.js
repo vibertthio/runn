@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { render } from 'react-dom';
 import { MusicVAE } from '@magenta/music';
+import uuidv4 from 'uuid/v4';
 
 
 import styles from './index.module.scss';
@@ -35,7 +36,9 @@ class App extends Component {
         ratio: window.devicePixelRatio || 1,
       },
 
+      level: 0,
       score: 0,
+      history: Array(questions.length).fill(-1),
     };
 
     this.sound = new Sound(this),
@@ -76,8 +79,8 @@ class App extends Component {
   }
 
   initVAE() {
-    // const modelCheckPoint = 'https://storage.googleapis.com/magentadata/js/checkpoints/music_vae/mel_2bar_small';
-    const modelCheckPoint = './checkpoints/mel_2bar_small';
+    const modelCheckPoint = 'https://storage.googleapis.com/magentadata/js/checkpoints/music_vae/mel_2bar_small';
+    // const modelCheckPoint = './checkpoints/mel_2bar_small';
     const n = this.numInterpolations;
     const vae = new MusicVAE(modelCheckPoint);
 
@@ -211,7 +214,7 @@ class App extends Component {
     e.stopPropagation();
     const { slash, waitingNext } = this.state;
     if (!slash && !waitingNext) {
-      console.log('m up');
+      // console.log('m up');
       this.renderer.handleMouseUp(e)
       const finished = this.checkFinished();
 
@@ -337,6 +340,9 @@ class App extends Component {
 
   onClickTheButton() {
     if (this.state.waitingNext) {
+      const tips = document.getElementById('tips');
+      tips.style.display = 'block';
+
       const result = document.getElementById('resultText');
       result.style.display = 'none';
 
@@ -354,13 +360,18 @@ class App extends Component {
           waitingNext: false,
           finishedAnswer: false,
           slash: true,
+
+          level: 0,
+          history: Array(questions.length).fill(-1),
         });
         return;
       }
 
       this.resetAns();
 
+      const { level } = this.state;
       this.setState({
+        level: level + 1,
         loadingNextInterpolation: true,
         waitingNext: false,
         finishedAnswer: false,
@@ -369,6 +380,8 @@ class App extends Component {
     }
 
     if (this.state.finishedAnswer) {
+      const { level, history } = this.state;
+
       const tips = document.getElementById('tips');
       tips.style.display = 'none';
 
@@ -380,14 +393,17 @@ class App extends Component {
 
       if (correct) {
         this.sound.triggerSoundEffect(2);
+        history[level] = 2;
       } else {
         this.sound.triggerSoundEffect(1);
+        history[level] = 1;
       }
 
       this.setState({
         waitingNext: true,
         answerCorrect: correct,
         score,
+        history,
       });
 
       return;
@@ -399,7 +415,7 @@ class App extends Component {
   }
 
   render() {
-    const { waitingNext, loadingModel, finishedAnswer, answerCorrect, score, loadingNextInterpolation } = this.state;
+    const { waitingNext, loadingModel, finishedAnswer, answerCorrect, score, loadingNextInterpolation, history, level } = this.state;
     const loadingText = loadingModel ? 'loading...' : 'play';
     let buttonText = finishedAnswer ? 'send' : 'sorting...';
 
@@ -417,6 +433,13 @@ class App extends Component {
     const resultText = answerCorrect ? 'correct!' : 'wrong!';
     const scoreText = `${score.toString()}/${(questions.length).toString()}`;
     const bottomScoreText = `[ score: ${score.toString()}/${(questions.length).toString()} ]`;
+
+    let finalText = 'Ears of a musician!';
+    if (score < 3) {
+      finalText = 'You can do this!';
+    } else if (score < 5) {
+      finalText = 'You have a good ear!';
+    }
 
 
     const arr = Array.from(Array(9).keys());
@@ -447,11 +470,12 @@ class App extends Component {
               <p className={styles.builtWith}>
                 Built with tone.js + musicvae.js.
                 <br />
-                Learn more about <a className={styles.about} target="_blank" href="https://github.com/vibertthio">how it works.</a>
+                Learn more about <a className={styles.about} target="_blank" href="https://github.com/vibertthio/sornting">how it works.</a>
               </p>
 
               <p>Made by</p>
               <img className="splash-icon" src={sig} width="100" height="auto" alt="Vibert Thio Icon" />
+              <p><a className={styles.name} target="_blank" href="https://vibertthio.com/portfolio">Vibert Thio</a></p>
             </div>
           </div>
           <div className={styles.badgeWrapper}>
@@ -466,6 +490,7 @@ class App extends Component {
         </section>
         <section className={styles.splash} id="splash-score" style={{display: "none"}}>
           <div className={styles.wrapper}>
+            <h2><font color="#f39c12">{finalText}</font></h2>
             <h3>Score</h3>
             <h1>{scoreText}</h1>
             <div className="device-supported">
@@ -479,13 +504,16 @@ class App extends Component {
               </button>
 
               <p className={styles.builtWith}>
+                Challenge your friend with this game.
+                <br />
                 Built with tone.js + musicvae.js.
                 <br />
-                Learn more about <a className={styles.about} target="_blank" href="https://github.com/vibertthio">how it works.</a>
+                Learn more about <a className={styles.about} target="_blank" href="https://github.com/vibertthio/sornting">how it works.</a>
               </p>
 
               <p>Made by</p>
               <img className="splash-icon" src={sig} width="100" height="auto" alt="Vibert Thio Icon" />
+              <p><a className={styles.name} target="_blank" href="https://vibertthio.com/portfolio">Vibert Thio</a></p>
             </div>
           </div>
           <div className={styles.badgeWrapper}>
@@ -514,12 +542,7 @@ class App extends Component {
           </button>
 
           <div className={styles.tips} id="tips">
-            <h3>🙋‍♀️Tips</h3>
-            <p>⚡Drag the <font color="#2ecc71">melodies below</font> <br/>
-              into the <font color="#f39c12">golden box</font> above <br />
-              to complete the interpolation.</p>
-
-            <p>👇Click on the boxes to listen to the melodies.</p>
+            {this.tipsText(level)}
           </div>
           <h1 className={styles.result} id="resultText">{resultText}</h1>
 
@@ -533,6 +556,7 @@ class App extends Component {
           />
         </div>
         <div className={styles.control}>
+
           <div className={styles.slider}>
             <button
               className={styles.sendButton}
@@ -542,8 +566,39 @@ class App extends Component {
               {buttonText}
             </button>
           </div>
-          <div className={styles.score}>
+          {/* <div className={styles.score}>
             <p>{bottomScoreText}</p>
+          </div> */}
+
+
+          <div className={styles.score}>
+            {history.map((value, i) => {
+              if (value === 1) {
+                return (
+                  <div key={uuidv4()} className={styles.item}>
+                    <div className={styles.wrong} />
+                  </div>
+                );
+              } else if (value === 2) {
+                return (
+                  <div key={uuidv4()} className={styles.item}>
+                    <div className={styles.correct} />
+                  </div>
+                );
+              } else if (i === level) {
+                return (
+                  <div key={uuidv4()} className={styles.item}>
+                    <div className={styles.current} />
+                  </div>
+                );
+              } else if (value === -1) {
+                return (
+                  <div key={uuidv4()} className={styles.item}>
+                    <div className={styles.unfinished} />
+                  </div>
+                );
+              }
+            })}
           </div>
         </div>
         <div id="menu" className={styles.overlay}>
@@ -557,7 +612,7 @@ class App extends Component {
                 Vibert Thio
               </a>.{' Source code is on '}
               <a
-                href="https://github.com/vibertthio"
+                href="https://github.com/vibertthio/sornting"
                 target="_blank"
                 rel="noreferrer noopener"
               >
@@ -575,6 +630,48 @@ class App extends Component {
         </div>
       </div>
     );
+  }
+
+  tipsText(level) {
+    if (level === 0) {
+      return (
+        <div>
+          <h3>🙋‍♀️Tips</h3>
+          <p>⚡Drag the <font color="#2ecc71">melodies below</font> <br />
+            into the <font color="#f39c12">golden box</font> above <br />
+            to complete the interpolation.</p>
+
+          <p>👇Click on the boxes to listen to the melodies.</p>
+        </div>
+      );
+    } else if (level === 1) {
+      return (
+        <div>
+          <p>🚵‍♂️It will get harder every new level.</p>
+        </div>
+      );
+    } else if (level === 2) {
+      return (
+        <div>
+          <p>🧗‍♂Whether you are a musician, <br />
+          you may challenge yourself.</p>
+        </div>
+      );
+    } else if (level === 3) {
+      return (
+        <div>
+          <p>🔊Listen carefully.</p>
+          <p>👀Or, observe the patterns carefully.</p>
+        </div>
+      );
+    } else if (level === 4) {
+      return (
+        <div>
+          <p>😈 Invisible</p>
+          <p>Now you can only listen to figure out the answer.</p>
+        </div>
+      );
+    }
   }
 }
 
