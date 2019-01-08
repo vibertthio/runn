@@ -79,8 +79,8 @@ class App extends Component {
   }
 
   initVAE() {
-    // const modelCheckPoint = 'https://storage.googleapis.com/magentadata/js/checkpoints/music_vae/mel_2bar_small';
-    const modelCheckPoint = './checkpoints/mel_2bar_small';
+    const modelCheckPoint = 'https://storage.googleapis.com/magentadata/js/checkpoints/music_vae/mel_2bar_small';
+    // const modelCheckPoint = './checkpoints/mel_2bar_small';
     const n = this.numInterpolations;
     const vae = new MusicVAE(modelCheckPoint);
 
