@@ -1,5 +1,6 @@
 const questions = [
 
+  // 1.
   {
     melodies: [
       'Arpeggiated',
@@ -45,6 +46,57 @@ const questions = [
     ],
   },
 
+  // 2.
+  {
+    melodies: [
+      'Sparse',
+      'Bounce',
+    ],
+    numInterpolations: 5,
+    answers: [
+      {
+        index: 0,
+        ans: false,
+        show: true,
+      },
+      {
+        index: -1,
+        ans: true,
+        show: true,
+      },
+      {
+        index: -1,
+        ans: true,
+        show: true,
+      },
+      {
+        index: -1,
+        ans: true,
+        show: true,
+      },
+      {
+        index: 4,
+        ans: false,
+        show: true,
+      },
+    ],
+    options: [
+      {
+        index: 2,
+        show: false,
+      },
+      {
+        index: 1,
+        show: true,
+      },
+      {
+        index: 3,
+        show: true,
+      },
+    ],
+  },
+
+  // 3.
   {
     melodies: [
       'Arpeggiated',
@@ -95,11 +147,11 @@ const questions = [
       },
       {
         index: 1,
-        show: true,
+        show: false,
       },
       {
         index: 3,
-        show: true,
+        show: false,
       },
       {
         index: 2,
@@ -108,6 +160,7 @@ const questions = [
     ],
   },
 
+  // 4.
   {
     melodies: [
       'Sparse',
@@ -158,7 +211,7 @@ const questions = [
       },
       {
         index: 3,
-        show: true,
+        show: false,
       },
       {
         index: 5,
@@ -166,7 +219,7 @@ const questions = [
       },
       {
         index: 1,
-        show: true,
+        show: false,
       },
       {
         index: 2,
@@ -175,6 +228,7 @@ const questions = [
     ],
   },
 
+  // 5.
   {
     melodies: [
       'Melody 1',
@@ -236,7 +290,7 @@ const questions = [
     options: [
       {
         index: 7,
-        show: true,
+        show: false,
       },
       {
         index: 3,
@@ -252,15 +306,16 @@ const questions = [
       },
       {
         index: 5,
-        show: true,
+        show: false,
       },
       {
         index: 2,
-        show: true,
+        show: false,
       },
     ],
   },
 
+  // 6.
   {
     melodies: [
       'Arpeggiated',
@@ -357,7 +412,7 @@ const questions = [
 
 
 function getQuestions(index) {
-  return questions[index];
+  return questions[index % questions.length];
 }
 
 function checkEnd(index) {
