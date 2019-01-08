@@ -46,7 +46,7 @@ class App extends Component {
     this.melodies = [];
     this.bpms = [];
     this.questionIndex = 0;
-    this.initAns();
+    this.initAns(0);
   }
 
   componentDidMount() {
@@ -79,8 +79,8 @@ class App extends Component {
   }
 
   initVAE() {
-    const modelCheckPoint = 'https://storage.googleapis.com/magentadata/js/checkpoints/music_vae/mel_2bar_small';
-    // const modelCheckPoint = './checkpoints/mel_2bar_small';
+    // const modelCheckPoint = 'https://storage.googleapis.com/magentadata/js/checkpoints/music_vae/mel_2bar_small';
+    const modelCheckPoint = './checkpoints/mel_2bar_small';
     const n = this.numInterpolations;
     const vae = new MusicVAE(modelCheckPoint);
 
@@ -99,48 +99,49 @@ class App extends Component {
         this.setState({
           loadingModel: false,
         });
-        this.sound.triggerSoundEffect(4);
+        this.sound.triggerSoundEffect(2);
       });
   }
 
-  initAns() {
-    const q = JSON.parse(JSON.stringify(getQuestions(this.questionIndex)));
-    console.log(q);
+  initAns(lv) {
+    const q = JSON.parse(JSON.stringify(getQuestions(lv)));
     this.answers = q.answers.slice(0);
     this.options = q.options.slice(0);
     this.numInterpolations = q.numInterpolations;
     this.melodiesName = q.melodies.slice(0);
   }
 
-  resetAns(reset = false) {
-    if (!reset) {
-      this.questionIndex += 1;
-    } else {
-      this.questionIndex = 0;
-    }
-    const q = JSON.parse(JSON.stringify(getQuestions(this.questionIndex)));
+  resetAns() {
+    const { level } = this.state;
+    const nextLevel = level + 1;
+    const q = JSON.parse(JSON.stringify(getQuestions(nextLevel)));
 
     this.vae.interpolate([
       presetMelodies[q.melodies[0]],
       presetMelodies[q.melodies[1]],
     ], q.numInterpolations)
     .then((i) => {
-      // console.log('finish interpolate, set melody');
-      this.initAns();
+      this.initAns(nextLevel);
       this.setMelodies(i);
 
       this.setState({
         loadingNextInterpolation: false,
       });
 
-      if (this.questionIndex !== 0) {
+      if (this.state.level !== 0) {
         this.sound.triggerSoundEffect(4);
       }
     });
 
-    // this.setState({
-    //   loadingNextInterpolation: true,
-    // });
+    this.setState({
+      loadingNextInterpolation: true,
+    });
+  }
+
+  showAns() {
+    this.answers.forEach(a => {
+      a.show = true;
+    });
   }
 
   setMelodies(ms) {
@@ -303,8 +304,10 @@ class App extends Component {
   }
 
   onPlay() {
-    console.log('press play!');
     const { restart } = this.state;
+    console.log('press play!');
+
+    this.sound.triggerSoundEffect(4);
 
     const id = restart ? 'splash-score' : 'splash';
     const splash = document.getElementById(id);
@@ -339,6 +342,12 @@ class App extends Component {
   }
 
   onClickTheButton() {
+    const { loadingNextInterpolation } = this.state;
+
+    if (loadingNextInterpolation) {
+      return;
+    }
+
     if (this.state.waitingNext) {
       const tips = document.getElementById('tips');
       tips.style.display = 'block';
@@ -346,7 +355,9 @@ class App extends Component {
       const result = document.getElementById('resultText');
       result.style.display = 'none';
 
-      if (checkEnd(this.questionIndex)) {
+      const { level } = this.state;
+
+      if (checkEnd(level)) {
         // reset game
         this.sound.triggerSoundEffect(3);
 
@@ -354,28 +365,26 @@ class App extends Component {
         splash.style.display = 'block';
         splash.style.opacity = 1.0;
 
-        this.resetAns(true);
+        this.resetAns();
         this.setState({
+          level: 0,
           restart: true,
           waitingNext: false,
           finishedAnswer: false,
           slash: true,
 
-          level: 0,
           history: Array(questions.length).fill(-1),
         });
         return;
       }
-
       this.resetAns();
-
-      const { level } = this.state;
       this.setState({
         level: level + 1,
         loadingNextInterpolation: true,
         waitingNext: false,
         finishedAnswer: false,
       });
+
       return;
     }
 
@@ -388,6 +397,7 @@ class App extends Component {
       const result = document.getElementById('resultText');
       result.style.display = 'block';
 
+      // update score
       const correct = this.checkCorrect();
       const score = this.state.score + (correct ? 1 : 0);
 
@@ -399,6 +409,11 @@ class App extends Component {
         history[level] = 1;
       }
 
+      // reveal ans
+      this.showAns();
+
+
+
       this.setState({
         waitingNext: true,
         answerCorrect: correct,
@@ -408,6 +423,10 @@ class App extends Component {
 
       return;
     }
+  }
+
+  setLevel(lv) {
+
   }
 
   triggerSoundEffect() {
@@ -422,7 +441,7 @@ class App extends Component {
     if (loadingNextInterpolation) {
       buttonText = 'loading ...';
     } else if (waitingNext) {
-      if (!checkEnd(this.questionIndex)) {
+      if (!checkEnd(level)) {
         buttonText = 'next';
       } else {
         buttonText = 'end';
@@ -647,24 +666,30 @@ class App extends Component {
     } else if (level === 1) {
       return (
         <div>
-          <p>🚵‍♂️It will get harder every new level.</p>
+          <p>👀Some answers are hidden away. Listen carefully.</p>
         </div>
       );
     } else if (level === 2) {
+      return (
+        <div>
+          <p>🚵‍♂️It will get harder every new level.</p>
+        </div>
+      );
+    } else if (level === 3) {
       return (
         <div>
           <p>🧗‍♂Whether you are a musician, <br />
           you may challenge yourself.</p>
         </div>
       );
-    } else if (level === 3) {
+    } else if (level === 4) {
       return (
         <div>
           <p>🔊Listen carefully.</p>
-          <p>👀Or, observe the patterns carefully.</p>
+          <p>👀Also, observe the patterns carefully.</p>
         </div>
       );
-    } else if (level === 4) {
+    } else if (level === 5) {
       return (
         <div>
           <p>😈 Invisible</p>

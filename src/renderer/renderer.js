@@ -75,6 +75,8 @@ export default class Renderer {
   }
 
   draw(src, progress = 0) {
+    // console.log(this.app.state.loadingNextInterpolation);
+    // console.log(this.melodies);
 
     this.frameCount += 1;
     this.progress = progress;
@@ -148,18 +150,24 @@ export default class Renderer {
     let cx = e.clientX - this.width * 0.5;;
     let cy = e.clientY - this.height * 0.5;
 
+    const { dragging } = this.app.state;
+
     const onAnsId = this.handleMouseDownOnAnswers(cx, cy);
     let onAns = -1;
     if (onAnsId > -1 && onAnsId < this.app.answers.length) {
       onAns = this.app.answers[onAnsId].index;
-      this.melodiesIndex = onAns;
+      if (!dragging) {
+        this.melodiesIndex = onAns;
+      }
     }
 
     const onOptionsId = this.handleMouseDownOnOptions(cx, cy);
     let onOptions = -1;
     if (onOptionsId > -1 && onOptionsId < this.app.options.length) {
       onOptions = this.app.options[onOptionsId].index;
-      this.melodiesIndex = onOptions;
+      if (!dragging) {
+        this.melodiesIndex = onOptions;
+      }
     }
 
     return [
@@ -290,6 +298,11 @@ export default class Renderer {
               const originalId = this.app.options[hoverIndex].index;
               this.app.options[hoverIndex].index = this.app.options[index].index;
               this.app.options[index].index = originalId;
+
+              // show
+              const originalShow = this.app.options[hoverIndex].show;
+              this.app.options[hoverIndex].show = this.app.options[index].show;
+              this.app.options[index].show = originalShow;
             }
           }
         }

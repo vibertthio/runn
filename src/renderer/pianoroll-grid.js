@@ -287,6 +287,7 @@ export default class PianorollGrid {
     ctx.save();
 
     ctx.strokeStyle = '#FFF';
+    ctx.lineWidth = 1.5;
     ctx.beginPath()
     ctx.moveTo(0.1 * w, 0.1 * h);
     ctx.lineTo(-0.1 * w, -0.1 * h);
