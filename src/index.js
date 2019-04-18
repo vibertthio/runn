@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { render } from 'react-dom';
-import { MusicVAE } from '@magenta/music';
+import { MusicRNN } from '@magenta/music';
 import uuidv4 from 'uuid/v4';
 
 
@@ -46,12 +46,11 @@ class App extends Component {
     this.melodies = [];
     this.bpms = [];
     this.questionIndex = 0;
-    this.initAns(0);
   }
 
   componentDidMount() {
     this.renderer = new Renderer(this, this.canvas);
-    this.initVAE();
+    this.initRNN();
     this.addEventListeners();
     requestAnimationFrame(() => { this.update() });
   }
@@ -59,89 +58,49 @@ class App extends Component {
   addEventListeners() {
     window.addEventListener('keydown', this.handleKeyDown.bind(this), false);
     window.addEventListener('resize', this.handleResize.bind(this, false));
-    window.addEventListener('click', this.handleClick.bind(this));
-    window.addEventListener('mousedown', this.handleMouseDown.bind(this));
-    window.addEventListener('mousemove', this.handleMouseMove.bind(this));
-    window.addEventListener('mouseup', this.handleMouseUp.bind(this));
+    // window.addEventListener('click', this.handleClick.bind(this));
+    // window.addEventListener('mousedown', this.handleMouseDown.bind(this));
+    // window.addEventListener('mousemove', this.handleMouseMove.bind(this));
+    // window.addEventListener('mouseup', this.handleMouseUp.bind(this));
   }
 
   removeEventListener() {
     window.removeEventListener('keydown', this.handleKeyDown.bind(this));
-    window.removeEventListener('mousedown', this.handleMouseDown.bind(this));
-    window.removeEventListener('click', this.handleClick.bind(this));
-    window.removeEventListener('mousemove', this.handleMouseMove.bind(this));
-    window.removeEventListener('mouseup', this.handleMouseUp.bind(this));
     window.removeEventListener('resize', this.handleResize.bind(this, false));
+    // window.removeEventListener('click', this.handleClick.bind(this));
+    // window.removeEventListener('mousedown', this.handleMouseDown.bind(this));
+    // window.removeEventListener('mousemove', this.handleMouseMove.bind(this));
+    // window.removeEventListener('mouseup', this.handleMouseUp.bind(this));
   }
 
   componentWillUnmount() {
     removeEventListener();
   }
 
-  initVAE() {
-    const modelCheckPoint = 'https://storage.googleapis.com/magentadata/js/checkpoints/music_vae/mel_2bar_small';
-    // const modelCheckPoint = './checkpoints/mel_2bar_small';
+  initRNN() {
+    const modelCheckPoint = './checkpoints/basic_rnn';
     const n = this.numInterpolations;
-    const vae = new MusicVAE(modelCheckPoint);
+    const rnn = new MusicRNN(modelCheckPoint);
 
-    this.setMelodies(new Array(n).fill(presetMelodies['Twinkle']));
-    vae.initialize()
+    this.setMelodies(new Array(1).fill(presetMelodies['Twinkle']));
+
+    rnn.initialize()
       .then(() => {
         console.log('initialized!');
-        return vae.interpolate([
-          presetMelodies[this.melodiesName[0]],
-          presetMelodies[this.melodiesName[1]],
-        ], n);
+        return rnn.continueSequence(
+          presetMelodies['Twinkle'],
+          32,
+          1.0)
       })
       .then((i) => {
-        this.setMelodies(i);
-        this.vae = vae;
+        console.log(i);
+        this.setMelodies([i]);
+        this.rnn = rnn;
         this.setState({
           loadingModel: false,
         });
         this.sound.triggerSoundEffect(2);
       });
-  }
-
-  initAns(lv) {
-    const q = JSON.parse(JSON.stringify(getQuestions(lv)));
-    this.answers = q.answers.slice(0);
-    this.options = q.options.slice(0);
-    this.numInterpolations = q.numInterpolations;
-    this.melodiesName = q.melodies.slice(0);
-  }
-
-  resetAns() {
-    const { level } = this.state;
-    const nextLevel = level + 1;
-    const q = JSON.parse(JSON.stringify(getQuestions(nextLevel)));
-
-    this.vae.interpolate([
-      presetMelodies[q.melodies[0]],
-      presetMelodies[q.melodies[1]],
-    ], q.numInterpolations)
-    .then((i) => {
-      this.initAns(nextLevel);
-      this.setMelodies(i);
-
-      this.setState({
-        loadingNextInterpolation: false,
-      });
-
-      if (this.state.level !== 0) {
-        this.sound.triggerSoundEffect(4);
-      }
-    });
-
-    this.setState({
-      loadingNextInterpolation: true,
-    });
-  }
-
-  showAns() {
-    this.answers.forEach(a => {
-      a.show = true;
-    });
   }
 
   setMelodies(ms) {
@@ -168,75 +127,18 @@ class App extends Component {
 
   handleClick(e) {
     e.stopPropagation();
-    const { slash, dragging } = this.state;
-
-    if (!slash) {
-      const [onAns, onOptions] = this.renderer.handleMouseClick(e);
-      if (!dragging) {
-        if (onAns > -1) {
-          this.sound.changeMelody(onAns);
-          this.start();
-        } else if (onOptions > -1) {
-          this.sound.changeMelody(onOptions);
-          this.start();
-        }
-      }
-
-      this.setState({
-        dragging: false,
-      });
-    }
   }
 
   handleMouseDown(e) {
     e.stopPropagation();
-    const { slash, waitingNext } = this.state;
-
-    if (!slash && !waitingNext) {
-      const [ onAns, onOptions] = this.renderer.handleMouseDown(e);
-      if (onAns > -1) {
-        // this.sound.changeMelody(onAns);
-        // this.start();
-        this.setState({
-          mouseDown: true,
-        });
-      } else if (onOptions > -1) {
-        // this.sound.changeMelody(onOptions);
-        // this.start();
-        this.setState({
-          mouseDown: true,
-        });
-      }
-    }
-
   }
 
   handleMouseUp(e) {
     e.stopPropagation();
-    const { slash, waitingNext } = this.state;
-    if (!slash && !waitingNext) {
-      // console.log('m up');
-      this.renderer.handleMouseUp(e)
-      const finished = this.checkFinished();
-
-      this.setState({
-        mouseDown: false,
-        finishedAnswer: finished,
-      });
-    }
   }
 
   handleMouseMove(e) {
     e.stopPropagation();
-    const { slash } = this.state;
-    if (!slash) {
-      this.renderer.handleMouseMove(e);
-      if (this.state.mouseDown) {
-        this.setState({
-          dragging: true,
-        });
-      }
-    }
   }
 
   handleClickMenu() {
@@ -303,7 +205,7 @@ class App extends Component {
     });
   }
 
-  onPlay() {
+  onPressPlay() {
     const { restart } = this.state;
     console.log('press play!');
 
@@ -321,113 +223,7 @@ class App extends Component {
     }, 500);
   }
 
-  checkFinished() {
-    let ret = true;
-    this.answers.forEach(a => {
-      if (a.ans && (a.index === -1)) {
-        ret = false;
-      }
-    });
-    return ret;
-  }
-
-  checkCorrect() {
-    let ret = true;
-    this.answers.forEach((a, i) => {
-      if (a.index !== i) {
-        ret = false;
-      }
-    });
-    return ret;
-  }
-
-  onClickTheButton() {
-    const { loadingNextInterpolation } = this.state;
-
-    if (loadingNextInterpolation) {
-      return;
-    }
-
-    if (this.state.waitingNext) {
-      const tips = document.getElementById('tips');
-      tips.style.display = 'block';
-
-      const result = document.getElementById('resultText');
-      result.style.display = 'none';
-
-      const { level } = this.state;
-
-      if (checkEnd(level)) {
-        // reset game
-        this.sound.triggerSoundEffect(3);
-
-        const splash = document.getElementById('splash-score');
-        splash.style.display = 'block';
-        splash.style.opacity = 1.0;
-
-        this.resetAns();
-        this.setState({
-          level: 0,
-          restart: true,
-          waitingNext: false,
-          finishedAnswer: false,
-          slash: true,
-
-          history: Array(questions.length).fill(-1),
-        });
-        return;
-      }
-      this.resetAns();
-      this.setState({
-        level: level + 1,
-        loadingNextInterpolation: true,
-        waitingNext: false,
-        finishedAnswer: false,
-      });
-
-      return;
-    }
-
-    if (this.state.finishedAnswer) {
-      const { level, history } = this.state;
-
-      const tips = document.getElementById('tips');
-      tips.style.display = 'none';
-
-      const result = document.getElementById('resultText');
-      result.style.display = 'block';
-
-      // update score
-      const correct = this.checkCorrect();
-      const score = this.state.score + (correct ? 1 : 0);
-
-      if (correct) {
-        this.sound.triggerSoundEffect(2);
-        history[level] = 2;
-      } else {
-        this.sound.triggerSoundEffect(1);
-        history[level] = 1;
-      }
-
-      // reveal ans
-      this.showAns();
-
-
-
-      this.setState({
-        waitingNext: true,
-        answerCorrect: correct,
-        score,
-        history,
-      });
-
-      return;
-    }
-  }
-
-  setLevel(lv) {
-
-  }
+  onClickTheButton() {}
 
   triggerSoundEffect() {
     this.sound.triggerSoundEffect();
@@ -468,9 +264,9 @@ class App extends Component {
       <div>
         <section className={styles.splash} id="splash">
           <div className={styles.wrapper}>
-            <h1>🎸Sornting</h1>
+            <h1>🏃‍♂️RUNN</h1>
             <h2>
-              = Sort + Song
+              = RNN + RUN
             </h2>
             <div className="device-supported">
               <p className={styles.description}>
@@ -481,7 +277,7 @@ class App extends Component {
               <button
                 className={styles.playButton}
                 id="splash-play-button"
-                onClick={() => this.onPlay()}
+                onClick={() => this.onPressPlay()}
               >
                 {loadingText}
               </button>
@@ -517,7 +313,7 @@ class App extends Component {
               <button
                 className={styles.playButton}
                 id="splash-play-button"
-                onClick={() => this.onPlay()}
+                onClick={() => this.onPressPlay()}
               >
                 play again
               </button>
@@ -549,7 +345,7 @@ class App extends Component {
         <div className={styles.title}>
           <div className={styles.link}>
             <a href="https://github.com/vibertthio/sornting" target="_blank" rel="noreferrer noopener">
-              Sornting
+              🏃‍♂️RUNN
             </a>
           </div>
           <button
@@ -574,7 +370,8 @@ class App extends Component {
             height={this.state.screen.height * this.state.screen.ratio}
           />
         </div>
-        <div className={styles.control}>
+
+        {/* <div className={styles.control}>
 
           <div className={styles.slider}>
             <button
@@ -585,10 +382,6 @@ class App extends Component {
               {buttonText}
             </button>
           </div>
-          {/* <div className={styles.score}>
-            <p>{bottomScoreText}</p>
-          </div> */}
-
 
           <div className={styles.score}>
             {history.map((value, i) => {
@@ -619,12 +412,13 @@ class App extends Component {
               }
             })}
           </div>
-        </div>
+        </div> */}
+
         <div id="menu" className={styles.overlay}>
           <button className={styles.overlayBtn} onClick={() => this.handleClickMenu()} />
           <div className={styles.intro}>
             <p>
-              <strong>$ 🎸Sornting $</strong>
+              <strong>$ 🏃‍♂️ RUNN $</strong>
               <br />= Sort + Song
               <br />A game based on a musical machine learning algorithm which can interpolate different melodies. Made by{' '}
               <a href="https://vibertthio.com/portfolio/" target="_blank" rel="noreferrer noopener">
@@ -652,51 +446,11 @@ class App extends Component {
   }
 
   tipsText(level) {
-    if (level === 0) {
-      return (
-        <div>
-          <h3>🙋‍♀️Tips</h3>
-          <p>⚡Drag the <font color="#2ecc71">melodies below</font> <br />
-            into the <font color="#f39c12">golden box</font> above <br />
-            to complete the interpolation.</p>
-
-          <p>👇Click on the boxes to listen to the melodies.</p>
-        </div>
-      );
-    } else if (level === 1) {
-      return (
-        <div>
-          <p>👀Some answers are hidden away. Listen carefully.</p>
-        </div>
-      );
-    } else if (level === 2) {
-      return (
-        <div>
-          <p>🚵‍♂️It will get harder every new level.</p>
-        </div>
-      );
-    } else if (level === 3) {
-      return (
-        <div>
-          <p>🧗‍♂Whether you are a musician, <br />
-          you may challenge yourself.</p>
-        </div>
-      );
-    } else if (level === 4) {
-      return (
-        <div>
-          <p>🔊Listen carefully.</p>
-          <p>👀Also, observe the patterns carefully.</p>
-        </div>
-      );
-    } else if (level === 5) {
-      return (
-        <div>
-          <p>😈 Invisible</p>
-          <p>Now you can only listen to figure out the answer.</p>
-        </div>
-      );
-    }
+    return (
+      <div>
+        <p>⚡Click space to run and jump!</p>
+      </div>
+    );
   }
 }
 

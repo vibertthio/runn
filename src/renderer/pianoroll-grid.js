@@ -121,10 +121,9 @@ export default class PianorollGrid {
 
       const hStep = h / 64;
 
-      if (((this.ans) && (this.renderer.app.answers[this.fixed].show)) ||
-        ((!this.ans) && (this.renderer.app.options[this.fixed].show))) {
+      if (true) {
 
-        const melody = this.renderer.melodies[id];
+        const melody = this.renderer.melodies[0];
         melody.notes.forEach((item, index) => {
           const { pitch, quantizedStartStep, quantizedEndStep } = item;
           const y = 56 - (pitch - 40);
@@ -207,52 +206,52 @@ export default class PianorollGrid {
     const ratio = this.dynamic ? 0.08 : 0.06;
     const unit = this.renderer.h * ratio;
     let size = 0.5;
-    if (this.dynamic) {
-      size = 0.5 + Math.sin(this.renderer.frameCount * 0.04) * 0.02
-      if (on) {
-        size = 0.45;
-      }
+    // if (this.dynamic) {
+    //   size = 0.5 + Math.sin(this.renderer.frameCount * 0.04) * 0.02
+    //   if (on) {
+    //     size = 0.45;
+    //   }
 
-      if (this.ans) {
-        if (this.renderer.app.answers[this.fixed].index !== -1) {
-          size = 0.5;
-        }
-      } else {
-        if (this.renderer.app.options[this.fixed].index === -1) {
-          size = 0.35;
-        }
-      }
-    }
+    //   if (this.ans) {
+    //     if (this.renderer.app.answers[this.fixed].index !== -1) {
+    //       size = 0.5;
+    //     }
+    //   } else {
+    //     if (this.renderer.app.options[this.fixed].index === -1) {
+    //       size = 0.35;
+    //     }
+    //   }
+    // }
 
     ctx.save();
 
-    if (this.dynamic) {
-      if (this.ans) {
-        ctx.strokeStyle = '#f39c12';
-      } else {
-        ctx.strokeStyle = '#2ecc71';
-      }
-    } else {
-      ctx.strokeStyle = '#FFF';
-    }
+    // if (this.dynamic) {
+    //   if (this.ans) {
+    //     ctx.strokeStyle = '#f39c12';
+    //   } else {
+    //     ctx.strokeStyle = '#2ecc71';
+    //   }
+    // } else {
+    //   ctx.strokeStyle = '#FFF';
+    // }
 
-    const { waitingNext, answerCorrect } = this.renderer.app.state;
-    if (waitingNext) {
-      if (answerCorrect) {
-        ctx.strokeStyle = '#2ecc71';
-      } else {
-        if (this.ans) {
-          if (this.fixed !== this.renderer.app.answers[this.fixed].index) {
-            ctx.strokeStyle = '#e74c3c';
-          } else if (this.renderer.app.answers[this.fixed].ans) {
-            ctx.strokeStyle = '#2ecc71';
-          }
-        } else {
-          ctx.strokeStyle = '#FFF';
-        }
-      }
-      size = 0.5;
-    }
+    // const { waitingNext, answerCorrect } = this.renderer.app.state;
+    // if (waitingNext) {
+    //   if (answerCorrect) {
+    //     ctx.strokeStyle = '#2ecc71';
+    //   } else {
+    //     if (this.ans) {
+    //       if (this.fixed !== this.renderer.app.answers[this.fixed].index) {
+    //         ctx.strokeStyle = '#e74c3c';
+    //       } else if (this.renderer.app.answers[this.fixed].ans) {
+    //         ctx.strokeStyle = '#2ecc71';
+    //       }
+    //     } else {
+    //       ctx.strokeStyle = '#FFF';
+    //     }
+    //   }
+    //   size = 0.5;
+    // }
 
     ctx.beginPath()
     ctx.moveTo(size * w, size * h - unit);
@@ -329,11 +328,12 @@ export default class PianorollGrid {
   }
 
   getId() {
-    let id = this.renderer.app.answers[this.fixed].index;
-    if (!this.ans) {
-      id = this.renderer.app.options[this.fixed].index;
-    }
-    return id;
+    return 0;
+    // let id = this.renderer.app.answers[this.fixed].index;
+    // if (!this.ans) {
+    //   id = this.renderer.app.options[this.fixed].index;
+    // }
+    // return id;
   }
 
 
