@@ -1,8 +1,16 @@
-# 🎸Sornting
 
->  ### [play it](https://vibertthio.com/sornting/)
+<h1 align="center">
+Runn | <a href="http://vibertthio.com/portfolio" target="_blank">Play It<a/>
+</h1>
 
-#### = 🎻song + 🕵️‍♂️sort
+<h4 align="center">
+= 🤖 RNN + 🏃‍♂️Run
+</h4>
+<p align="center">
+  <img src="./assets/city.gif" height="300px"/>
+</p>
+
+
 
 The player has to figure out the original order of the interpolation between two different melodies, and the difficulties will increase as the game progresses.
 
@@ -10,15 +18,5 @@ Recently, I’m exploring the idea of using gamification to make the musical mac
 
 <br/>
 
-<p align="center">
-    <img src="./assets/full.gif" width="600">
-</p>
-<br/>
 
 I’m not trying to justify the result of the interpolation is perfect here. The user will find that some weird effect of interpolation while playing the game and listening to the melodies carefully. It will help the user to not only understand the model but also find out the weakness of model.
-
-
-
-## Links
-
-[screenshots](./assets/versions.md)
