@@ -1,154 +1,143 @@
 import { Engine, World, Bodies, Composite} from 'matter-js';
 import PianorollGrid from './pianoroll-grid';
+import Physic from './physic';
 
 export default class Renderer {
+
   constructor(app, canvas) {
     this.app = app;
     this.canvas = canvas;
+    this.frameCount = 0;
     this.melodies = [];
-    this.melodiesIndex = 0;
-    this.pianorollGridsAnswer = [];
-    this.pianorollGridsOptions = [];
-    this.nOfAns = 1;
-    this.nOfOptions = 0;
     this.fontSize = 1.0;
     this.playing = false;
-
-    this.draggingState = {
-      ans: true, // true: ans, false: options
-      index: -1,
-      hoverAns: true,
-      hoverIndex: -1,
-    };
-
-    this.frameCount = 0;
     this.halt = false;
 
+    this.w = 0;
+    this.h = 0;
+
+    this.pianorollGrids = [];
+    this.pianorollGrids[0] = new PianorollGrid(this);
+    this.physic = new Physic(this);
+
+    this.initColor();
+    this.initMatter();
+  }
+
+  initColor() {
     // this.backgroundColor = 'rgba(37, 38, 35, 1.0)';
     this.backgroundColor = 'rgba(15, 15, 15, 1.0)';
     this.noteOnColor = 'rgba(255, 255, 255, 1.0)';
     this.mouseOnColor = 'rgba(150, 150, 150, 1.0)';
     this.noteOnCurrentColor = 'rgba(255, 100, 100, 1.0)';
     this.boxColor = 'rgba(200, 200, 200, 1.0)';
-    this.displayWidth = 0;
-    this.h = 0;
-
-    let pos = -1 * (this.nOfAns - 1);
-    this.pianorollGridsAnswer[0] = new PianorollGrid(this, -1.2, pos, 0, true, true)
-
-    // interpolation display
-    this.h_step = 0;
-
-    // physics
-    this.initMatter();
   }
 
-
   initMatter() {
-    // create an engine
-    const engine = Engine.create();
+    this.engine = Engine.create();
+    // Engine.run(this.engine);
+  }
 
-    // create two boxes and a ground
-    const boxA = Bodies.rectangle(400, 200, 80, 80);
-    const boxB = Bodies.rectangle(450, 50, 80, 80);
-    const ground = Bodies.rectangle(400, 610, 810, 60, { isStatic: true });
+  updateMatter() {
+    const { notes, totalQuantizedSteps } = this.melodies[0];
+    const unit = this.width / totalQuantizedSteps;
+    World.clear(this.engine.world);
+    this.avatar = Bodies.rectangle(400, 100, 20, 20);
+    // console.log(`totalQuantizedSteps: ${totalQuantizedSteps}`);
+    // console.log(`unit: ${unit}`);
+    // console.log(`avatar id: ${this.avatar.id}`);
+    // console.log(`notes length: ${notes.length}`);
+    const objects = [];
 
-    // add all of the bodies to the world
-    World.add(engine.world, [boxA, boxB, ground]);
+    notes.forEach((note, index) => {
+      const { pitch, quantizedStartStep, quantizedEndStep } = note;
+      const w = (quantizedEndStep - quantizedStartStep) * unit;
+      const h = 10;
+      const y = this.height - pitch * unit * 0.5;
+      const x = quantizedStartStep * unit + w * 0.5;
+      // console.log(`${index}: ${x}, ${y}, ${w}, ${h}`);
+      objects.push(Bodies.rectangle(x, y, w, h, { isStatic: true }));
+    });
 
-    // run the engine
-    Engine.run(engine);
-
-    // run the renderer
-    this.engine = engine;
+    objects.push(this.avatar);
+    World.add(this.engine.world, objects);
   }
 
   updateMelodies(ms) {
     this.melodies = ms;
+    this.physic.updateMatter();
   }
 
   draw(src, progress = 0) {
+    const ctx = this.canvas.getContext('2d');
+
     this.frameCount += 1;
     this.progress = progress;
-
-    const ctx = this.canvas.getContext('2d');
-    this.width = src.width;
-    this.height = src.height;
+    if (src.width !== this.width || src.height !== this.height) {
+      this.width = src.width;
+      this.height = src.height;
+      this.physic.updateMatter();
+    }
     const width = src.width;
     const height = src.height;
 
     ctx.save();
     ctx.fillStyle = this.backgroundColor;
     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-    this.drawPhysic(ctx);
+    // this.drawPhysic(ctx);
+    this.physic.draw(ctx);
 
-    // const h = Math.min(width, height) * 0.18;
-    // const h = width * 0.1;
-    // const w = Math.max(Math.min(((width - 100) / (this.nOfAns * 1.5)), 70), 30);
-    const w = Math.max(Math.min(((width - 100) / (this.nOfAns * 1.5)), 150), 20);
-    // const w = h;
+    const w = Math.max(Math.min(((width - 100) / 1.5), 150), 20);
     const h = w;
     this.h = h;
-    this.displayWidth = w;
+    this.w = w;
     this.setFontSize(ctx, Math.pow(w / 800, 0.3));
 
     ctx.translate(width * 0.5, height * 0.5);
-
-    // this.pianorollGridsAnswer.forEach((p, i) => {
-    //   const frameOnly = this.app.answers[i].index === -1;
-    //   p.draw(ctx, w, h, frameOnly);
-    // });
-    this.pianorollGridsAnswer[0].draw(ctx, w, h);
-    // this.pianorollGridsOptions.forEach((p, i) => {
-    //   const frameOnly = this.app.options[i].index === -1;
-    //   p.draw(ctx, w, h, frameOnly);
-    // });
+    this.pianorollGrids[0].draw(ctx, width, height);
 
     ctx.restore();
   }
 
   drawPhysic(ctx) {
-    ctx.save();
     const bodies = Composite.allBodies(this.engine.world);
-    const context = this.canvas.getContext('2d');
 
-    // context.fillStyle = '#000';
-    // context.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    ctx.save();
 
+    // draw grounds
     ctx.beginPath();
-    for (let i = 0; i < bodies.length; i += 1) {
-      var vertices = bodies[i].vertices;
-
-      ctx.moveTo(vertices[0].x, vertices[0].y);
-
-      for (let j = 1; j < vertices.length; j += 1) {
-        ctx.lineTo(vertices[j].x, vertices[j].y);
+    bodies.forEach((b, i) => {
+      if (this.avatar.id === b.id) {
+        return;
       }
-
+      const { vertices } = b;
+      ctx.moveTo(vertices[0].x, vertices[0].y);
+      vertices.forEach((v, j) => {
+        ctx.lineTo(v.x, v.y);
+      });
       ctx.lineTo(vertices[0].x, vertices[0].y);
-    }
+    });
 
     ctx.lineWidth = 1;
     ctx.strokeStyle = '#999';
     ctx.stroke();
+
+    // draw avatar
+    if (this.avatar) {
+      ctx.beginPath();
+      const { vertices } = this.avatar;
+      ctx.moveTo(vertices[0].x, vertices[0].y);
+      vertices.forEach((v, j) => {
+        ctx.lineTo(v.x, v.y);
+      });
+      ctx.lineTo(vertices[0].x, vertices[0].y);
+      ctx.fillStyle = '#F00';
+      ctx.fill();
+    }
+
     ctx.restore();
   }
 
-  drawInterpolation(ctx, w, h) {}
-
-  handleMouseClick(e) {
-    let cx = e.clientX - this.width * 0.5;;
-    let cy = e.clientY - this.height * 0.5;
-  }
-
-  handleMouseDown(e) {}
-
-  handleMouseMove(e) {}
-
-  handleMouseUp(e) {}
-
-
-  // draw frame
   drawFrame(ctx, w, h) {
     const unit = this.h * 0.04;
 
@@ -188,9 +177,23 @@ export default class Renderer {
     ctx.font = this.fontSize.toString() + 'rem monospace';
   }
 
-  // animation
   triggerStartAnimation() {
-    this.pianorollGridsAnswer.forEach(p => p.triggerStartAnimation());
+    this.pianorollGrids.forEach(p => p.triggerStartAnimation());
   }
+
+  /* Mouse Handling
+   *   Calculate the position of the mouse:
+   *     let cx = e.clientX - this.width * 0.5;
+   *     let cy = e.clientY - this.height * 0.5;
+   */
+  handleMouseClick(e) {}
+
+  handleMouseDown(e) {}
+
+  handleMouseMove(e) {}
+
+  handleMouseUp(e) {}
+
+
 
 }

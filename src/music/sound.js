@@ -9,8 +9,8 @@ import transitionSound from './effect/transition.wav';
 
 export default class Sound {
   constructor(app) {
-    this.app = app;
     StartAudioContext(Tone.context);
+    this.app = app;
     this.currentIndex = 0;
     this.beat = 0;
     this.matrix = [];
@@ -23,6 +23,25 @@ export default class Sound {
     this.noteOn = -1;
     this.loop = false;
 
+    this.initEffects();
+    this.initTable();
+    this.initSounds();
+  }
+
+  initTable() {
+    this.section = new Array(4).fill(new Array(48).fill(new Array(128).fill(0)));
+  }
+
+  initEffects() {
+    this.effects = [];
+    this.effects[0] = new Tone.Player(beepSound).toMaster();
+    this.effects[1] = new Tone.Player(wrongSound).toMaster();
+    this.effects[2] = new Tone.Player(correctSound).toMaster();
+    this.effects[3] = new Tone.Player(endSound).toMaster();
+    this.effects[4] = new Tone.Player(transitionSound).toMaster();
+  }
+
+  initSounds() {
     this.comp = new Tone.PolySynth(6, Tone.Synth, {
       "oscillator": {
         "partials": [0, 2, 3, 4],
@@ -46,22 +65,38 @@ export default class Sound {
       },
     }).toMaster();
 
-    this.effects = [];
-    this.effects[0] = new Tone.Player(beepSound).toMaster();
-    this.effects[1] = new Tone.Player(wrongSound).toMaster();
-    this.effects[2] = new Tone.Player(correctSound).toMaster();
-    this.effects[3] = new Tone.Player(endSound).toMaster();
-    this.effects[4] = new Tone.Player(transitionSound).toMaster();
-
-    this.initTable();
-
     Transport.bpm.value = 150;
-
     Transport.start();
   }
 
-  initTable() {
-    this.section = new Array(4).fill(new Array(48).fill(new Array(128).fill(0)));
+  stop() {
+
+    this.part.stop();
+    this.synth.releaseAll();
+  }
+
+  start() {
+    this.noteOn = -1;
+    this.stop();
+    this.part.start();
+    this.part.stop('+8m');
+
+    if (this.stopEvent) {
+      this.stopEvent.dispose();
+    }
+    this.stopEvent = new Event(time => {
+      this.app.stop();
+    });
+    this.stopEvent.start('+8m');
+  }
+
+  trigger() {
+    if (this.part.state === 'started') {
+      this.stop();
+      return false;
+    }
+    this.start();
+    return true;
   }
 
   updateMelodies(m) {
@@ -81,7 +116,7 @@ export default class Sound {
     }, notes);
 
     this.part.loop = 1;
-    this.part.loopEnd = '2:0:0';
+    this.part.loopEnd = '8:0:0';
   }
 
   changeMelody(i) {
@@ -101,46 +136,16 @@ export default class Sound {
     }, notes);
 
     this.part.loop = 1;
-    this.part.loopEnd = '2:0:0';
+    this.part.loopEnd = '8:0:0';
   }
 
   changeBpm(b) {
     Transport.bpm.value = b;
   }
 
-  stop() {
-
-    this.part.stop();
-    this.synth.releaseAll();
-  }
-
-  start() {
-    this.noteOn = -1;
-    this.stop();
-    this.part.start();
-    this.part.stop('+2m');
-
-    if (this.stopEvent) {
-      this.stopEvent.dispose();
-    }
-    this.stopEvent = new Event(time => {
-      this.app.stop();
-    });
-    this.stopEvent.start('+2m');
-  }
-
-  trigger() {
-    if (this.part.state === 'started') {
-      this.stop();
-      return false;
-    }
-    this.start();
-    return true;
-  }
-
-  triggerSoundEffect(index = 0) {
-    if (index > -1 && index < this.effects.length) {
-      this.effects[index].start();
+  triggerSoundEffect(i = 0) {
+    if (i > -1 && i < this.effects.length) {
+      this.effects[i].start();
     }
   }
 }

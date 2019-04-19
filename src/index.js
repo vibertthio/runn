@@ -57,6 +57,7 @@ class App extends Component {
 
   addEventListeners() {
     window.addEventListener('keydown', this.handleKeyDown.bind(this), false);
+    window.addEventListener('keyup', this.handleKeyUp.bind(this), false);
     window.addEventListener('resize', this.handleResize.bind(this, false));
     // window.addEventListener('click', this.handleClick.bind(this));
     // window.addEventListener('mousedown', this.handleMouseDown.bind(this));
@@ -66,6 +67,7 @@ class App extends Component {
 
   removeEventListener() {
     window.removeEventListener('keydown', this.handleKeyDown.bind(this));
+    window.removeEventListener('keyup', this.handleKeyUp.bind(this));
     window.removeEventListener('resize', this.handleResize.bind(this, false));
     // window.removeEventListener('click', this.handleClick.bind(this));
     // window.removeEventListener('mousedown', this.handleMouseDown.bind(this));
@@ -82,18 +84,19 @@ class App extends Component {
     const n = this.numInterpolations;
     const rnn = new MusicRNN(modelCheckPoint);
 
-    this.setMelodies(new Array(1).fill(presetMelodies['Twinkle']));
+    // this.setMelodies(new Array(1).fill(presetMelodies['Twinkle']));
 
     rnn.initialize()
       .then(() => {
         console.log('initialized!');
         return rnn.continueSequence(
           presetMelodies['Twinkle'],
-          32,
+          // 32,
+          128,
           1.0)
       })
       .then((i) => {
-        console.log(i);
+        // console.log(i);
         this.setMelodies([i]);
         this.rnn = rnn;
         this.setState({
@@ -106,13 +109,42 @@ class App extends Component {
   setMelodies(ms) {
     this.renderer.updateMelodies(ms);
     this.sound.updateMelodies(ms);
-    this.interpolatedMelodies = ms;
   }
 
   update() {
-    const { progress } = this.sound.part;
-    this.renderer.draw(this.state.screen, progress);
+    if (this.sound.part) {
+      const { progress } = this.sound.part;
+      this.renderer.draw(this.state.screen, progress);
+    }
     requestAnimationFrame(() => { this.update() });
+  }
+
+  triggerSoundEffect() {
+    this.sound.triggerSoundEffect();
+  }
+
+  trigger() {
+    const playing = this.sound.trigger();
+    this.renderer.playing = playing;
+    this.setState({
+      playing,
+    });
+  }
+
+  start() {
+    this.sound.start();
+    this.renderer.playing = true;
+    this.setState({
+      playing: true,
+    });
+  }
+
+  stop() {
+    this.sound.stop();
+    this.renderer.playing = false;
+    this.setState({
+      playing: false,
+    });
   }
 
   handleResize(value, e) {
@@ -150,20 +182,49 @@ class App extends Component {
     }
   }
 
-  handleKeyDown(event) {
-    event.stopPropagation();
+  handleKeyDown(e) {
+    e.stopPropagation();
     const { loadingModel } = this.state;
     if (!loadingModel) {
-      if (event.keyCode === 32) {
+      // console.log(e.keyCode);
+
+      if (e.keyCode === 37) {
+        // left
+        this.renderer.physic.pressLeftKey();
+      } else if (e.keyCode === 39) {
+        // right
+        this.renderer.physic.pressRightKey();
+      } else if (e.keyCode === 38) {
+        // up
+        this.renderer.physic.jump();
+      } else if (e.keyCode === 40) {
+        // down
+      }
+
+      if (e.keyCode === 32) {
         // space
         this.trigger();
       }
-      if (event.keyCode === 65) {
+      if (e.keyCode === 65) {
         // a
       }
-      if (event.keyCode === 82) {
+      if (e.keyCode === 82) {
         // r
       }
+    }
+  }
+
+  handleKeyUp(e) {
+    if (e.keyCode === 37) {
+      // left
+      this.renderer.physic.releaseLeftKey();
+    } else if (e.keyCode === 39) {
+      // right
+      this.renderer.physic.releaseRightKey();
+    } else if (e.keyCode === 38) {
+      // up
+    } else if (e.keyCode === 40) {
+      // down
     }
   }
 
@@ -178,30 +239,6 @@ class App extends Component {
     document.getElementById('menu').style.height = '0%';
     this.setState({
       open: false,
-    });
-  }
-
-  trigger() {
-    const playing = this.sound.trigger();
-    this.renderer.playing = playing;
-    this.setState({
-      playing,
-    });
-  }
-
-  start() {
-    this.sound.start();
-    this.renderer.playing = true;
-    this.setState({
-      playing: true,
-    });
-  }
-
-  stop() {
-    this.sound.stop();
-    this.renderer.playing = false;
-    this.setState({
-      playing: false,
     });
   }
 
@@ -224,10 +261,6 @@ class App extends Component {
   }
 
   onClickTheButton() {}
-
-  triggerSoundEffect() {
-    this.sound.triggerSoundEffect();
-  }
 
   render() {
     const { waitingNext, loadingModel, finishedAnswer, answerCorrect, score, loadingNextInterpolation, history, level } = this.state;
