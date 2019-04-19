@@ -86,6 +86,11 @@ export default class Renderer {
     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     // this.drawPhysic(ctx);
     this.physic.draw(ctx);
+    if (this.physic.checkDeath()) {
+      this.app.fail();
+    } else if (progress > 0.99) {
+      this.app.win();
+    }
 
     const w = Math.max(Math.min(((width - 100) / 1.5), 150), 20);
     const h = w;
@@ -93,8 +98,9 @@ export default class Renderer {
     this.w = w;
     this.setFontSize(ctx, Math.pow(w / 800, 0.3));
 
-    ctx.translate(width * 0.5, height * 0.5);
-    this.pianorollGrids[0].draw(ctx, width, height);
+    // ctx.translate(width * 0.5, height * 0.5);
+    ctx.translate(width * 0.5, height * 0.75);
+    this.pianorollGrids[0].draw(ctx, width, height * 0.25);
 
     ctx.restore();
   }

@@ -70,7 +70,6 @@ export default class Sound {
   }
 
   stop() {
-
     this.part.stop();
     this.synth.releaseAll();
   }
@@ -79,15 +78,15 @@ export default class Sound {
     this.noteOn = -1;
     this.stop();
     this.part.start();
-    this.part.stop('+8m');
 
+    this.part.stop(`+${this.app.nOfBars}m`);
     if (this.stopEvent) {
       this.stopEvent.dispose();
     }
     this.stopEvent = new Event(time => {
       this.app.stop();
     });
-    this.stopEvent.start('+8m');
+    this.stopEvent.start(`+${this.app.nOfBars}m`);
   }
 
   trigger() {
@@ -116,28 +115,28 @@ export default class Sound {
     }, notes);
 
     this.part.loop = 1;
-    this.part.loopEnd = '8:0:0';
+    this.part.loopEnd = `${this.app.nOfBars}:0:0`;
   }
 
-  changeMelody(i) {
-    this.melodiesIndex = i;
-    const notes = this.melodies[this.melodiesIndex].notes.map(note => {
-      const s = note.quantizedStartStep;
-      return {
-        'time': `${Math.floor(s / 16)}:${Math.floor(s / 4) % 4}:${(s % 4)}`,
-        'note': Tone.Frequency(note.pitch, 'midi')
-      };
-    });
-    if (this.part) {
-      this.part.stop();
-    }
-    this.part = new Part((time, value) => {
-      this.synth.triggerAttackRelease(value.note, "8n", time);
-    }, notes);
+  // changeMelody(i) {
+  //   this.melodiesIndex = i;
+  //   const notes = this.melodies[this.melodiesIndex].notes.map(note => {
+  //     const s = note.quantizedStartStep;
+  //     return {
+  //       'time': `${Math.floor(s / 16)}:${Math.floor(s / 4) % 4}:${(s % 4)}`,
+  //       'note': Tone.Frequency(note.pitch, 'midi')
+  //     };
+  //   });
+  //   if (this.part) {
+  //     this.part.stop();
+  //   }
+  //   this.part = new Part((time, value) => {
+  //     this.synth.triggerAttackRelease(value.note, "8n", time);
+  //   }, notes);
 
-    this.part.loop = 1;
-    this.part.loopEnd = '8:0:0';
-  }
+  //   this.part.loop = 1;
+  //   this.part.loopEnd = '8:0:0';
+  // }
 
   changeBpm(b) {
     Transport.bpm.value = b;

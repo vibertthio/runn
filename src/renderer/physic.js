@@ -1,4 +1,5 @@
 import { Engine, World, Bodies, Composite, Body, Events } from 'matter-js';
+import { createPackedMatrixTexture } from '@tensorflow/tfjs-core/dist/kernels/webgl/gpgpu_util';
 
 export default class Physic {
   constructor(renderer) {
@@ -40,7 +41,7 @@ export default class Physic {
 
   updateMatter() {
     const { notes, totalQuantizedSteps } = this.renderer.melodies[0];
-    const unit = this.renderer.width / totalQuantizedSteps;
+    const unit = this.renderer.width * 4 / totalQuantizedSteps;
     World.clear(this.engine.world);
     this.avatar = Bodies.rectangle(400, 100, 20, 20, {
       isStatic: false,
@@ -55,7 +56,7 @@ export default class Physic {
       const { pitch, quantizedStartStep, quantizedEndStep } = note;
       const w = (quantizedEndStep - quantizedStartStep) * unit;
       const h = 10;
-      const y = this.renderer.height - pitch * unit * 0.5;
+      const y = this.renderer.height - pitch * unit * 0.7 - 50;
       const x = quantizedStartStep * unit + w * 0.5;
       // console.log(`${index}: ${x}, ${y}, ${w}, ${h}`);
       objects.push(Bodies.rectangle(x, y, w, h, { isStatic: true }));
@@ -66,11 +67,24 @@ export default class Physic {
   }
 
   draw(ctx) {
+    const p = this.renderer.progress;
+
     Engine.update(this.engine);
     const bodies = Composite.allBodies(this.engine.world);
     this.update();
 
     ctx.save();
+
+    ctx.save();
+    ctx.beginPath()
+    ctx.moveTo(300, this.renderer.height * 0.5 - 100);
+    ctx.lineTo(300, this.renderer.height * 0.5 + 100);
+    ctx.strokeStyle = '#F00';
+    ctx.lineWidth = '5px';
+    ctx.stroke();
+    ctx.restore();
+
+    ctx.translate(300 - p * this.renderer.width * 4, 0);
 
     // draw grounds
     ctx.beginPath();
@@ -106,6 +120,18 @@ export default class Physic {
     ctx.restore();
   }
 
+  checkDeath() {
+    if (this.avatar.position.y > this.renderer.height) {
+      return true;
+    }
+    return false;
+  }
+
+  resetAvatar() {
+    Body.setPosition(this.avatar, { x: 400, y: 100 });
+    Body.setVelocity(this.avatar, { x: 0, y: 0 });
+  }
+
   update() {
     if (this.moving) {
       if (this.movingDir) {
@@ -120,7 +146,7 @@ export default class Physic {
     Body.setAngularVelocity(this.avatar, 0);
   }
 
-  jump(v = -5) {
+  jump(v = -8) {
     const vy = this.avatar.velocity.y;
     if (Math.abs(vy) > 0.01) {
       return;

@@ -38,6 +38,7 @@ class App extends Component {
 
       level: 0,
       score: 0,
+      gameFinished: 0,
       history: Array(questions.length).fill(-1),
     };
 
@@ -45,7 +46,8 @@ class App extends Component {
     this.canvas = [];
     this.melodies = [];
     this.bpms = [];
-    this.questionIndex = 0;
+    this.nOfBars = 32;
+    this.melodyLength = this.nOfBars * 16;
   }
 
   componentDidMount() {
@@ -91,8 +93,7 @@ class App extends Component {
         console.log('initialized!');
         return rnn.continueSequence(
           presetMelodies['Twinkle'],
-          // 32,
-          128,
+          this.melodyLength,
           1.0)
       })
       .then((i) => {
@@ -112,8 +113,12 @@ class App extends Component {
   }
 
   update() {
+    const { gameFinished } = this.state;
     if (this.sound.part) {
-      const { progress } = this.sound.part;
+      let { progress } = this.sound.part;
+      if (gameFinished === 1) {
+        progress = 0.99;
+      }
       this.renderer.draw(this.state.screen, progress);
     }
     requestAnimationFrame(() => { this.update() });
@@ -125,16 +130,27 @@ class App extends Component {
 
   trigger() {
     const playing = this.sound.trigger();
-    this.renderer.playing = playing;
-    this.setState({
-      playing,
-    });
+    // this.renderer.playing = playing;
+    // this.setState({
+    //   playing,
+    // });
+    if (playing) {
+      this.start();
+    } else {
+      this.stop();
+    }
   }
 
   start() {
+    const { gameFinished } = this.state;
+    if (gameFinished === 1) {
+      this.renderer.physic.resetAvatar();
+    }
+
     this.sound.start();
     this.renderer.playing = true;
     this.setState({
+      gameFinished: 0,
       playing: true,
     });
   }
@@ -144,6 +160,22 @@ class App extends Component {
     this.renderer.playing = false;
     this.setState({
       playing: false,
+    });
+  }
+
+  fail() {
+    this.sound.triggerSoundEffect(1);
+    this.stop();
+    this.renderer.physic.resetAvatar();
+    this.setState({
+      gameFinished: -1,
+    });
+  }
+
+  win() {
+    this.sound.triggerSoundEffect(2);
+    this.setState({
+      gameFinished: 1,
     });
   }
 
@@ -207,6 +239,7 @@ class App extends Component {
       }
       if (e.keyCode === 65) {
         // a
+        this.renderer.physic.resetAvatar();
       }
       if (e.keyCode === 82) {
         // r
@@ -390,7 +423,7 @@ class App extends Component {
           </button>
 
           <div className={styles.tips} id="tips">
-            {this.tipsText(level)}
+            {this.tipsText()}
           </div>
           <h1 className={styles.result} id="resultText">{resultText}</h1>
 
@@ -478,12 +511,27 @@ class App extends Component {
     );
   }
 
-  tipsText(level) {
-    return (
-      <div>
-        <p>⚡Click space to run and jump!</p>
-      </div>
-    );
+  tipsText() {
+    const { gameFinished } = this.state;
+    if (gameFinished === 0) {
+      return (
+        <div>
+          <p>⚡Use arrow keys to run and jump!</p>
+        </div>
+      );
+    } else if (gameFinished === 1) {
+      return (
+        <div>
+          <p>🎉 Yeah! You win!</p>
+        </div>
+      );
+    } else if (gameFinished === -1) {
+      return (
+        <div>
+          <p>😢 You lose...</p>
+        </div>
+      );
+    }
   }
 }
 

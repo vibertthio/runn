@@ -79,7 +79,7 @@ export default class PianorollGrid {
 
     const p = this.renderer.progress;
     const { notes, totalQuantizedSteps } = this.renderer.melodies[0];
-    const hStep = 10;
+    const hStep = 2;
     const unit = w / totalQuantizedSteps;
 
     ctx.save();
