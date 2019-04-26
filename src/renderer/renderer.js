@@ -35,7 +35,6 @@ export default class Renderer {
 
   initMatter() {
     this.engine = Engine.create();
-    // Engine.run(this.engine);
   }
 
   updateMatter() {
@@ -84,7 +83,6 @@ export default class Renderer {
     ctx.save();
     ctx.fillStyle = this.backgroundColor;
     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-    // this.drawPhysic(ctx);
     this.physic.draw(ctx);
     if (this.physic.checkDeath()) {
       this.app.fail();
@@ -99,81 +97,8 @@ export default class Renderer {
     this.setFontSize(ctx, Math.pow(w / 800, 0.3));
 
     // ctx.translate(width * 0.5, height * 0.5);
-    ctx.translate(width * 0.5, height * 0.75);
-    this.pianorollGrids[0].draw(ctx, width, height * 0.25);
-
-    ctx.restore();
-  }
-
-  drawPhysic(ctx) {
-    const bodies = Composite.allBodies(this.engine.world);
-
-    ctx.save();
-
-    // draw grounds
-    ctx.beginPath();
-    bodies.forEach((b, i) => {
-      if (this.avatar.id === b.id) {
-        return;
-      }
-      const { vertices } = b;
-      ctx.moveTo(vertices[0].x, vertices[0].y);
-      vertices.forEach((v, j) => {
-        ctx.lineTo(v.x, v.y);
-      });
-      ctx.lineTo(vertices[0].x, vertices[0].y);
-    });
-
-    ctx.lineWidth = 1;
-    ctx.strokeStyle = '#999';
-    ctx.stroke();
-
-    // draw avatar
-    if (this.avatar) {
-      ctx.beginPath();
-      const { vertices } = this.avatar;
-      ctx.moveTo(vertices[0].x, vertices[0].y);
-      vertices.forEach((v, j) => {
-        ctx.lineTo(v.x, v.y);
-      });
-      ctx.lineTo(vertices[0].x, vertices[0].y);
-      ctx.fillStyle = '#F00';
-      ctx.fill();
-    }
-
-    ctx.restore();
-  }
-
-  drawFrame(ctx, w, h) {
-    const unit = this.h * 0.04;
-
-    ctx.save();
-
-    ctx.strokeStyle = '#FFF';
-
-    ctx.beginPath()
-    ctx.moveTo(0.5 * w, 0.5 * h - unit);
-    ctx.lineTo(0.5 * w, 0.5 * h);
-    ctx.lineTo(0.5 * w - unit, 0.5 * h);
-    ctx.stroke();
-
-    ctx.beginPath()
-    ctx.moveTo(-0.5 * w, 0.5 * h - unit);
-    ctx.lineTo(-0.5 * w, 0.5 * h);
-    ctx.lineTo(-0.5 * w + unit, 0.5 * h);
-    ctx.stroke();
-
-    ctx.beginPath()
-    ctx.moveTo(0.5 * w, -0.5 * h + unit);
-    ctx.lineTo(0.5 * w, -0.5 * h);
-    ctx.lineTo(0.5 * w - unit, -0.5 * h);
-    ctx.stroke();
-
-    ctx.beginPath()
-    ctx.moveTo(-0.5 * w, -0.5 * h + unit);
-    ctx.lineTo(-0.5 * w, -0.5 * h);
-    ctx.lineTo(-0.5 * w + unit, -0.5 * h);
-    ctx.stroke();
+    ctx.translate(width * 0.5, height * 0.8);
+    this.pianorollGrids[0].draw(ctx, width * 0.7, height * 0.15);
 
     ctx.restore();
   }

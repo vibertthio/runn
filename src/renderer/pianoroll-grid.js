@@ -86,7 +86,15 @@ export default class PianorollGrid {
     ctx.translate(this.gridXShift, this.gridYShift);
 
     ctx.save();
+    // this.drawFrame(ctx, w, h);
     ctx.translate(-w * 0.5, -h * 0.5);
+
+    //
+    ctx.fillStyle = '#000';
+    ctx.strokeStyle = '#FFF';
+    ctx.fillRect(0, 0, w, h);
+    ctx.strokeRect(0, 0, w, h);
+
     notes.forEach((item, index) => {
       const { pitch, quantizedStartStep, quantizedEndStep } = item;
       const y = h - pitch * unit * 0.5;
@@ -103,8 +111,8 @@ export default class PianorollGrid {
           this.currentNoteYShift = 1;
           this.currentNoteIndex = index;
         }
-        ctx.fillStyle = '#FFF';
-        ctx.fillText(pitch, 5, -8);
+        // ctx.fillStyle = '#FFF';
+        // ctx.fillText(pitch, 5, -8);
         ctx.fillStyle = '#F00';
         ctx.translate(0, this.currentNoteYShift * -2);
       } else {
@@ -145,35 +153,47 @@ export default class PianorollGrid {
 
   drawFrame(ctx, w, h) {
     const ratio = this.dynamic ? 0.08 : 0.06;
-    const unit = this.renderer.h * ratio;
+    const unit = this.renderer.h * 1.0;
     let size = 0.5;
 
     ctx.save();
-
+    ctx.strokeStyle = '#FFF';
     ctx.beginPath()
-    ctx.moveTo(size * w, size * h - unit);
-    ctx.lineTo(size * w, size * h);
-    ctx.lineTo(size * w - unit, size * h);
-    ctx.stroke();
-
-    ctx.beginPath()
-    ctx.moveTo(-size * w, size * h - unit);
-    ctx.lineTo(-size * w, size * h);
-    ctx.lineTo(-size * w + unit, size * h);
-    ctx.stroke();
-
-    ctx.beginPath()
-    ctx.moveTo(size * w, -size * h + unit);
+    ctx.moveTo(size * w, size * h);
     ctx.lineTo(size * w, -size * h);
-    ctx.lineTo(size * w - unit, -size * h);
-    ctx.stroke();
-
-    ctx.beginPath()
-    ctx.moveTo(-size * w, -size * h + unit);
     ctx.lineTo(-size * w, -size * h);
-    ctx.lineTo(-size * w + unit, -size * h);
+    ctx.lineTo(-size * w, size * h);
+    ctx.lineTo(size * w, size * h);
     ctx.stroke();
-
     ctx.restore();
+
+    // ctx.save();
+
+    // ctx.strokeStyle = '#FFF';
+    // ctx.beginPath()
+    // ctx.moveTo(size * w, size * h - unit);
+    // ctx.lineTo(size * w, size * h);
+    // ctx.lineTo(size * w - unit, size * h);
+    // ctx.stroke();
+
+    // ctx.beginPath()
+    // ctx.moveTo(-size * w, size * h - unit);
+    // ctx.lineTo(-size * w, size * h);
+    // ctx.lineTo(-size * w + unit, size * h);
+    // ctx.stroke();
+
+    // ctx.beginPath()
+    // ctx.moveTo(size * w, -size * h + unit);
+    // ctx.lineTo(size * w, -size * h);
+    // ctx.lineTo(size * w - unit, -size * h);
+    // ctx.stroke();
+
+    // ctx.beginPath()
+    // ctx.moveTo(-size * w, -size * h + unit);
+    // ctx.lineTo(-size * w, -size * h);
+    // ctx.lineTo(-size * w + unit, -size * h);
+    // ctx.stroke();
+
+    // ctx.restore();
   }
 }

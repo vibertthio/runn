@@ -21,7 +21,7 @@ export default class Physic {
       for (let i = 0; i < pairs.length; i++) {
         const pair = pairs[i];
         if (pair.bodyA.label === 'avatar' || pair.bodyB.label === 'avatar') {
-          // console.log('avatar collision start');
+          console.log('avatar collision start');
           this.avatarCollisionCount = this.avatarCollisionCount + 1;
         }
       }
@@ -32,25 +32,37 @@ export default class Physic {
       for (let i = 0; i < pairs.length; i++) {
         const pair = pairs[i];
         if (pair.bodyA.label === 'avatar' || pair.bodyB.label === 'avatar') {
-          // console.log('avatar collision end');
+          console.log('avatar collision end');
           this.avatarCollisionCount = this.avatarCollisionCount - 1;
         }
       }
     });
+
+    // Events.on(this.engine, 'beforeUpdate', (e) => {
+    //   const bodies = Composite.allBodies(this.engine.world);
+    //   bodies.forEach((b, i) => {
+    //     if (i % 5 === 0 && b !== this.avatar) {
+    //       const py = b.position.y + this.unit * 0.1 * Math.sin(this.engine.timing.timestamp * 0.002);
+    //       Body.setVelocity(b, { x: 0, y: py - b.position.y });
+    //       Body.setPosition(b, { x: b.position.x, y: py });
+    //     }
+    //   })
+    // });
+
   }
 
   updateMatter() {
     const { notes, totalQuantizedSteps } = this.renderer.melodies[0];
     const unit = this.renderer.width * 4 / totalQuantizedSteps;
     World.clear(this.engine.world);
-    this.avatar = Bodies.rectangle(400, 100, 20, 20, {
+    // this.avatar = Bodies.rectangle(0, 0, unit * 2, unit * 2, {
+    this.avatar = Bodies.rectangle(notes[0].quantizedStartStep * unit, 0, unit * 2, unit * 2, {
       isStatic: false,
       friction: 0.001,
-      // frictionAir: 0.1,
       label: 'avatar',
     });
-    // this.avatar.friction = 0.001;
     const objects = [];
+    const positions = [];
 
     notes.forEach((note, index) => {
       const { pitch, quantizedStartStep, quantizedEndStep } = note;
@@ -60,10 +72,13 @@ export default class Physic {
       const x = quantizedStartStep * unit + w * 0.5;
       // console.log(`${index}: ${x}, ${y}, ${w}, ${h}`);
       objects.push(Bodies.rectangle(x, y, w, h, { isStatic: true }));
+      positions.push({ x, y });
     });
 
     objects.push(this.avatar);
     World.add(this.engine.world, objects);
+    this.boxPositions = positions;
+    this.unit = unit;
   }
 
   draw(ctx) {
@@ -77,8 +92,8 @@ export default class Physic {
 
     ctx.save();
     ctx.beginPath()
-    ctx.moveTo(300, this.renderer.height * 0.5 - 100);
-    ctx.lineTo(300, this.renderer.height * 0.5 + 100);
+    ctx.moveTo(300, 0);
+    ctx.lineTo(300, this.renderer.height);
     ctx.strokeStyle = '#F00';
     ctx.lineWidth = '5px';
     ctx.stroke();
@@ -128,7 +143,10 @@ export default class Physic {
   }
 
   resetAvatar() {
-    Body.setPosition(this.avatar, { x: 400, y: 100 });
+    const { notes, totalQuantizedSteps } = this.renderer.melodies[0];
+    const unit = this.renderer.width * 4 / totalQuantizedSteps;
+
+    Body.setPosition(this.avatar, { x: notes[0].quantizedStartStep * unit, y: 100 });
     Body.setVelocity(this.avatar, { x: 0, y: 0 });
   }
 
@@ -149,7 +167,7 @@ export default class Physic {
   jump(v = -8) {
     const vy = this.avatar.velocity.y;
     if (Math.abs(vy) > 0.01) {
-      return;
+      // return;
     }
     if (this.avatarCollisionActive === 0) {
       return;
