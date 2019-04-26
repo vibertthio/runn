@@ -336,8 +336,8 @@ class App extends Component {
             </h2>
             <div className="device-supported">
               <p className={styles.description}>
-                A game based on a musical machine learning algorithm which can interpolate different melodies. <br/>
-                The player has to listen to the music to find out the right order, or "sort" the song.
+                A game based on a musical machine learning algorithm which can generate melodies. <br/>
+                The player has to finish the side-scrolling game to listen to the full song.
               </p>
 
               <button
