@@ -167,7 +167,7 @@ export default class Physic {
   jump(v = -8) {
     const vy = this.avatar.velocity.y;
     if (Math.abs(vy) > 0.01) {
-      // return;
+      return;
     }
     if (this.avatarCollisionActive === 0) {
       return;
