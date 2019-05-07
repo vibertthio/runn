@@ -1,8 +1,6 @@
 import React, { Component } from 'react';
 import { render } from 'react-dom';
-import { MusicRNN } from '@magenta/music';
-import uuidv4 from 'uuid/v4';
-
+import { MusicRNN, MusicVAE } from '@magenta/music';
 
 import styles from './index.module.scss';
 import sig from './assets/sig.png';
@@ -10,7 +8,8 @@ import info from './assets/info.png';
 import Sound from './music/sound';
 import Renderer from './renderer/renderer';
 import { presetMelodies } from './music/clips';
-import { questions, getQuestions, checkEnd } from './utils/questions';
+import { questions, checkEnd } from './utils/questions';
+
 
 class App extends Component {
   constructor(props) {
@@ -46,12 +45,13 @@ class App extends Component {
     this.canvas = [];
     this.melodies = [];
     this.bpms = [];
-    this.nOfBars = 32;
+    this.nOfBars = 12;
     this.melodyLength = this.nOfBars * 16;
   }
 
   componentDidMount() {
     this.renderer = new Renderer(this, this.canvas);
+    this.initVAE();
     this.initRNN();
     this.addEventListeners();
     requestAnimationFrame(() => { this.update() });
@@ -83,28 +83,31 @@ class App extends Component {
 
   initRNN() {
     const modelCheckPoint = './checkpoints/basic_rnn';
-    const n = this.numInterpolations;
-    const rnn = new MusicRNN(modelCheckPoint);
+    const model = new MusicRNN(modelCheckPoint);
 
-    // this.setMelodies(new Array(1).fill(presetMelodies['Twinkle']));
-
-    rnn.initialize()
+    model.initialize()
       .then(() => {
         console.log('initialized!');
-        return rnn.continueSequence(
+        return model.continueSequence(
           presetMelodies['Twinkle'],
           this.melodyLength,
           1.0)
       })
       .then((i) => {
-        // console.log(i);
         this.setMelodies([i]);
-        this.rnn = rnn;
+        this.model = model;
         this.setState({
           loadingModel: false,
         });
         this.sound.triggerSoundEffect(2);
       });
+  }
+
+  async initVAE() {
+    const modelCheckPoint = './checkpoints/hierdec-mel_16bar';
+    const model = new MusicVAE(modelCheckPoint);
+    const result = await model.sample(1);
+    console.log(result);
   }
 
   setMelodies(ms) {
@@ -293,21 +296,19 @@ class App extends Component {
     }, 500);
   }
 
-  onClickTheButton() {}
+  onClickTheButton() {
+    this.start();
+  }
 
   render() {
-    const { waitingNext, loadingModel, finishedAnswer, answerCorrect, score, loadingNextInterpolation, history, level } = this.state;
+    const { waitingNext, loadingModel, finishedAnswer, answerCorrect, score, loadingNextInterpolation, history, level, gameFinished, playing } = this.state;
     const loadingText = loadingModel ? 'loading...' : 'play';
-    let buttonText = finishedAnswer ? 'send' : 'sorting...';
+    let buttonText = 'start';
 
-    if (loadingNextInterpolation) {
-      buttonText = 'loading ...';
-    } else if (waitingNext) {
-      if (!checkEnd(level)) {
-        buttonText = 'next';
-      } else {
-        buttonText = 'end';
-      }
+    if (gameFinished === 1) {
+      buttonText = 'next';
+    } else if (gameFinished === -1) {
+      buttonText = 'retry';
     }
 
 
@@ -437,48 +438,19 @@ class App extends Component {
           />
         </div>
 
-        {/* <div className={styles.control}>
-
-          <div className={styles.slider}>
-            <button
-              className={styles.sendButton}
-              onClick={() => this.onClickTheButton()}
-              onKeyDown={e => e.preventDefault()}
-            >
-              {buttonText}
-            </button>
-          </div>
-
-          <div className={styles.score}>
-            {history.map((value, i) => {
-              if (value === 1) {
-                return (
-                  <div key={uuidv4()} className={styles.item}>
-                    <div className={styles.wrong} />
-                  </div>
-                );
-              } else if (value === 2) {
-                return (
-                  <div key={uuidv4()} className={styles.item}>
-                    <div className={styles.correct} />
-                  </div>
-                );
-              } else if (i === level) {
-                return (
-                  <div key={uuidv4()} className={styles.item}>
-                    <div className={styles.current} />
-                  </div>
-                );
-              } else if (value === -1) {
-                return (
-                  <div key={uuidv4()} className={styles.item}>
-                    <div className={styles.unfinished} />
-                  </div>
-                );
-              }
-            })}
-          </div>
-        </div> */}
+        {!playing ?
+          (<div className={styles.control}>
+            <div className={styles.slider}>
+              <button
+                className={styles.sendButton}
+                onClick={() => this.onClickTheButton()}
+                onKeyDown={e => e.preventDefault()}
+              >
+                {buttonText}
+              </button>
+            </div>
+          </div>) : ''
+        }
 
         <div id="menu" className={styles.overlay}>
           <button className={styles.overlayBtn} onClick={() => this.handleClickMenu()} />

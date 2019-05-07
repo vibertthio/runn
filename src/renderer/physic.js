@@ -11,6 +11,7 @@ export default class Physic {
     this.movingDir = true;
     this.holdingRightKey = false;
     this.holdingLeftKey = false;
+    this.displayWidthRatio = 2;
 
     this.initCollisionEvents();
   }
@@ -53,10 +54,12 @@ export default class Physic {
 
   updateMatter() {
     const { notes, totalQuantizedSteps } = this.renderer.melodies[0];
-    const unit = this.renderer.width * 4 / totalQuantizedSteps;
+    const unit = this.renderer.width * this.displayWidthRatio / totalQuantizedSteps;
+    const hUnit = this.renderer.height / 128;
+    const avatarSize = this.renderer.width / 64;
     World.clear(this.engine.world);
     // this.avatar = Bodies.rectangle(0, 0, unit * 2, unit * 2, {
-    this.avatar = Bodies.rectangle(notes[0].quantizedStartStep * unit, 0, unit * 2, unit * 2, {
+    this.avatar = Bodies.rectangle(notes[0].quantizedStartStep * unit, 0, avatarSize, avatarSize, {
       isStatic: false,
       friction: 0.001,
       label: 'avatar',
@@ -68,7 +71,7 @@ export default class Physic {
       const { pitch, quantizedStartStep, quantizedEndStep } = note;
       const w = (quantizedEndStep - quantizedStartStep) * unit;
       const h = 10;
-      const y = this.renderer.height - pitch * unit * 0.7 - 50;
+      const y = this.renderer.height - pitch * hUnit - 50;
       const x = quantizedStartStep * unit + w * 0.5;
       // console.log(`${index}: ${x}, ${y}, ${w}, ${h}`);
       objects.push(Bodies.rectangle(x, y, w, h, { isStatic: true }));
@@ -99,7 +102,9 @@ export default class Physic {
     ctx.stroke();
     ctx.restore();
 
-    ctx.translate(300 - p * this.renderer.width * 4, 0);
+    const xStart = p * this.renderer.width * this.displayWidthRatio - 300;
+    const xEnd = xStart + this.renderer.width;
+    ctx.translate(300 - p * this.renderer.width * this.displayWidthRatio, 0);
 
     // draw grounds
     ctx.beginPath();
@@ -107,12 +112,20 @@ export default class Physic {
       if (this.avatar.id === b.id) {
         return;
       }
+
       const { vertices } = b;
-      ctx.moveTo(vertices[0].x, vertices[0].y);
-      vertices.forEach((v, j) => {
-        ctx.lineTo(v.x, v.y);
-      });
-      ctx.lineTo(vertices[0].x, vertices[0].y);
+
+      // only draw the blocks in the sight
+      if ((vertices[0].x > xStart
+        && vertices[0].x < xEnd)
+        || (vertices[2].x < xStart
+        && vertices[2].x < xEnd)) {
+        ctx.moveTo(vertices[0].x, vertices[0].y);
+        vertices.forEach((v, j) => {
+          ctx.lineTo(v.x, v.y);
+        });
+        ctx.lineTo(vertices[0].x, vertices[0].y);
+      }
     });
 
     ctx.lineWidth = 1;

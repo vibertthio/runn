@@ -152,62 +152,9 @@ $range-label-width: 60px !default;
   display: block;
 
   width: 100%;
-  bottom: 4rem;
+  // bottom: 4rem;
+  top: 45%;
   text-align: center;
-  
-  .score {
-    font-family: $font-default;
-    font-size: 1.2rem;
-    margin: 10px auto;
-    color: white;
-
-    width: 11rem;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-evenly;
-
-    .item {
-      align-items: center;
-      width: 0.6rem;
-      height: 0.6rem;
-
-      .breathing {
-        animation-name: breath;
-        animation-duration: 2s;
-        animation-iteration-count: infinite;
-  
-        @keyframes breath {
-          0%   { width: 0.4rem; height: 0.4rem; }
-          50%  { width: 0.6rem; height: 0.6rem; }
-          100% { width: 0.4rem; height: 0.4rem; }
-        }
-      }
-      .circle {
-        width: 0.5rem;
-        height: 0.5rem;
-        border-radius: 50%;      
-        border: 1.5px solid $link-color;
-      }
-      .current {
-        @extend .dimming;
-        @extend .circle;
-      }
-      .unfinished {
-        @extend .circle;
-      }
-      .correct {
-        @extend .circle;
-        border: 1.5px solid $link-color;
-        background-color: $link-color;
-      }
-      .wrong {
-        @extend .circle;
-        border: 1.5px solid #c0392b;
-        background-color: #c0392b;
-      }
-    }
-  }
-
 
   .slider {
     // display: block;
@@ -228,61 +175,27 @@ $range-label-width: 60px !default;
       width: 205px;
       height: 50px;
       border: 0;
-      // border: 2px solid $link-color;
-      border-bottom: 2px solid $link-color;
-      border-top: 2px solid $link-color;
-      background-color: transparent;
+      border-radius: 1rem;
+      border: 2px solid $link-color;
+      // border-bottom: 2px solid $link-color;
+      // border-top: 2px solid $link-color;
+      background-color: #000;
       // text-transform: uppercase;
       // color: $link-color;
       color: white;
       text-align: center;
       // transition: background-color 300ms ease-in-out;
       font-family: $font-default;
-    }
-    .sendButton:hover {
-      color: white;
-      background-color: $link-color;
-      -webkit-user-select: none;  /* Chrome all / Safari all */
-      -moz-user-select: none;     /* Firefox all */
-      -ms-user-select: none;
-    }
-    .sendButton:focus {
-      outline: none;
-    }
-    
-    // button {
-    //   background: none;
-    //   color: inherit;
-    //   border: none;
-    //   padding: 0;
-    //   font: inherit;
-    //   cursor: pointer;
-    //   outline: inherit;
-    // }
 
-    input[type='range'] {
-      -webkit-appearance: none;
-      width: 7rem;
-      height: $range-track-height;
-      border-radius: 5px;
-      outline: none;
-
-      display: inline;
-      margin: auto 0.5rem;
-
-      // Range Handle
-      &::-webkit-slider-thumb {
-        appearance: none;
-        width: $range-handle-size;
-        height: $range-handle-size;
-        border-radius: 40%;
-        background: $range-handle-color;
-        cursor: pointer;
-        transition: background .05s ease-in-out;
-
-        &:hover {
-          background: $range-handle-color-hover;
-        }
+      &:hover {
+        color: white;
+        background-color: $link-color;
+        -webkit-user-select: none;  /* Chrome all / Safari all */
+        -moz-user-select: none;     /* Firefox all */
+        -ms-user-select: none;
+      }
+      &:focus {
+        outline: none;
       }
     }
   }

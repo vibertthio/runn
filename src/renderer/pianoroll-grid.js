@@ -80,7 +80,8 @@ export default class PianorollGrid {
     const p = this.renderer.progress;
     const { notes, totalQuantizedSteps } = this.renderer.melodies[0];
     const hStep = 2;
-    const unit = w / totalQuantizedSteps;
+    const wUnit = w / totalQuantizedSteps;
+    const hUnit = h / 64;
 
     ctx.save();
     ctx.translate(this.gridXShift, this.gridYShift);
@@ -97,11 +98,11 @@ export default class PianorollGrid {
 
     notes.forEach((item, index) => {
       const { pitch, quantizedStartStep, quantizedEndStep } = item;
-      const y = h - pitch * unit * 0.5;
-      const wStepDisplay = unit * (1 - this.newSectionYShift);
+      const y = h - pitch * hUnit * 0.5;
+      const wStepDisplay = wUnit * (1 - this.newSectionYShift);
       ctx.save();
       ctx.strokeStyle = 'none';
-      ctx.translate(quantizedStartStep * unit, y);
+      ctx.translate(quantizedStartStep * wUnit, y);
 
       if ((p * totalQuantizedSteps) >= quantizedStartStep
         && (p * totalQuantizedSteps) <= quantizedEndStep
@@ -125,12 +126,26 @@ export default class PianorollGrid {
 
     // progress
     if (this.isPlaying()) {
-      ctx.translate(w  * p, 0);
+      ctx.save();
+      ctx.translate(w * p, 0);
       ctx.strokeStyle = '#F00';
       ctx.beginPath();
       ctx.moveTo(0, 0);
       ctx.lineTo(0, h);
       ctx.stroke();
+      ctx.restore();
+    }
+
+    // bars
+    for (let i = 1; i < 4; i += 1) {
+      ctx.save();
+      ctx.translate(w * i * 0.25, 0);
+      ctx.strokeStyle = '#555';
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(0, h);
+      ctx.stroke();
+      ctx.restore();
     }
 
     ctx.restore();

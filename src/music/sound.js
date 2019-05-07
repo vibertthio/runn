@@ -118,26 +118,6 @@ export default class Sound {
     this.part.loopEnd = `${this.app.nOfBars}:0:0`;
   }
 
-  // changeMelody(i) {
-  //   this.melodiesIndex = i;
-  //   const notes = this.melodies[this.melodiesIndex].notes.map(note => {
-  //     const s = note.quantizedStartStep;
-  //     return {
-  //       'time': `${Math.floor(s / 16)}:${Math.floor(s / 4) % 4}:${(s % 4)}`,
-  //       'note': Tone.Frequency(note.pitch, 'midi')
-  //     };
-  //   });
-  //   if (this.part) {
-  //     this.part.stop();
-  //   }
-  //   this.part = new Part((time, value) => {
-  //     this.synth.triggerAttackRelease(value.note, "8n", time);
-  //   }, notes);
-
-  //   this.part.loop = 1;
-  //   this.part.loopEnd = '8:0:0';
-  // }
-
   changeBpm(b) {
     Transport.bpm.value = b;
   }
