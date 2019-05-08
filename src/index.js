@@ -8,7 +8,8 @@ import info from './assets/info.png';
 import Sound from './music/sound';
 import Renderer from './renderer/renderer';
 import { presetMelodies } from './utils/clips';
-import { questions, chordProgressions } from './utils/questions';
+import { questions, chordProgressions, checkEnd } from './utils/questions';
+import palette from './palette';
 
 const GAME = {
   WAITING: 0,
@@ -116,7 +117,7 @@ class App extends Component {
         this.setState({
           loadingModel: false,
         });
-        this.sound.triggerSoundEffect(2);
+        this.sound.triggerSoundEffect(4);
       });
   }
 
@@ -140,7 +141,7 @@ class App extends Component {
         this.setState({
           loadingModel: false,
         });
-        this.sound.triggerSoundEffect(2);
+        this.sound.triggerSoundEffect(4);
       });
   }
 
@@ -161,9 +162,6 @@ class App extends Component {
     requestAnimationFrame(() => { this.update() });
   }
 
-  triggerSoundEffect() {
-    this.sound.triggerSoundEffect();
-  }
 
   start() {
     const { gameFinished } = this.state;
@@ -186,6 +184,7 @@ class App extends Component {
   }
 
   fail() {
+    console.log('app: fail');
     this.sound.triggerSoundEffect(1);
     this.sound.stop();
     this.renderer.physic.resetAvatar();
@@ -196,6 +195,7 @@ class App extends Component {
   }
 
   win() {
+    console.log('app: win');
     this.sound.triggerSoundEffect(2);
     this.setState({
       playing: false,
@@ -239,9 +239,8 @@ class App extends Component {
   }
 
   handleKeyDown(e) {
-    e.stopPropagation();
-    const { loadingModel } = this.state;
-    if (!loadingModel) {
+    const { playing, loadingModel, chord } = this.state;
+    if (!loadingModel && playing) {
       // console.log(e.keyCode);
 
       if (e.keyCode === 37) {
@@ -257,20 +256,22 @@ class App extends Component {
         // down
       }
 
-      if (e.keyCode === 65) {
-        // a
-        this.renderer.physic.avatarChord.pressLeftKey();
-      }
-      if (e.keyCode === 68) {
-        // d
-        this.renderer.physic.avatarChord.pressRightKey();
-      }
-      if (e.keyCode === 87) {
-        // w
-        this.renderer.physic.avatarChord.jump();
-      }
-      if (e.keyCode === 83) {
-        // s
+      if (chord) {
+        if (e.keyCode === 65) {
+          // a
+          this.renderer.physic.avatarChord.pressLeftKey();
+        }
+        if (e.keyCode === 68) {
+          // d
+          this.renderer.physic.avatarChord.pressRightKey();
+        }
+        if (e.keyCode === 87) {
+          // w
+          this.renderer.physic.avatarChord.jump();
+        }
+        if (e.keyCode === 83) {
+          // s
+        }
       }
 
       if (e.keyCode === 32) {
@@ -285,28 +286,34 @@ class App extends Component {
   }
 
   handleKeyUp(e) {
-    if (e.keyCode === 37) {
-      // left
-      this.renderer.physic.avatar.releaseLeftKey();
-    } else if (e.keyCode === 39) {
-      // right
-      this.renderer.physic.avatar.releaseRightKey();
-    } else if (e.keyCode === 38) {
-      // up
-    } else if (e.keyCode === 40) {
-      // down
-    }
+    const { playing, loadingModel, chord } = this.state;
 
-    if (e.keyCode === 65) {
-      // a
-      this.renderer.physic.avatarChord.releaseLeftKey();
-    }
-    if (e.keyCode === 68) {
-      // d
-      this.renderer.physic.avatarChord.releaseRightKey();
-    }
-    if (e.keyCode === 87) {
-      // w
+    if (!loadingModel) {
+      if (e.keyCode === 37) {
+        // left
+        this.renderer.physic.avatar.releaseLeftKey();
+      } else if (e.keyCode === 39) {
+        // right
+        this.renderer.physic.avatar.releaseRightKey();
+      } else if (e.keyCode === 38) {
+        // up
+      } else if (e.keyCode === 40) {
+        // down
+      }
+
+      if (chord) {
+        if (e.keyCode === 65) {
+          // a
+          this.renderer.physic.avatarChord.releaseLeftKey();
+        }
+        if (e.keyCode === 68) {
+          // d
+          this.renderer.physic.avatarChord.releaseRightKey();
+        }
+        if (e.keyCode === 87) {
+          // w
+        }
+      }
     }
   }
 
@@ -329,6 +336,9 @@ class App extends Component {
 
     this.sound.triggerSoundEffect(4);
 
+    if (restart) {
+      this.loadNewLevel(0);
+    }
     const id = restart ? 'splash-score' : 'splash';
     const splash = document.getElementById(id);
     splash.style.opacity = 0.0;
@@ -354,7 +364,16 @@ class App extends Component {
     } else if (gameFinished === GAME.LOSE) {
       this.start();
     } else if (gameFinished === GAME.WIN) {
-      this.loadNewLevel(level + 1);
+      if (checkEnd(level)) {
+        const splash = document.getElementById('splash-score');
+        splash.style.display = 'block';
+        splash.style.opacity = 1.0;
+        this.setState({
+          restart: true,
+        });
+      } else {
+        this.loadNewLevel(level + 1);
+      }
     }
 
     this.setState({
@@ -366,13 +385,16 @@ class App extends Component {
     const { loadingModel, level, gameFinished, playing } = this.state;
     const loadingText = loadingModel ? 'loading...' : 'play';
 
-    let buttonText = 'start';
+    let buttonText = 'Start';
     if (loadingModel) {
-      buttonText = 'loading';
+      buttonText = 'Loading';
     } else if (gameFinished === GAME.WIN) {
-      buttonText = 'next';
+      buttonText = 'Next';
+      if (checkEnd(level)) {
+        buttonText = 'End';
+      }
     } else if (gameFinished === GAME.LOSE) {
-      buttonText = 'retry';
+      buttonText = 'Start Over';
     }
 
     const resultText = 'you bro';
@@ -428,9 +450,9 @@ class App extends Component {
         </section>
         <section className={styles.splash} id="splash-score" style={{display: "none"}}>
           <div className={styles.wrapper}>
-            <h2><font color="#f39c12">{finalText}</font></h2>
-            <h3>Score</h3>
-            <h1>{scoreText}</h1>
+            <h2>{finalText}</h2>
+            <p id="remind">Challenge your friend with this game.
+              <br/> Also, try another awesome game <a className={styles.about} target="_blank" href="https://vibertthio.com/sornting">Sornting</a>.<br/></p>
             <div className="device-supported">
 
               <button
@@ -442,8 +464,6 @@ class App extends Component {
               </button>
 
               <p className={styles.builtWith}>
-                Challenge your friend with this game.
-                <br />
                 Built with tone.js + musicvae.js.
                 <br />
                 Learn more about <a className={styles.about} target="_blank" href="https://github.com/vibertthio/sornting">how it works.</a>

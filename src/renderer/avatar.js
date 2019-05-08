@@ -1,4 +1,6 @@
 import { Body } from 'matter-js';
+import palette from '../palette';
+
 
 export default class Avatar {
   constructor(id, body, renderer) {
@@ -22,9 +24,9 @@ export default class Avatar {
     });
     ctx.lineTo(vertices[0].x, vertices[0].y);
     if (this.id === 0) {
-      ctx.fillStyle = '#F00';
+      ctx.fillStyle = palette[4];
     } else if (this.id === 1) {
-      ctx.fillStyle = '#0F0';
+      ctx.fillStyle = palette[5];
     }
     ctx.fill();
   }

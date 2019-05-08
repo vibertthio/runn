@@ -1,6 +1,7 @@
 import { Engine, World, Bodies, Composite} from 'matter-js';
 import PianorollGrid from './pianoroll-grid';
 import Physic from './physic';
+import palette from '../palette';
 
 export default class Renderer {
 
@@ -24,12 +25,7 @@ export default class Renderer {
   }
 
   initColor() {
-    // this.backgroundColor = 'rgba(37, 38, 35, 1.0)';
-    this.backgroundColor = 'rgba(15, 15, 15, 1.0)';
-    this.noteOnColor = 'rgba(255, 255, 255, 1.0)';
-    this.mouseOnColor = 'rgba(150, 150, 150, 1.0)';
-    this.noteOnCurrentColor = 'rgba(255, 100, 100, 1.0)';
-    this.boxColor = 'rgba(200, 200, 200, 1.0)';
+    this.backgroundColor = palette[0];
   }
 
   initMatter() {
@@ -65,9 +61,7 @@ export default class Renderer {
     ctx.fillStyle = this.backgroundColor;
     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     this.physic.draw(ctx);
-    if (this.physic.checkDeath()) {
-      this.app.fail();
-    }
+
 
     const w = Math.max(Math.min(((width - 100) / 1.5), 150), 20);
     const h = w;

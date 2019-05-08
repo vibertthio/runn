@@ -1,4 +1,5 @@
 import * as Note from "tonal-note"
+import palette from '../palette';
 
 export default class PianorollGrid {
 
@@ -93,7 +94,7 @@ export default class PianorollGrid {
     ctx.save();
     ctx.translate(-w * 0.5, -h * 0.5);
     ctx.fillStyle = '#000';
-    ctx.strokeStyle = '#FFF';
+    ctx.strokeStyle = palette[3];
     ctx.fillRect(0, 0, w, h);
     ctx.strokeRect(0, 0, w, h);
 
@@ -114,10 +115,10 @@ export default class PianorollGrid {
           this.currentNoteYShift = 1;
           this.currentNoteIndex = index;
         }
-        ctx.fillStyle = '#F00';
+        ctx.fillStyle = palette[1];
         ctx.translate(0, this.currentNoteYShift * -2);
       } else {
-        ctx.fillStyle = this.noteOnColor;
+        ctx.fillStyle = palette[3];
       }
 
       ctx.fillRect(0, 0, wStepDisplay * (quantizedEndStep - quantizedStartStep - 0.2), hStep);
@@ -145,7 +146,7 @@ export default class PianorollGrid {
             this.currentNoteYShift = 1;
             this.currentNoteIndex = index;
           }
-          ctx.fillStyle = '#F00';
+          ctx.fillStyle = palette[1];
           ctx.translate(0, this.currentNoteYShift * -2);
         } else {
           ctx.fillStyle = this.noteOnColor;
@@ -160,7 +161,7 @@ export default class PianorollGrid {
     if (this.isPlaying()) {
       ctx.save();
       ctx.translate(w * p, 0);
-      ctx.strokeStyle = '#F00';
+      ctx.strokeStyle = palette[1];
       ctx.beginPath();
       ctx.moveTo(0, 0);
       ctx.lineTo(0, h);
@@ -172,7 +173,7 @@ export default class PianorollGrid {
     for (let i = 1; i < 4; i += 1) {
       ctx.save();
       ctx.translate(w * i * 0.25, 0);
-      ctx.strokeStyle = '#333';
+      ctx.strokeStyle = palette[2];
       ctx.beginPath();
       ctx.moveTo(0, 0);
       ctx.lineTo(0, h);

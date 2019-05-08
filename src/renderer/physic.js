@@ -1,5 +1,6 @@
 import { Engine, World, Bodies, Composite, Body, Events } from 'matter-js';
 import * as Note from "tonal-note";
+import palette from '../palette';
 
 import Avatar from './avatar';
 
@@ -21,6 +22,7 @@ export default class Physic {
     this.holdingRightKey = false;
     this.holdingLeftKey = false;
     this.displayWidthRatio = 2;
+    this.progress = 0;
 
     this.initCollisionEvents();
   }
@@ -64,6 +66,7 @@ export default class Physic {
   updateMatter() {
     const { notes, totalQuantizedSteps } = this.renderer.melodies[0];
     const { chord, chordProgression } = this.renderer;
+    this.displayWidthRatio = totalQuantizedSteps / 128;
     const unit = this.renderer.width * this.displayWidthRatio / totalQuantizedSteps;
     const hUnit = this.renderer.height / 128;
     const avatarSize = this.renderer.width / 64;
@@ -89,13 +92,19 @@ export default class Physic {
       const h = 10;
       const y = this.renderer.height - pitch * hUnit - 50;
       const x = quantizedStartStep * unit + w * 0.5;
-      // console.log(`${index}: ${x}, ${y}, ${w}, ${h}`);
-      objects.push(Bodies.rectangle(x, y, w, h, {
+      const isLast = (index === notes.length - 1);
+      const label = isLast ? 'last' : 'regular';
+      const newBlock = Bodies.rectangle(x, y, w, h, {
         isStatic: true,
+        label,
         collisionFilter: {
           category: categories[1],
         },
-      }));
+      });
+      if (isLast) {
+        this.lastBlock = newBlock;
+      }
+      objects.push(newBlock);
       positions.push({ x, y });
     });
 
@@ -133,12 +142,14 @@ export default class Physic {
 
 
     World.add(this.engine.world, objects);
+    this.resetAvatar();
     this.boxPositions = positions;
     this.unit = unit;
+    this.progress = 0;
   }
 
   draw(ctx) {
-    const p = this.renderer.progress;
+    this.progress = Math.max(this.renderer.progress, this.progress);
     const { chord } = this.renderer;
 
     Engine.update(this.engine);
@@ -158,14 +169,16 @@ export default class Physic {
     ctx.beginPath()
     ctx.moveTo(300, 0);
     ctx.lineTo(300, this.renderer.height);
-    ctx.strokeStyle = '#F00';
+    ctx.strokeStyle = palette[1];
     ctx.lineWidth = '5px';
     ctx.stroke();
     ctx.restore();
 
-    const xStart = p * this.renderer.width * this.displayWidthRatio - 300;
+    const xStart = this.progress * this.renderer.width * this.displayWidthRatio - 300;
     const xEnd = xStart + this.renderer.width;
-    ctx.translate(300 - p * this.renderer.width * this.displayWidthRatio, 0);
+    this.xStart = xStart;
+    this.xEnd = xEnd;
+    ctx.translate(-xStart, 0);
 
     // draw grounds
     ctx.beginPath();
@@ -180,7 +193,7 @@ export default class Physic {
       // only draw the blocks in the sight
       if ((vertices[0].x > xStart
         && vertices[0].x < xEnd)
-        || (vertices[2].x < xStart
+        || (vertices[2].x > xStart
         && vertices[2].x < xEnd)) {
         ctx.moveTo(vertices[0].x, vertices[0].y);
         vertices.forEach((v, j) => {
@@ -194,6 +207,8 @@ export default class Physic {
     ctx.strokeStyle = '#999';
     ctx.stroke();
 
+    this.drawLastBlock(ctx);
+
     if (this.avatar) {
       this.avatar.draw(ctx);
     }
@@ -203,17 +218,55 @@ export default class Physic {
     }
 
     ctx.restore();
+
+    if (this.checkDeath()) {
+      this.renderer.app.fail();
+    }
+  }
+
+  drawLastBlock(ctx) {
+    ctx.save();
+    ctx.beginPath();
+
+    const { vertices } = this.lastBlock;
+
+    // only draw the blocks in the sight
+    if ((vertices[0].x > this.xStart
+      && vertices[0].x < this.xEnd)
+      || (vertices[2].x > this.xStart
+        && vertices[2].x < this.xEnd)) {
+      ctx.moveTo(vertices[0].x, vertices[0].y);
+      vertices.forEach((v, j) => {
+        ctx.lineTo(v.x, v.y);
+      });
+      ctx.lineTo(vertices[0].x, vertices[0].y);
+    }
+
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = palette[1];
+    ctx.stroke();
+
+    ctx.restore()
   }
 
   checkDeath() {
     const { chord } = this.renderer;
     if (this.avatar.body.position.y > this.renderer.height) {
       return true;
-    } else if (chord) {
+    }
+    if (this.avatar.body.position.x < this.xStart) {
+      return true;
+    }
+
+    if (chord) {
       if (this.avatarChord.body.position.y > this.renderer.height) {
         return true;
       }
+      if (this.avatarChord.body.position.x < this.xStart) {
+        return true;
+      }
     }
+
     return false;
   }
 
@@ -222,11 +275,11 @@ export default class Physic {
     const { chord } = this.renderer;
     const unit = this.renderer.width * 4 / totalQuantizedSteps;
 
-    Body.setPosition(this.avatar.body, { x: (notes[0].quantizedStartStep + 1) * unit, y: 100 });
+    Body.setPosition(this.avatar.body, { x: (notes[0].quantizedStartStep + 1) * unit, y: this.renderer.height * 0.3 });
     Body.setVelocity(this.avatar.body, { x: 0, y: 0 });
 
     if (chord) {
-      Body.setPosition(this.avatarChord.body, { x: (notes[0].quantizedStartStep + 2) * unit, y: 100 });
+      Body.setPosition(this.avatarChord.body, { x: (notes[0].quantizedStartStep + 2) * unit, y: this.renderer.height * 0.5 });
       Body.setVelocity(this.avatarChord.body, { x: 0, y: 0 });
     }
   }

@@ -22,7 +22,6 @@ export default class Sound {
     this.section = [];
     this.barIndex = 0;
     this.sectionIndex = 0;
-    this.noteOn = -1;
     this.loop = false;
 
     this.initEffects();
@@ -115,23 +114,36 @@ export default class Sound {
   }
 
   stop() {
-    this.part.stop();
+    console.log('sound: stop');
+    if (this.part.state === 'started') {
+      this.part.stop();
+    }
     this.synth.releaseAll();
+    console.log('synth release');
+
+
+    if (this.stopEvent) {
+      if (this.app.state.playing) {
+        this.stopEvent.dispose();
+      }
+    }
+
+    console.log('out');
   }
 
   start() {
-    this.noteOn = -1;
-    this.stop();
-    this.part.start();
+    console.log('sound: start');
+    this.synth.releaseAll();
+    this.comp.releaseAll();
 
-    this.part.stop(`+${this.app.nOfBars}m`);
-    if (this.stopEvent) {
-      this.stopEvent.dispose();
-    }
+    console.log('new event');
     this.stopEvent = new Event(time => {
       this.app.win();
-      // this.app.stop();
     });
+    console.log('event start');
+
+    this.part.start();
+    this.part.stop(`+${this.app.nOfBars}m`);
     this.stopEvent.start(`+${this.app.nOfBars}m`);
   }
 
