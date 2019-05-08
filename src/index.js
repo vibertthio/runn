@@ -1,14 +1,14 @@
 import React, { Component } from 'react';
 import { render } from 'react-dom';
-import { MusicRNN, MusicVAE } from '@magenta/music';
+import { MusicRNN } from '@magenta/music';
 
 import styles from './index.module.scss';
 import sig from './assets/sig.png';
 import info from './assets/info.png';
 import Sound from './music/sound';
 import Renderer from './renderer/renderer';
-import { presetMelodies } from './music/clips';
-import { questions, checkEnd } from './utils/questions';
+import { presetMelodies, chordProgression } from './music/clips';
+import { questions } from './utils/questions';
 
 
 class App extends Component {
@@ -52,7 +52,7 @@ class App extends Component {
   componentDidMount() {
     this.renderer = new Renderer(this, this.canvas);
     this.initVAE();
-    this.initRNN();
+    // this.initRNN();
     this.addEventListeners();
     requestAnimationFrame(() => { this.update() });
   }
@@ -104,10 +104,27 @@ class App extends Component {
   }
 
   async initVAE() {
-    const modelCheckPoint = './checkpoints/hierdec-mel_16bar';
-    const model = new MusicVAE(modelCheckPoint);
-    const result = await model.sample(1);
-    console.log(result);
+    const modelCheckPoint = './checkpoints/chord_pitches_improv';
+    const model = new MusicRNN(modelCheckPoint);
+    model.initialize()
+      .then(() => {
+        console.log('initialized!');
+        return model.continueSequence(
+          presetMelodies['Twinkle'],
+          this.melodyLength,
+          1.0,
+          chordProgression,
+          );
+      })
+      .then((i) => {
+        console.log(i);
+        this.setMelodies([i]);
+        this.model = model;
+        this.setState({
+          loadingModel: false,
+        });
+        this.sound.triggerSoundEffect(2);
+      });
   }
 
   setMelodies(ms) {
