@@ -1,3 +1,5 @@
+import * as Note from "tonal-note"
+
 export default class PianorollGrid {
 
   constructor(renderer, ysr = 0, xsr = 0, fixed = 0, ans = true, dynamic = true) {
@@ -78,6 +80,8 @@ export default class PianorollGrid {
     this.updateYShift();
 
     const p = this.renderer.progress;
+    const { chord, chordProgression } = this.renderer;
+
     const { notes, totalQuantizedSteps } = this.renderer.melodies[0];
     const hStep = 2;
     const wUnit = w / totalQuantizedSteps;
@@ -87,15 +91,13 @@ export default class PianorollGrid {
     ctx.translate(this.gridXShift, this.gridYShift);
 
     ctx.save();
-    // this.drawFrame(ctx, w, h);
     ctx.translate(-w * 0.5, -h * 0.5);
-
-    //
     ctx.fillStyle = '#000';
     ctx.strokeStyle = '#FFF';
     ctx.fillRect(0, 0, w, h);
     ctx.strokeRect(0, 0, w, h);
 
+    // draw notes
     notes.forEach((item, index) => {
       const { pitch, quantizedStartStep, quantizedEndStep } = item;
       const y = h - pitch * hUnit * 0.5;
@@ -112,8 +114,6 @@ export default class PianorollGrid {
           this.currentNoteYShift = 1;
           this.currentNoteIndex = index;
         }
-        // ctx.fillStyle = '#FFF';
-        // ctx.fillText(pitch, 5, -8);
         ctx.fillStyle = '#F00';
         ctx.translate(0, this.currentNoteYShift * -2);
       } else {
@@ -123,6 +123,38 @@ export default class PianorollGrid {
       ctx.fillRect(0, 0, wStepDisplay * (quantizedEndStep - quantizedStartStep - 0.2), hStep);
       ctx.restore();
     });
+
+    // draw chords
+    if (chord) {
+      chordProgression.forEach((chord, index) => {
+        const pitch = Note.midi(chord[0] + '2');
+        const quantizedStartStep = index * 16;
+        const quantizedEndStep = (index + 1) * 16;
+        const y = h - pitch * hUnit * 0.5;
+        const wStepDisplay = wUnit * (1 - this.newSectionYShift);
+
+        ctx.save();
+        ctx.strokeStyle = 'none';
+        ctx.translate(quantizedStartStep * wUnit, y);
+
+        if ((p * totalQuantizedSteps) >= quantizedStartStep
+          && (p * totalQuantizedSteps) <= quantizedEndStep
+          && this.isPlaying()) {
+          if (this.currentNoteIndex !== index) {
+            // change pitch
+            this.currentNoteYShift = 1;
+            this.currentNoteIndex = index;
+          }
+          ctx.fillStyle = '#F00';
+          ctx.translate(0, this.currentNoteYShift * -2);
+        } else {
+          ctx.fillStyle = this.noteOnColor;
+        }
+
+        ctx.fillRect(0, 0, wStepDisplay * (quantizedEndStep - quantizedStartStep - 0.2), hStep);
+        ctx.restore();
+      });
+    }
 
     // progress
     if (this.isPlaying()) {
@@ -140,7 +172,7 @@ export default class PianorollGrid {
     for (let i = 1; i < 4; i += 1) {
       ctx.save();
       ctx.translate(w * i * 0.25, 0);
-      ctx.strokeStyle = '#555';
+      ctx.strokeStyle = '#333';
       ctx.beginPath();
       ctx.moveTo(0, 0);
       ctx.lineTo(0, h);
@@ -153,7 +185,7 @@ export default class PianorollGrid {
   }
 
   isPlaying() {
-    return this.renderer.playing;
+    return this.renderer.app.state.playing;
   }
 
   updateYShift() {

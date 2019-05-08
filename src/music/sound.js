@@ -1,11 +1,13 @@
 import Tone, { Transport, Sequence, Part, Event } from 'tone';
 import StartAudioContext from 'startaudiocontext';
+import * as Chord from "tonal-chord";
 
 import beepSound from './effect/beep.wav';
 import wrongSound from './effect/wrong.wav';
 import correctSound from './effect/correct.wav';
 import endSound from './effect/end.wav';
 import transitionSound from './effect/transition.wav';
+
 
 export default class Sound {
   constructor(app) {
@@ -65,8 +67,51 @@ export default class Sound {
       },
     }).toMaster();
 
-    Transport.bpm.value = 150;
+    Transport.bpm.value = 250;
     Transport.start();
+  }
+
+  updateMelodies(m, c) {
+    this.melodies = m;
+
+    let notes = m[this.melodiesIndex].notes.map(note => {
+      const s = note.quantizedStartStep;
+      return {
+        'time': `${Math.floor(s / 16)}:${Math.floor(s / 4) % 4}:${(s % 4)}`,
+        'note': Tone.Frequency(note.pitch, 'midi'),
+        'chord': false,
+      };
+    });
+
+    if (c) {
+      this.chordProgression = c;
+      const chordNotes = this.chordProgression.map((chord, i) => {
+        const notes = Chord.notes(chord);
+        return {
+          'time': `${i}:0:0`,
+          'note': notes,
+          'chord': true,
+        };
+      });
+
+      notes = notes.concat(chordNotes);
+    }
+
+    if (this.part) {
+      this.part.stop();
+    }
+
+    this.part = new Part((time, value) => {
+      if (!value.chord) {
+        this.synth.triggerAttackRelease(value.note, "8n", time);
+      } else {
+        const notes = value.note.map(n => n + '3');
+        this.comp.triggerAttackRelease(notes, '4n', time, 0.5);
+      }
+    }, notes);
+
+    this.part.loop = 1;
+    this.part.loopEnd = `${this.app.nOfBars}:0:0`;
   }
 
   stop() {
@@ -84,7 +129,8 @@ export default class Sound {
       this.stopEvent.dispose();
     }
     this.stopEvent = new Event(time => {
-      this.app.stop();
+      this.app.win();
+      // this.app.stop();
     });
     this.stopEvent.start(`+${this.app.nOfBars}m`);
   }
@@ -96,26 +142,6 @@ export default class Sound {
     }
     this.start();
     return true;
-  }
-
-  updateMelodies(m) {
-    this.melodies = m;
-    const notes = m[this.melodiesIndex].notes.map(note => {
-      const s = note.quantizedStartStep;
-      return {
-        'time': `${Math.floor(s / 16)}:${Math.floor(s / 4) % 4}:${(s % 4)}`,
-        'note': Tone.Frequency(note.pitch, 'midi')
-      };
-    });
-    if (this.part) {
-      this.part.stop();
-    }
-    this.part = new Part((time, value) => {
-      this.synth.triggerAttackRelease(value.note, "8n", time);
-    }, notes);
-
-    this.part.loop = 1;
-    this.part.loopEnd = `${this.app.nOfBars}:0:0`;
   }
 
   changeBpm(b) {

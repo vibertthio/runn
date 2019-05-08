@@ -6962,6 +6962,11 @@ tonal-note@^2.1.2:
   resolved "https://registry.yarnpkg.com/tonal-note/-/tonal-note-2.1.2.tgz#8fdddb775168e918931a74a256e7810c730ebcac"
   integrity sha512-PP/h5+j4O1b1X3Gk++yJLE6yABRrksxt2CpqYMitdNhn+Hgd5UfMwlZALNVaZZTGGwksKaHn1h61rY+Ab/HCaQ==
 
+tonal-note@^2.2.2:
+  version "2.2.2"
+  resolved "https://registry.yarnpkg.com/tonal-note/-/tonal-note-2.2.2.tgz#3aeeeeb0e227fd0da9fcbc8e811cf1109081da56"
+  integrity sha512-RNK3Nb8PxBEW9yYGStcoczgE8bCYFZ5zfLvYJjvuzLWiwTQmqWOhTzONVobVCGFZ/jgDNwpBEKe/bngL3g3Xfw==
+
 tonal-pcset@^2.1.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/tonal-pcset/-/tonal-pcset-2.1.0.tgz#f54aa34630b3512dbefc0522fcca1ba1ee8b3220"

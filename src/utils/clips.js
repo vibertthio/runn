@@ -191,16 +191,6 @@ const presetMelodies = {
   },
 };
 
-
-const chordProgression = [
-  'C', 'Am', 'F', 'G',
-  'C', 'Am', 'F', 'G',
-  'C', 'Am', 'F', 'G',
-];
-
-
 export {
-  chordProgression,
   presetMelodies,
-  toMidi,
 };

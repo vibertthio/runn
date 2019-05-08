@@ -1,5 +1,14 @@
 import { Engine, World, Bodies, Composite, Body, Events } from 'matter-js';
-import { createPackedMatrixTexture } from '@tensorflow/tfjs-core/dist/kernels/webgl/gpgpu_util';
+import * as Note from "tonal-note";
+
+import Avatar from './avatar';
+
+const categories = [
+  0x0001,
+  0x0002,
+  0x0004,
+  0x0008,
+];
 
 export default class Physic {
   constructor(renderer) {
@@ -22,7 +31,7 @@ export default class Physic {
       for (let i = 0; i < pairs.length; i++) {
         const pair = pairs[i];
         if (pair.bodyA.label === 'avatar' || pair.bodyB.label === 'avatar') {
-          console.log('avatar collision start');
+          // console.log('avatar collision start');
           this.avatarCollisionCount = this.avatarCollisionCount + 1;
         }
       }
@@ -33,7 +42,7 @@ export default class Physic {
       for (let i = 0; i < pairs.length; i++) {
         const pair = pairs[i];
         if (pair.bodyA.label === 'avatar' || pair.bodyB.label === 'avatar') {
-          console.log('avatar collision end');
+          // console.log('avatar collision end');
           this.avatarCollisionCount = this.avatarCollisionCount - 1;
         }
       }
@@ -54,18 +63,25 @@ export default class Physic {
 
   updateMatter() {
     const { notes, totalQuantizedSteps } = this.renderer.melodies[0];
+    const { chord, chordProgression } = this.renderer;
     const unit = this.renderer.width * this.displayWidthRatio / totalQuantizedSteps;
     const hUnit = this.renderer.height / 128;
     const avatarSize = this.renderer.width / 64;
+    const objects = [];
+    const positions = [];
+
     World.clear(this.engine.world);
-    // this.avatar = Bodies.rectangle(0, 0, unit * 2, unit * 2, {
-    this.avatar = Bodies.rectangle(notes[0].quantizedStartStep * unit, 0, avatarSize, avatarSize, {
+
+    const avatar = Bodies.rectangle(notes[0].quantizedStartStep * unit, 0, avatarSize, avatarSize, {
       isStatic: false,
       friction: 0.001,
       label: 'avatar',
+      collisionFilter: {
+        mask: categories[0] | categories[1],
+      },
     });
-    const objects = [];
-    const positions = [];
+    this.avatar = new Avatar(0, avatar, this.renderer);
+    objects.push(avatar);
 
     notes.forEach((note, index) => {
       const { pitch, quantizedStartStep, quantizedEndStep } = note;
@@ -74,11 +90,48 @@ export default class Physic {
       const y = this.renderer.height - pitch * hUnit - 50;
       const x = quantizedStartStep * unit + w * 0.5;
       // console.log(`${index}: ${x}, ${y}, ${w}, ${h}`);
-      objects.push(Bodies.rectangle(x, y, w, h, { isStatic: true }));
+      objects.push(Bodies.rectangle(x, y, w, h, {
+        isStatic: true,
+        collisionFilter: {
+          category: categories[1],
+        },
+      }));
       positions.push({ x, y });
     });
 
-    objects.push(this.avatar);
+    // chord
+    if (chord) {
+      const avatarChord = Bodies.rectangle(notes[0].quantizedStartStep * unit, 0, avatarSize, avatarSize, {
+        isStatic: false,
+        friction: 0.001,
+        label: 'avatarChord',
+        collisionFilter: {
+          mask: categories[0] | categories[2],
+        },
+      });
+      this.avatarChord = new Avatar(1, avatarChord, this.renderer);
+      objects.push(avatarChord);
+
+      chordProgression.forEach((chord, index) => {
+        const pitch = Note.midi(chord[0] + '2');
+        const quantizedStartStep = index * 16;
+        const quantizedEndStep = (index + 1) * 16;
+
+        const w = (quantizedEndStep - quantizedStartStep) * unit;
+        const h = 10;
+        const y = this.renderer.height - pitch * hUnit - 50;
+        const x = quantizedStartStep * unit + w * 0.5;
+        // console.log(`${index}: ${x}, ${y}, ${w}, ${h}`);
+        objects.push(Bodies.rectangle(x, y, w, h, {
+          isStatic: true,
+          collisionFilter: {
+            category: categories[2],
+          },
+        }));
+      })
+    }
+
+
     World.add(this.engine.world, objects);
     this.boxPositions = positions;
     this.unit = unit;
@@ -86,10 +139,18 @@ export default class Physic {
 
   draw(ctx) {
     const p = this.renderer.progress;
+    const { chord } = this.renderer;
 
     Engine.update(this.engine);
     const bodies = Composite.allBodies(this.engine.world);
-    this.update();
+
+    if (this.avatar) {
+      this.avatar.update();
+    }
+
+    if (chord) {
+      this.avatarChord.update();
+    }
 
     ctx.save();
 
@@ -109,7 +170,8 @@ export default class Physic {
     // draw grounds
     ctx.beginPath();
     bodies.forEach((b, i) => {
-      if (this.avatar.id === b.id) {
+      if ((this.avatar.body.id === b.id)
+      || (chord && (this.avatarChord.body.id === b.id))) {
         return;
       }
 
@@ -132,110 +194,40 @@ export default class Physic {
     ctx.strokeStyle = '#999';
     ctx.stroke();
 
-    // draw avatar
     if (this.avatar) {
-      ctx.beginPath();
-      const { vertices } = this.avatar;
-      ctx.moveTo(vertices[0].x, vertices[0].y);
-      vertices.forEach((v, j) => {
-        ctx.lineTo(v.x, v.y);
-      });
-      ctx.lineTo(vertices[0].x, vertices[0].y);
-      ctx.fillStyle = '#F00';
-      ctx.fill();
+      this.avatar.draw(ctx);
+    }
+
+    if (chord) {
+      this.avatarChord.draw(ctx);
     }
 
     ctx.restore();
   }
 
   checkDeath() {
-    if (this.avatar.position.y > this.renderer.height) {
+    const { chord } = this.renderer;
+    if (this.avatar.body.position.y > this.renderer.height) {
       return true;
+    } else if (chord) {
+      if (this.avatarChord.body.position.y > this.renderer.height) {
+        return true;
+      }
     }
     return false;
   }
 
   resetAvatar() {
     const { notes, totalQuantizedSteps } = this.renderer.melodies[0];
+    const { chord } = this.renderer;
     const unit = this.renderer.width * 4 / totalQuantizedSteps;
 
-    Body.setPosition(this.avatar, { x: notes[0].quantizedStartStep * unit, y: 100 });
-    Body.setVelocity(this.avatar, { x: 0, y: 0 });
-  }
+    Body.setPosition(this.avatar.body, { x: (notes[0].quantizedStartStep + 1) * unit, y: 100 });
+    Body.setVelocity(this.avatar.body, { x: 0, y: 0 });
 
-  update() {
-    if (this.moving) {
-      if (this.movingDir) {
-        this.moveRight();
-      } else {
-        this.moveLeft();
-      }
-    } else {
-      this.moveStopping();
+    if (chord) {
+      Body.setPosition(this.avatarChord.body, { x: (notes[0].quantizedStartStep + 2) * unit, y: 100 });
+      Body.setVelocity(this.avatarChord.body, { x: 0, y: 0 });
     }
-
-    Body.setAngularVelocity(this.avatar, 0);
-  }
-
-  jump(v = -8) {
-    const vy = this.avatar.velocity.y;
-    if (Math.abs(vy) > 0.01) {
-      return;
-    }
-    if (this.avatarCollisionActive === 0) {
-      return;
-    }
-    Body.setVelocity(this.avatar, { x: this.avatar.velocity.x, y: v});
-  }
-
-  pressRightKey() {
-    this.moving = true;
-    this.movingDir = true;
-    this.holdingRightKey = true;
-  }
-
-  pressLeftKey() {
-    this.moving = true;
-    this.movingDir = false;
-    this.holdingLeftKey = true;
-  }
-
-  releaseRightKey() {
-    this.holdingRightKey = false;
-    if (!this.holdingLeftKey) {
-      this.moving = false;
-    } else {
-      this.movingDir = false;
-    }
-  }
-
-  releaseLeftKey() {
-    this.holdingLeftKey = false;
-    if (!this.holdingRightKey) {
-      this.moving = false;
-    } else {
-      this.movingDir = true;
-    }
-  }
-
-  moveRight() {
-    // Body.applyForce(this.avatar, this.avatar.position, { x: 0.001, y:0 });
-    const x = this.avatar.velocity.x;
-    const finalX = (5 - x) * 0.2 + x;
-    Body.setVelocity(this.avatar, { x: finalX, y: this.avatar.velocity.y });
-  }
-
-  moveLeft() {
-    // Body.applyForce(this.avatar, this.avatar.position, { x: -0.001, y: 0 });
-    const x = this.avatar.velocity.x;
-    const finalX = (-5 - x) * 0.2 + x;
-    Body.setVelocity(this.avatar, { x: finalX, y: this.avatar.velocity.y });
-  }
-
-  moveStopping() {
-    const x = this.avatar.velocity.x;
-    const finalX = (Math.abs(x * 0.8) < 0.01) ? 0 : x * 0.8;
-
-    Body.setVelocity(this.avatar, { x: finalX, y: this.avatar.velocity.y });
   }
 }

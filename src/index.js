@@ -7,54 +7,55 @@ import sig from './assets/sig.png';
 import info from './assets/info.png';
 import Sound from './music/sound';
 import Renderer from './renderer/renderer';
-import { presetMelodies, chordProgression } from './music/clips';
-import { questions } from './utils/questions';
+import { presetMelodies } from './utils/clips';
+import { questions, chordProgressions } from './utils/questions';
+
+const GAME = {
+  WAITING: 0,
+  WIN: 1,
+  LOSE: -1,
+};
 
 
 class App extends Component {
   constructor(props) {
     super(props);
 
+    this.sound = new Sound(this),
+    this.canvas = [];
+    this.melodies = [];
+    this.nOfBars = 8;
+
     this.state = {
+      slash: true, // landing page
       open: false, // menu
-      slash: true,
+      level: 0,
       playing: false,
-      mouseDown: false,
-      dragging: false,
       loadingModel: true,
-      loadingNextInterpolation: false,
-      rhythmThreshold: 0.6,
-      finishedAnswer: false,
-      answerCorrect: false,
-      waitingNext: false,
+      gameFinished: 0,
       restart: false,
+      chord: false,
+
       bpm: 120,
       screen: {
         width: window.innerWidth,
         height: window.innerHeight,
         ratio: window.devicePixelRatio || 1,
       },
-
-      level: 0,
-      score: 0,
-      gameFinished: 0,
-      history: Array(questions.length).fill(-1),
     };
 
-    this.sound = new Sound(this),
-    this.canvas = [];
-    this.melodies = [];
-    this.bpms = [];
-    this.nOfBars = 12;
-    this.melodyLength = this.nOfBars * 16;
   }
 
   componentDidMount() {
+
     this.renderer = new Renderer(this, this.canvas);
-    this.initVAE();
-    // this.initRNN();
+
+    this.loadNewLevel(0);
+
     this.addEventListeners();
+
     requestAnimationFrame(() => { this.update() });
+
   }
 
   addEventListeners() {
@@ -81,6 +82,22 @@ class App extends Component {
     removeEventListener();
   }
 
+  loadNewLevel(lv = 0) {
+    const { chord, nOfBars } = questions[lv];
+    this.nOfBars = nOfBars;
+
+    if (!chord) {
+      this.initRNN();
+    } else {
+      this.initChordRNN(chordProgressions[lv]);
+    }
+    this.setState({
+      loadingModel: true,
+      level: lv,
+      chord,
+    });
+  }
+
   initRNN() {
     const modelCheckPoint = './checkpoints/basic_rnn';
     const model = new MusicRNN(modelCheckPoint);
@@ -90,7 +107,7 @@ class App extends Component {
         console.log('initialized!');
         return model.continueSequence(
           presetMelodies['Twinkle'],
-          this.melodyLength,
+          this.nOfBars * 16,
           1.0)
       })
       .then((i) => {
@@ -103,7 +120,7 @@ class App extends Component {
       });
   }
 
-  async initVAE() {
+  initChordRNN(chordProgression) {
     const modelCheckPoint = './checkpoints/chord_pitches_improv';
     const model = new MusicRNN(modelCheckPoint);
     model.initialize()
@@ -111,14 +128,14 @@ class App extends Component {
         console.log('initialized!');
         return model.continueSequence(
           presetMelodies['Twinkle'],
-          this.melodyLength,
+          this.nOfBars * 16,
           1.0,
           chordProgression,
           );
       })
       .then((i) => {
         console.log(i);
-        this.setMelodies([i]);
+        this.setMelodies([i], chordProgression);
         this.model = model;
         this.setState({
           loadingModel: false,
@@ -127,9 +144,9 @@ class App extends Component {
       });
   }
 
-  setMelodies(ms) {
-    this.renderer.updateMelodies(ms);
-    this.sound.updateMelodies(ms);
+  setMelodies(ms, chordProgression) {
+    this.renderer.updateMelodies(ms, chordProgression);
+    this.sound.updateMelodies(ms, chordProgression);
   }
 
   update() {
@@ -148,19 +165,6 @@ class App extends Component {
     this.sound.triggerSoundEffect();
   }
 
-  trigger() {
-    const playing = this.sound.trigger();
-    // this.renderer.playing = playing;
-    // this.setState({
-    //   playing,
-    // });
-    if (playing) {
-      this.start();
-    } else {
-      this.stop();
-    }
-  }
-
   start() {
     const { gameFinished } = this.state;
     if (gameFinished === 1) {
@@ -168,7 +172,6 @@ class App extends Component {
     }
 
     this.sound.start();
-    this.renderer.playing = true;
     this.setState({
       gameFinished: 0,
       playing: true,
@@ -177,7 +180,6 @@ class App extends Component {
 
   stop() {
     this.sound.stop();
-    this.renderer.playing = false;
     this.setState({
       playing: false,
     });
@@ -185,9 +187,10 @@ class App extends Component {
 
   fail() {
     this.sound.triggerSoundEffect(1);
-    this.stop();
+    this.sound.stop();
     this.renderer.physic.resetAvatar();
     this.setState({
+      playing: false,
       gameFinished: -1,
     });
   }
@@ -195,6 +198,7 @@ class App extends Component {
   win() {
     this.sound.triggerSoundEffect(2);
     this.setState({
+      playing: false,
       gameFinished: 1,
     });
   }
@@ -242,27 +246,40 @@ class App extends Component {
 
       if (e.keyCode === 37) {
         // left
-        this.renderer.physic.pressLeftKey();
+        this.renderer.physic.avatar.pressLeftKey();
       } else if (e.keyCode === 39) {
         // right
-        this.renderer.physic.pressRightKey();
+        this.renderer.physic.avatar.pressRightKey();
       } else if (e.keyCode === 38) {
         // up
-        this.renderer.physic.jump();
+        this.renderer.physic.avatar.jump();
       } else if (e.keyCode === 40) {
         // down
       }
 
-      if (e.keyCode === 32) {
-        // space
-        this.trigger();
-      }
       if (e.keyCode === 65) {
         // a
-        this.renderer.physic.resetAvatar();
+        this.renderer.physic.avatarChord.pressLeftKey();
       }
+      if (e.keyCode === 68) {
+        // d
+        this.renderer.physic.avatarChord.pressRightKey();
+      }
+      if (e.keyCode === 87) {
+        // w
+        this.renderer.physic.avatarChord.jump();
+      }
+      if (e.keyCode === 83) {
+        // s
+      }
+
+      if (e.keyCode === 32) {
+        // space
+      }
+
       if (e.keyCode === 82) {
         // r
+        this.renderer.physic.resetAvatar();
       }
     }
   }
@@ -270,14 +287,26 @@ class App extends Component {
   handleKeyUp(e) {
     if (e.keyCode === 37) {
       // left
-      this.renderer.physic.releaseLeftKey();
+      this.renderer.physic.avatar.releaseLeftKey();
     } else if (e.keyCode === 39) {
       // right
-      this.renderer.physic.releaseRightKey();
+      this.renderer.physic.avatar.releaseRightKey();
     } else if (e.keyCode === 38) {
       // up
     } else if (e.keyCode === 40) {
       // down
+    }
+
+    if (e.keyCode === 65) {
+      // a
+      this.renderer.physic.avatarChord.releaseLeftKey();
+    }
+    if (e.keyCode === 68) {
+      // d
+      this.renderer.physic.avatarChord.releaseRightKey();
+    }
+    if (e.keyCode === 87) {
+      // w
     }
   }
 
@@ -297,7 +326,6 @@ class App extends Component {
 
   onPressPlay() {
     const { restart } = this.state;
-    console.log('press play!');
 
     this.sound.triggerSoundEffect(4);
 
@@ -314,36 +342,47 @@ class App extends Component {
   }
 
   onClickTheButton() {
-    this.start();
+    const { gameFinished, loadingModel, level } = this.state;
+
+    if (loadingModel) {
+      console.log('loading model...');
+      return;
+    }
+
+    if (gameFinished === GAME.WAITING) {
+      this.start();
+    } else if (gameFinished === GAME.LOSE) {
+      this.start();
+    } else if (gameFinished === GAME.WIN) {
+      this.loadNewLevel(level + 1);
+    }
+
+    this.setState({
+      gameFinished: 0,
+    });
   }
 
   render() {
-    const { waitingNext, loadingModel, finishedAnswer, answerCorrect, score, loadingNextInterpolation, history, level, gameFinished, playing } = this.state;
+    const { loadingModel, level, gameFinished, playing } = this.state;
     const loadingText = loadingModel ? 'loading...' : 'play';
-    let buttonText = 'start';
 
-    if (gameFinished === 1) {
+    let buttonText = 'start';
+    if (loadingModel) {
+      buttonText = 'loading';
+    } else if (gameFinished === GAME.WIN) {
       buttonText = 'next';
-    } else if (gameFinished === -1) {
+    } else if (gameFinished === GAME.LOSE) {
       buttonText = 'retry';
     }
 
-
-    const resultText = answerCorrect ? 'correct!' : 'wrong!';
-    const scoreText = `${score.toString()}/${(questions.length).toString()}`;
-    const bottomScoreText = `[ score: ${score.toString()}/${(questions.length).toString()} ]`;
-
-    let finalText = 'Ears of a musician!';
-    if (score < 3) {
-      finalText = 'You can do this!';
-    } else if (score < 5) {
-      finalText = 'You have a good ear!';
-    }
+    const resultText = 'you bro';
+    const scoreText = 'score';
+    const finalText = 'You are awesome!';
 
 
     const arr = Array.from(Array(9).keys());
     const mat = Array.from(Array(9 * 16).keys());
-    const { rhythmThreshold, bpm } = this.state;
+    const { bpm } = this.state;
     return (
       <div>
         <section className={styles.splash} id="splash">
@@ -475,12 +514,12 @@ class App extends Component {
             <p>
               <strong>$ 🏃‍♂️ RUNN $</strong>
               <br />= Sort + Song
-              <br />A game based on a musical machine learning algorithm which can interpolate different melodies. Made by{' '}
+              <br />A game to play side scrolling game on music scores generated by musical machine learning. Made by{' '}
               <a href="https://vibertthio.com/portfolio/" target="_blank" rel="noreferrer noopener">
                 Vibert Thio
               </a>.{' Source code is on '}
               <a
-                href="https://github.com/vibertthio/sornting"
+                href="https://github.com/vibertthio/runn"
                 target="_blank"
                 rel="noreferrer noopener"
               >

@@ -10,8 +10,7 @@ export default class Renderer {
     this.frameCount = 0;
     this.melodies = [];
     this.fontSize = 1.0;
-    this.playing = false;
-    this.halt = false;
+    this.chord = false;
 
     this.w = 0;
     this.h = 0;
@@ -37,33 +36,15 @@ export default class Renderer {
     this.engine = Engine.create();
   }
 
-  updateMatter() {
-    const { notes, totalQuantizedSteps } = this.melodies[0];
-    const unit = this.width / totalQuantizedSteps;
-    World.clear(this.engine.world);
-    this.avatar = Bodies.rectangle(400, 100, 20, 20);
-    // console.log(`totalQuantizedSteps: ${totalQuantizedSteps}`);
-    // console.log(`unit: ${unit}`);
-    // console.log(`avatar id: ${this.avatar.id}`);
-    // console.log(`notes length: ${notes.length}`);
-    const objects = [];
-
-    notes.forEach((note, index) => {
-      const { pitch, quantizedStartStep, quantizedEndStep } = note;
-      const w = (quantizedEndStep - quantizedStartStep) * unit;
-      const h = 10;
-      const y = this.height - pitch * unit * 0.5;
-      const x = quantizedStartStep * unit + w * 0.5;
-      // console.log(`${index}: ${x}, ${y}, ${w}, ${h}`);
-      objects.push(Bodies.rectangle(x, y, w, h, { isStatic: true }));
-    });
-
-    objects.push(this.avatar);
-    World.add(this.engine.world, objects);
-  }
-
-  updateMelodies(ms) {
+  updateMelodies(ms, c) {
     this.melodies = ms;
+    if (c) {
+      console.log('chord in renderer');
+      this.chord = true;
+      this.chordProgression = c;
+    } else {
+      this.chord = false;
+    }
     this.physic.updateMatter();
   }
 
@@ -86,15 +67,12 @@ export default class Renderer {
     this.physic.draw(ctx);
     if (this.physic.checkDeath()) {
       this.app.fail();
-    } else if (progress > 0.99) {
-      this.app.win();
     }
 
     const w = Math.max(Math.min(((width - 100) / 1.5), 150), 20);
     const h = w;
     this.h = h;
     this.w = w;
-    this.setFontSize(ctx, Math.pow(w / 800, 0.3));
 
     // ctx.translate(width * 0.5, height * 0.5);
     ctx.translate(width * 0.5, height * 0.8);
