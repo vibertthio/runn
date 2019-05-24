@@ -69,18 +69,10 @@ body {
     letter-spacing: 0.3rem;
     margin-right: 1rem;
     margin-left: 1rem;
+    margin-bottom: 1.5rem;
     padding-bottom: 5px; }
-  .index-module__title____kuSF button {
-    position: relative;
-    top: -25px;
-    left: 6.5rem; }
-    .index-module__title____kuSF button img {
-      width: 1.1rem;
-      opacity: 0.7; }
-      .index-module__title____kuSF button img:hover {
-        opacity: 1.0; }
   .index-module__title____kuSF .index-module__tips___1wmdy {
-    width: 40%;
+    width: 60%;
     min-width: 300px;
     margin: 0.1rem auto 0.2rem auto;
     position: relative;
@@ -89,11 +81,14 @@ body {
       margin: 0.1rem;
       font-size: 1.2rem; }
     .index-module__title____kuSF .index-module__tips___1wmdy p {
-      margin: 0.2rem;
+      margin: 0.1rem;
       font-size: 1.0rem; }
     @media screen and (max-width: 1000px) {
       .index-module__title____kuSF .index-module__tips___1wmdy {
-        margin: 0.8rem auto; } }
+        margin: 0.8rem auto; }
+        .index-module__title____kuSF .index-module__tips___1wmdy p {
+          margin: 0.1rem;
+          font-size: 0.7rem; } }
   .index-module__title____kuSF .index-module__result___1EuM- {
     display: none;
     margin-top: 3rem;
@@ -167,7 +162,7 @@ body {
   /* 0.5 second transition effect to slide in or slide down the overlay (height or width, depending on reveal) */
   -webkit-transition: 0.5s; }
   .index-module__overlay___1Tmco .index-module__intro___Ipvau {
-    max-width: 450px;
+    max-width: 500px;
     margin: 0rem auto; }
     .index-module__overlay___1Tmco .index-module__intro___Ipvau p {
       z-index: 3;
@@ -190,11 +185,14 @@ body {
     height: 30%; }
 
 .index-module__btn___rIoDY {
-  position: relative;
-  padding-left: 3px;
-  top: 2px; }
+  position: fixed;
+  right: 1rem;
+  top: 1rem; }
   .index-module__btn___rIoDY img {
-    width: 12px; }
+    width: 1.1rem;
+    opacity: 0.7; }
+    .index-module__btn___rIoDY img:hover {
+      opacity: 1.0; }
 
 .index-module__interactive___1gDyA {
   display: -webkit-box;
