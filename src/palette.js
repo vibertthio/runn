@@ -7,6 +7,7 @@ const colors = [
   'rgba(247, 51, 247, 1)', // 5
   'rgba(15, 15, 15, 1.0)', // 6
   'rgba(255 ,255, 255 ,1.0)', // 7
+  'rgba(247, 51, 247, 0.2)', // 8
 ];
 
 export default [
@@ -16,4 +17,5 @@ export default [
   colors[7],
   colors[2],
   colors[4],
+  colors[8],
 ];

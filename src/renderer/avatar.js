@@ -3,9 +3,10 @@ import palette from '../palette';
 
 
 export default class Avatar {
-  constructor(id, body, renderer) {
+  constructor(id, body, renderer, physic) {
     this.id = id;
     this.renderer = renderer;
+    this.physic = physic;
     this.body = body;
 
     this.collisionCount = 0;
@@ -13,6 +14,9 @@ export default class Avatar {
     this.movingDir = true;
     this.holdingRightKey = false;
     this.holdingLeftKey = false;
+    this.speedLimit = 0;
+    this.accelRatio = 0.2;
+    this.winJumpTimeID = 0;
   }
 
   draw(ctx) {
@@ -35,11 +39,15 @@ export default class Avatar {
     const { notes, totalQuantizedSteps } = this.renderer.melodies[0];
     const unit = this.renderer.width * 4 / totalQuantizedSteps;
 
-    Body.setPosition(this.body, { x: notes[0].quantizedStartStep * unit, y: 100 });
+    const add = (this.id === 0) ? 1 : 1;
+    const yPos = (this.id === 0) ? this.renderer.height * 0.25 : this.renderer.height * 0.5;
+    Body.setPosition(this.body, { x: (notes[0].quantizedStartStep + add) * unit, y: yPos });
     Body.setVelocity(this.body, { x: 0, y: 0 });
   }
 
   update() {
+    this.speedLimit = this.physic.unit * 0.4;
+
     if (this.moving) {
       if (this.movingDir) {
         this.moveRight();
@@ -53,7 +61,18 @@ export default class Avatar {
     Body.setAngularVelocity(this.body, 0);
   }
 
-  jump(v = -8) {
+  winJump() {
+    if (this.renderer.app.state.gameFinished === 1) {
+      this.jump(-0.5);
+      this.winJumpTimeID = window.setTimeout(() => {
+        this.winJump()
+      }, 1000);
+    } else {
+      window.clearTimeout(this.winJumpTimeID);
+    }
+  }
+
+  jump(v = -1.2) {
     const vy = this.body.velocity.y;
     if (Math.abs(vy) > 0.01) {
       return;
@@ -61,7 +80,8 @@ export default class Avatar {
     if (this.bodyCollisionActive === 0) {
       return;
     }
-    Body.setVelocity(this.body, { x: this.body.velocity.x, y: v });
+    const finalV = v * this.physic.hUnit;
+    Body.setVelocity(this.body, { x: this.body.velocity.x, y: finalV });
   }
 
   pressRightKey() {
@@ -95,16 +115,14 @@ export default class Avatar {
   }
 
   moveRight() {
-    // Body.applyForce(this.body, this.body.position, { x: 0.001, y:0 });
     const x = this.body.velocity.x;
-    const finalX = (5 - x) * 0.2 + x;
+    const finalX = (this.speedLimit - x) * this.accelRatio + x;
     Body.setVelocity(this.body, { x: finalX, y: this.body.velocity.y });
   }
 
   moveLeft() {
-    // Body.applyForce(this.body, this.body.position, { x: -0.001, y: 0 });
     const x = this.body.velocity.x;
-    const finalX = (-5 - x) * 0.2 + x;
+    const finalX = (-this.speedLimit - x) * this.accelRatio + x;
     Body.setVelocity(this.body, { x: finalX, y: this.body.velocity.y });
   }
 

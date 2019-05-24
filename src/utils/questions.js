@@ -6,8 +6,8 @@ const questions = [
   },
   {
     lv: 1,
-    chord: false,
-    nOfBars: 16,
+    chord: true,
+    nOfBars: 8,
   },
   {
     lv: 2,
@@ -24,8 +24,8 @@ const chordProgressions = [
   [
     'C', 'Am', 'F', 'G',
     'C', 'F', 'G', 'C',
-    'C', 'Am', 'F', 'G',
-    'C', 'F', 'G', 'C',
+    // 'C', 'Am', 'F', 'G',
+    // 'C', 'F', 'G', 'C',
   ],
   [
     'C', 'Am', 'F', 'G',

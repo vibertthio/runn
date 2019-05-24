@@ -78,27 +78,28 @@ body {
     letter-spacing: 0.3rem;
     margin-right: 1rem;
     margin-left: 1rem;
+    margin-bottom: 1.5rem;
     padding-bottom: 5px;
   }
 
 
-  button {
-    position: relative;
-    top: -25px;
-    left: 6.5rem;
+  // button {
+  //   position: relative;
+  //   top: -25px;
+  //   left: 6.5rem;
 
-    img {
-      width: 1.1rem;
-      opacity: 0.7;
-      &:hover{
-        opacity: 1.0;
-      }
-    }
-  }
+  //   img {
+  //     width: 1.1rem;
+  //     opacity: 0.7;
+  //     &:hover{
+  //       opacity: 1.0;
+  //     }
+  //   }
+  // }
 
   .tips {
     @extend .dimming;
-    width: 40%;
+    width: 60%;
     min-width: 300px;
     margin: 0.1rem auto 0.2rem auto;
     position: relative;
@@ -110,13 +111,18 @@ body {
     }
 
     p {
-      margin: 0.2rem;
+      margin: 0.1rem;
       font-size: 1.0rem;
       // font-size: 0.7rem;
     }
 
     @media screen and (max-width: 1000px) {
       margin: 0.8rem auto;
+
+      p {
+        margin: 0.1rem;
+        font-size: 0.7rem;
+      }
     }
   }
 
@@ -223,7 +229,7 @@ $range-label-width: 60px !default;
   -webkit-transition: 0.5s;
 
   .intro {
-    max-width: 450px;
+    max-width: 500px;
     margin: 0rem auto;
 
     p {
@@ -267,13 +273,16 @@ $range-label-width: 60px !default;
 .btn {
   @extend .no-btn-style;
 
-  position: relative;
-  padding-left: 3px;
-  top: 2px;
-
+  position: fixed;
+  right: 1rem;
+  top: 1rem;
 
   img {
-    width: 12px;
+    width: 1.1rem;
+    opacity: 0.7;
+    &:hover{
+      opacity: 1.0;
+    }
   }
 }
 .interactive {
