@@ -165,7 +165,7 @@ export default class Sound {
           this.comp.triggerAttackRelease(notes, '1m', time, 1.0);
         }
       } else {
-        if (this.app.renderer.physic.checkBand()) {          
+        if (this.app.renderer.physic.checkBand()) {
           const n = value.note % 16;
           if (drumSequence.kick.indexOf(n) !== -1) {
             this.samples[0].start(time);
@@ -190,7 +190,7 @@ export default class Sound {
       this.part.stop();
     }
     this.synth.releaseAll();
-    console.log('synth release');
+    this.comp.releaseAll();
 
 
     if (this.stopEvent) {

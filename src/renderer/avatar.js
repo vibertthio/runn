@@ -72,14 +72,12 @@ export default class Avatar {
     }
   }
 
-  jump(v = -1.2) {
+  jump(v = -1.0) {
     const vy = this.body.velocity.y;
     if (Math.abs(vy) > 0.01) {
       return;
     }
-    if (this.bodyCollisionActive === 0) {
-      return;
-    }
+
     const finalV = v * this.physic.hUnit;
     Body.setVelocity(this.body, { x: this.body.velocity.x, y: finalV });
   }

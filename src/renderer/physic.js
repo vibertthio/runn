@@ -81,7 +81,7 @@ export default class Physic {
     // this.displayWidthRatio = totalQuantizedSteps / 16;
     this.displayWidthRatio = totalQuantizedSteps / 64;
     const unit = this.renderer.width * this.displayWidthRatio / totalQuantizedSteps;
-    const hUnit = this.renderer.height / 128;
+    const hUnit = this.renderer.height / 100;
     const avatarSize = this.renderer.width / 64;
     const objects = [];
     const positions = [];
@@ -103,7 +103,8 @@ export default class Physic {
       const { pitch, quantizedStartStep, quantizedEndStep } = note;
       const w = (quantizedEndStep - quantizedStartStep) * unit;
       const h = hUnit;
-      const y = this.renderer.height - pitch * hUnit - 50;
+      const shift = (this.renderer.app.state.level === 0) ? 100 : 20
+      const y = this.renderer.height - pitch * hUnit + shift;
       const x = quantizedStartStep * unit + w * 0.5;
       const isLast = (index === notes.length - 1);
       const label = isLast ? 'm-last' : 'm-regular';
@@ -140,8 +141,8 @@ export default class Physic {
         const quantizedEndStep = (index + 1) * 16;
 
         const w = (quantizedEndStep - quantizedStartStep) * unit;
-        const h = hUnit;
-        const y = this.renderer.height - pitch * hUnit - 50;
+        const h = hUnit * 2;
+        const y = this.renderer.height - pitch * hUnit - 10;
         const x = quantizedStartStep * unit + w * 0.5;
         const isLast = (index === chordProgression.length - 1);
         const label = isLast ? 'c-last' : 'c-regular';
@@ -209,11 +210,11 @@ export default class Physic {
     const progressX = this.progress * this.renderer.width * this.displayWidthRatio;
     const xStart = this.progress * this.renderer.width * this.displayWidthRatio - this.progressPosition;
     const xEnd = xStart + this.renderer.width;
-    
+
     this.progressX = progressX;
     this.xStart = xStart;
     this.xEnd = xEnd;
-    
+
     ctx.translate(-xStart, 0);
 
     // draw grounds

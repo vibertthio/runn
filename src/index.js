@@ -278,16 +278,16 @@ class App extends Component {
         }
       }
 
-      if (e.keyCode === 32) {
-        // space
-      }
+      // if (e.keyCode === 32) {
+      //   // space
+      // }
 
-      if (e.keyCode === 82) {
-        // r
-        this.renderer.physic.resetAvatar();
-      }
+      // if (e.keyCode === 82) {
+      //   // r
+      //   this.renderer.physic.resetAvatar();
+      // }
     }
-    if (!slash && !playing) {
+    if (!slash && !playing && !loadingModel) {
       this.onClickTheButton();
     }
   }
@@ -570,7 +570,7 @@ class App extends Component {
   tipsText() {
     const { gameFinished, level } = this.state;
     if (gameFinished === 0) {
-      if (level === 0) {        
+      if (level === 0) {
         return (
           <div>
             <p>
