@@ -20,7 +20,7 @@
   "dependencies": {
     "@magenta/music": "^1.4.0",
     "@tweenjs/tween.js": "^17.3.0",
-    "gsap": "^1.19.1",
+    "gsap": "^3.6.0",
     "matter-js": "^0.14.2",
     "noisejs": "^2.1.0",
     "normalize-css": "^2.3.1",
