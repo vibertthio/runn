@@ -438,7 +438,7 @@ class App extends Component {
               <p className={styles.builtWith}>
                 Built with tone.js + musicvae.js.
                 <br />
-                Learn more about <a className={styles.about} target="_blank" href="https://github.com/vibertthio/sornting">how it works.</a>
+                Learn more about <a className={styles.about} target="_blank" href="https://github.com/vibertthio/runn">how it works.</a>
               </p>
 
               <p>Made by</p>
@@ -474,7 +474,7 @@ class App extends Component {
               <p className={styles.builtWith}>
                 Built with tone.js + musicvae.js.
                 <br />
-                Learn more about <a className={styles.about} target="_blank" href="https://github.com/vibertthio/sornting">how it works.</a>
+                Learn more about <a className={styles.about} target="_blank" href="https://github.com/vibertthio/runn">how it works.</a>
               </p>
 
               <p>Made by</p>
