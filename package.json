@@ -56,7 +56,7 @@
     "file-loader": "^1.1.6",
     "gh-pages": "^1.1.0",
     "html-webpack-plugin": "^2.30.1",
-    "node-sass": "^4.7.2",
+    "node-sass": "^7.0.0",
     "postcss-loader": "^2.0.10",
     "prettier": "^1.9.1",
     "raw-loader": "^0.5.1",
